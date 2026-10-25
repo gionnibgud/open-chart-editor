@@ -95,7 +95,8 @@ function requireRenderer(arrangement,factories) {
 export async function buildAndPlaytest(project,{arrangementId=null,vocalOnly=false,startTime=0,loopRegion=null,isCurrent=()=>true,fetchImpl=fetchDefault,feedBack=hostDefault(),rendererFactories=globalThis.window??globalThis}={}){
  if(typeof feedBack?.capabilities?.dispatch!=='function'||typeof feedBack?.closeCurrentSong!=='function')throw Error('Build and playtest requires the FeedBack host playback interface');
  if(!Array.isArray(project?.arrangements)||!project.arrangements.length)throw Error('Choose an arrangement before playtesting');
- const playable=project.arrangements.filter(arrangement=>!arrangement.editorOnly);
+ const playable=project.arrangements.filter(arrangement=>!arrangement.editorOnly&&!arrangement.hidden);
+ if(!vocalOnly&&arrangementId!=null&&project.arrangements.some(arrangement=>arrangement.id===arrangementId&&arrangement.hidden))throw Error('This arrangement is hidden; unhide it to playtest it');
  if(!vocalOnly&&arrangementId!=null&&project.arrangements.some(arrangement=>arrangement.id===arrangementId&&arrangement.editorOnly))throw Error('Scratch tracks are excluded from playable builds; select a main arrangement');
  const selectedIndex=arrangementId==null?0:playable.findIndex(arrangement=>arrangement.id===arrangementId);
  if(!vocalOnly&&!playable.length)throw Error('Add a main arrangement before playtesting');

@@ -104,6 +104,8 @@ export function findChartIssues(project, options = {}) {
     const basePath = `arrangements[${arrIndex}]`;
     if (!arrangement) { emit('arrangement.invalid', 'Arrangement must be an object.', {path: basePath}); continue; }
     if (stock && arrangement.editorOnly) continue;
+    if (arrangement.hidden === true) continue;   // hidden parts are not built; checked again once unhidden
+    for (const [i, o] of list(arrangement.combineReview).entries()) if (ownObject(o) && finite(o.start)) emit('combine.overlap', `Combined parts overlapped here (${list(o.sources).join(', ')}): ${o.kept === 'both' ? 'both kept' : `kept ${o.kept}`}. Check it, then Arrangement > Clear overlap highlights.`, {severity: 'warning', time: o.start, path: `arrangements[${arrIndex}].combineReview[${i}]`});
     const a = arrangement, isFretted = fretted(a), count = a.stringCount ?? a.tuning?.length ?? (a.type === 'bass' ? 4 : 6);
     const templates = list(a.chord_templates ?? a.templates);
     if (stock && (!isFretted || count !== (a.type === 'bass' ? 4 : 6))) emit('export.instrument', 'Stock RS2014 requires exactly six-string guitar or four-string bass; retain other layouts in the source project / FeedBack.', {path: basePath});

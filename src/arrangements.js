@@ -7,14 +7,23 @@ export function manageArrangement(project,id,operation,{newName}={}){
  const {index,arrangement}=part(project,id);
  if(operation==='rename'){arrangement.name=name(newName);return id;}
  if(['up','down'].includes(operation)){const next=index+(operation==='up'?-1:1);if(next<0||next>=project.arrangements.length)throw Error('This arrangement is already at that end of the list');[project.arrangements[index],project.arrangements[next]]=[project.arrangements[next],project.arrangements[index]];return id;}
+ if(['lock','unlock','hide','unhide'].includes(operation)){
+  if(arrangement.editorOnly)throw Error('Scratch tracks cannot be locked or hidden');
+  if(operation==='lock')arrangement.locked=true;
+  if(operation==='unlock')delete arrangement.locked;
+  if(operation==='hide'){if(project.arrangements.filter(a=>!a.editorOnly&&!a.hidden).length<=1)throw Error('Keep at least one visible arrangement');arrangement.hidden=true;}
+  if(operation==='unhide')delete arrangement.hidden;
+  return id;
+ }
  if(operation==='remove'){
+  if(arrangement.locked)throw Error(`${arrangement.name} is locked; unlock it before deleting`);
   if(!arrangement.editorOnly&&project.arrangements.filter(a=>!a.editorOnly).length<=1)throw Error('Keep at least one main arrangement');
   const removed=new Set([id,...project.arrangements.filter(a=>a.editorOnly&&a.scratchFor===id).map(a=>a.id)]),remaining=project.arrangements.filter(a=>!removed.has(a.id));if(!remaining.length)throw Error('Keep at least one arrangement');
   project.arrangements=remaining;return remaining[Math.min(index,remaining.length-1)].id;
  }
  if(operation!=='duplicate')throw Error('Choose a supported arrangement operation');
  if(arrangement.editorOnly)throw Error('Duplicate a main arrangement; copy scratch notes into a main part first');
- const copy=clone(arrangement);copy.id=uid();copy.name=name(newName||arrangement.name+' copy');
+ const copy=clone(arrangement);copy.id=uid();copy.name=name(newName||arrangement.name+' copy');delete copy.locked;delete copy.hidden;delete copy.combineReview;
  if(['guitar','bass'].includes(copy.type))copy.priority='alternative';
  const ids=new Map(),replacement=id=>{if(!id)return uid();if(!ids.has(id))ids.set(id,uid());return ids.get(id)};
  for(const content of [copy,...copy.difficulties||[]])for(const note of [...content.notes||[],...(content.chords||[]).flatMap(c=>c.notes||[])])note.id=replacement(note.id);

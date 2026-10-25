@@ -31,7 +31,7 @@ NAME_LIMIT = 30     # printable ASCII; the 32-byte name keeps its last byte 0
 
 def applies(arr):
     """True for an arrangement the DLC Builder export writes in the RS7X layout."""
-    return arr.get('type') == 'guitar' and arr.get('stringCount') == 7 and arr.get('editorOnly') is not True and arr.get('_notationOnly') is not True
+    return arr.get('type') == 'guitar' and arr.get('stringCount') == 7 and arr.get('editorOnly') is not True and arr.get('hidden') is not True and arr.get('_notationOnly') is not True
 
 
 def refusal(arr):

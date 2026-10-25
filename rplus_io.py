@@ -484,6 +484,8 @@ def rplus_folder(project):
         return name
 
     for arr in project['arrangements']:
+        if arr.get('hidden') is True:
+            continue
         source = arr.get('_rplus') or {}
         changed = not source or source.get('fingerprint') != _fingerprint(arr)
         if not changed:

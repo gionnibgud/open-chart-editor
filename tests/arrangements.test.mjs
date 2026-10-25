@@ -11,3 +11,12 @@ test('last main, invalid rename and outer-list moves fail without data loss',()=
  const p=makeProject(),a=p.arrangements[0],before=clone(p);for(const [operation,options]of [['remove',{}],['up',{}],['rename',{newName:'   '}]]){assert.throws(()=>manageArrangement(p,a.id,operation,options));assert.deepEqual(p,before)}
  const second=makeArrangement('keys');p.arrangements.push(second);manageArrangement(p,second.id,'up');assert.equal(p.arrangements[0].id,second.id);manageArrangement(p,second.id,'rename',{newName:'  Own piano  '});assert.equal(second.name,'Own piano');
 });
+test('lock and hide flags: clones start unlocked and visible, locked parts are not deleted, one part stays visible',()=>{
+ const p=makeProject(),a=p.arrangements[0],b=makeArrangement('guitar');p.arrangements.push(b);
+ manageArrangement(p,a.id,'lock');manageArrangement(p,a.id,'hide');assert.equal(a.locked,true);assert.equal(a.hidden,true);
+ assert.throws(()=>manageArrangement(p,b.id,'hide'),/at least one visible/);
+ assert.throws(()=>manageArrangement(p,a.id,'remove'),/locked/);
+ const copyId=manageArrangement(p,a.id,'duplicate'),copy=p.arrangements.find(x=>x.id===copyId);assert.equal(copy.locked,undefined);assert.equal(copy.hidden,undefined);
+ manageArrangement(p,a.id,'unlock');manageArrangement(p,a.id,'unhide');assert.equal('locked' in a||'hidden' in a,false);
+ const scratch={...makeArrangement(),editorOnly:true};p.arrangements.push(scratch);assert.throws(()=>manageArrangement(p,scratch.id,'lock'),/Scratch/);
+});

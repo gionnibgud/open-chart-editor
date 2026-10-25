@@ -1009,8 +1009,10 @@ def _role_document(content):
         if not isinstance(row['type'],str) or not row['type'] or len(row['type'])>128 or not isinstance(row['sha256'],str) or re.fullmatch('[0-9a-f]{64}',row['sha256']) is None:
             raise ProjectError('Arrangement role metadata has invalid type/hash')
         values=row['values']
-        if not isinstance(values,dict) or not values or set(values)-{'role','priority'}:
+        if not isinstance(values,dict) or not values or set(values)-{'role','priority','locked'}:
             raise ProjectError('Arrangement role metadata has invalid fields')
+        if 'locked' in values and values['locked'] is not True:
+            raise ProjectError('Arrangement lock metadata must be true when present')
         if 'role' in values:
             role=values['role']
             if role is not None and (not isinstance(role,str) or len(role)>128):
@@ -1046,6 +1048,7 @@ def _store_roles(project,entries,manifest):
     for arr in project['arrangements']:
         if arr.get('editorOnly'):continue
         values={key:copy.deepcopy(arr[key]) for key in ('role','priority') if key in arr}
+        if arr.get('locked') is True:values['locked']=True
         if not values:continue
         entry=indexed.get(arr['id']);name=(entry.get('drum_tab') or entry.get('file')) if entry else None
         if name is None or name not in entries:
@@ -1402,7 +1405,9 @@ def load_feedpak(data):
             if not isinstance(rows,list) or any(not isinstance(row,dict) for row in rows):
                 raise ProjectError('OCE scratch sidecar has invalid arrangements')
             for row in rows:
-                row['editorOnly']=True
+                # Hidden arrangements travel with the scratch tracks and come back hidden.
+                if row.get('hidden') is True:row.pop('editorOnly',None)
+                else:row['editorOnly']=True
             project['arrangements'].extend(rows)
     if not project['arrangements']:
         raise ProjectError('Pack has no supported chart or retained notation arrangement')
@@ -1528,6 +1533,12 @@ def _grid_index(beats,time):
 
 def save_feedpak(project,*,vocal_only=False):
     validate_project(project)
+    # Hidden arrangements stay in the project but not in the playable pack: they are
+    # saved with the scratch tracks in the editor sidecar.
+    if any(arr.get('hidden') is True and not arr.get('editorOnly') for arr in project.get('arrangements',[])):
+        project={**project,'arrangements':[{**arr,'editorOnly':True} if arr.get('hidden') is True else arr for arr in project['arrangements']]}
+        if not any(not arr.get('editorOnly') for arr in project['arrangements']):
+            raise ProjectError('Every arrangement is hidden; unhide at least one before saving a FeedPak')
     if vocal_only:
         if not any(v.get('pitch') is not None and v.get('length',0)>0 for v in project.get('vocals',[])):
             raise ProjectError('Vocal Highway preview requires a pitched vocal event with positive duration; lyric-only and zero-duration events remain editable and exportable.')
@@ -2083,6 +2094,8 @@ def save_xml(project, arrangement_id=None, *, rs7x=False):
     arr = next((a for a in project['arrangements'] if a['id'] == arrangement_id), project['arrangements'][0] if arrangement_id is None else None)
     if arr is None:
         raise ProjectError('Arrangement ID not found')
+    if arr.get('hidden') is True:
+        raise ProjectError('This arrangement is hidden; unhide it to export it')
     if arr.get('editorOnly') is True:
         raise ProjectError('Scratch tracks are editor-only; duplicate this track as a playable arrangement before exporting Rocksmith XML')
     arr=_snapshot_arrangement(arr)

@@ -238,7 +238,7 @@ def feedback_loose(project, *, audio=None, normalized_wav=None, flat_mp3=None):
         mirrors.append({'type':role,'name':arr.get('name',role.title()),'file':path})
     # Keys parts as R+ keyboard charts (MIDI pitch per note), which the loose loader reads.
     for index,arr in enumerate(work['arrangements']):
-        if arr.get('type')!='keys' or arr.get('editorOnly') or arr.get('readOnly') or not arr.get('notes'):continue
+        if arr.get('type')!='keys' or arr.get('editorOnly') or arr.get('hidden') or arr.get('readOnly') or not arr.get('notes'):continue
         stable=lambda what:str(uuid.uuid5(uuid.NAMESPACE_URL,f"oce-loose:{work.get('title','')}:{what}"))
         try:chart=rplus_io.save_keyboard_xml(work,arr['id'],song_id=stable('song'),arrangement_uuid=stable(arr['id']))
         except pack_io.ProjectError as exc:notes.append(f"{arr.get('name','Keys')}: no keyboard chart written ({exc})");continue
@@ -414,13 +414,14 @@ def native_compatibility(project):
     rows=[]
     for arr in project.get('arrangements',[]):
         kind=arr.get('type'); count=arr.get('stringCount',len(arr.get('tuning',[])))
-        compatible=arr.get('editorOnly') is not True and ((kind=='guitar' and count==6) or (kind=='bass' and count==4))
+        hidden=arr.get('hidden') is True
+        compatible=not hidden and arr.get('editorOnly') is not True and ((kind=='guitar' and count==6) or (kind=='bass' and count==4))
         # Seven-string guitar goes to the DLC Builder project only, in the RS7X layout;
         # 'compatible' (stock six/four strings) stays false so other targets are unchanged.
         seven=rs7x.applies(arr)
         rows.append({'id':arr['id'],'name':arr.get('name',arr['id']),
                      'type':kind,'stringCount':count,'compatible':compatible,'rs7x':seven,
-                     'reason':None if compatible else 'Seven-string guitar: DLC Builder project only, in the RS7X layout for the rs7string mod; the chart also remains in the full master.' if seven else ('Retained notation has no editable native tab conversion; source remains in the full master.' if arr.get('_notationOnly') else rs7x.refusal(arr) or 'Stock RS2014 requires playable six-string guitar or four-string bass; chart remains in the full master.')})
+                     'reason':None if compatible else 'Hidden: not included in builds; the chart remains in the full master.' if hidden else 'Seven-string guitar: DLC Builder project only, in the RS7X layout for the rs7string mod; the chart also remains in the full master.' if seven else ('Retained notation has no editable native tab conversion; source remains in the full master.' if arr.get('_notationOnly') else rs7x.refusal(arr) or 'Stock RS2014 requires playable six-string guitar or four-string bass; chart remains in the full master.')})
     return rows
 
 
