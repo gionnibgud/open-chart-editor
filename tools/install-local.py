@@ -16,7 +16,7 @@ PLUGIN_ID = 'open_chart_editor'
 # Runtime files only. Additions require a reviewed code change here. No globbed
 # directories, research, test songs, private decompilation, .git or dependencies.
 RUNTIME_FILES = (
-    'plugin.json', 'screen.html', 'screen.js', 'routes.py', 'library_source.py', 'folder_io.py', 'export_targets.py', 'rplus_io.py', 'rsw_reader.py', 'feedpak_contract.py', 'requirements-standalone.txt', 'requirements.txt', 'tools/assist/gp_assist.py', 'pack_io.py', 'notation_state.py', 'musicxml_dynamics.py', 'midi_programs.py',
+    'plugin.json', 'screen.html', 'screen.js', 'routes.py', 'library_source.py', 'folder_io.py', 'export_targets.py', 'rplus_io.py', 'rsw_reader.py', 'rs7x.py', 'feedpak_contract.py', 'requirements-standalone.txt', 'requirements.txt', 'tools/assist/gp_assist.py', 'pack_io.py', 'notation_state.py', 'musicxml_dynamics.py', 'midi_programs.py',
     'assets/editor.css', 'assets/tone-rack-data.json', 'LICENSE', 'THIRD-PARTY-NOTICES.txt', 'assets/feedpak-schemas/LICENSE-CODE.txt', 'assets/feedpak-schemas/PROVENANCE.json',
     'assets/feedpak-schemas/arrangement.schema.json', 'assets/feedpak-schemas/drum-tab.schema.json',
     'assets/feedpak-schemas/harmony.schema.json', 'assets/feedpak-schemas/keys.schema.json',

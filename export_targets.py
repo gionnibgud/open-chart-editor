@@ -21,9 +21,16 @@ from pathlib import Path, PurePosixPath
 from xml.etree import ElementTree as ET
 
 try:
-    from . import pack_io, rplus_io
+    from . import pack_io, rplus_io, rs7x
 except ImportError:
     import pack_io
+    try:
+        import rs7x
+    except ImportError:
+        import importlib.util
+        _rs7x_spec=importlib.util.spec_from_file_location('open_chart_editor_rs7x',Path(__file__).with_name('rs7x.py'))
+        rs7x=importlib.util.module_from_spec(_rs7x_spec)
+        _rs7x_spec.loader.exec_module(rs7x)
     try:
         import rplus_io
     except ImportError:
@@ -408,9 +415,12 @@ def native_compatibility(project):
     for arr in project.get('arrangements',[]):
         kind=arr.get('type'); count=arr.get('stringCount',len(arr.get('tuning',[])))
         compatible=arr.get('editorOnly') is not True and ((kind=='guitar' and count==6) or (kind=='bass' and count==4))
+        # Seven-string guitar goes to the DLC Builder project only, in the RS7X layout;
+        # 'compatible' (stock six/four strings) stays false so other targets are unchanged.
+        seven=rs7x.applies(arr)
         rows.append({'id':arr['id'],'name':arr.get('name',arr['id']),
-                     'type':kind,'stringCount':count,'compatible':compatible,
-                     'reason':None if compatible else 'Retained notation has no editable native tab conversion; source remains in the full master.' if arr.get('_notationOnly') else 'Stock RS2014 requires playable six-string guitar or four-string bass; chart remains in the full master.'})
+                     'type':kind,'stringCount':count,'compatible':compatible,'rs7x':seven,
+                     'reason':None if compatible else 'Seven-string guitar: DLC Builder project only, in the RS7X layout for the rs7string mod; the chart also remains in the full master.' if seven else ('Retained notation has no editable native tab conversion; source remains in the full master.' if arr.get('_notationOnly') else rs7x.refusal(arr) or 'Stock RS2014 requires playable six-string guitar or four-string bass; chart remains in the full master.')})
     return rows
 
 
@@ -534,12 +544,14 @@ def rs2014_sources(project, arrangement_ids, *, include_vocals=False,
         raise pack_io.ProjectError('Select at least one instrumental or vocal source')
     by_id={arr['id']:arr for arr in work['arrangements']}
     compatibility=native_compatibility(work)
-    supported={row['id'] for row in compatibility if row['compatible']}
+    supported={row['id'] for row in compatibility if row['compatible'] or row['rs7x']}
+    seven={row['id'] for row in compatibility if row['rs7x']}
     for identifier in arrangement_ids:
         if identifier not in by_id:
             raise pack_io.ProjectError('Source arrangement ID not found: '+identifier)
         if identifier not in supported:
             raise pack_io.ProjectError('Selected chart is not stock RS2014 compatible: '+identifier+'; select a compatible subset explicitly. All charts remain in the master.')
+        if identifier in seven:rs7x.validate(work,by_id[identifier])
     pack_io.validate_cdlc_strings(work,arrangement_ids,include_vocals)
     tree=EntryTree()
     name,data=source_audio(work,audio)
@@ -578,11 +590,17 @@ def rs2014_sources(project, arrangement_ids, *, include_vocals=False,
     else:
         cover_data=_original_cover()
     tree.add(cover_path,cover_data)
-    warnings=[]; arrangements=[]; all_tones=[]; tone_map={}; native_projection={}
+    warnings=[]; arrangements=[]; all_tones=[]; tone_map={}; native_projection={}; seven_records=[]
     for index,identifier in enumerate(arrangement_ids):
         arr=by_id[identifier]; role=pack_io.arrangement_role(arr)
         path=f'arrangements/{index:02d}_{role}.xml'
-        xml=pack_io.save_xml(work,identifier); root=ET.fromstring(xml)
+        if identifier in seven:
+            ordered={**work,'arrangements':[rs7x.stock_order(a) if a['id']==identifier else a for a in work['arrangements']]}
+            xml=pack_io.save_xml(ordered,identifier,rs7x=True)
+            seven_records.append(rs7x.describe(work,arr,path))
+        else:
+            xml=pack_io.save_xml(work,identifier)
+        root=ET.fromstring(xml)
         tree.add(f'authored-xml/{index:02d}_{role}.xml',xml)
         priority=arr.get('priority') or 'main'
         if priority not in ('main','alternative','bonus'):
@@ -610,6 +628,7 @@ def rs2014_sources(project, arrangement_ids, *, include_vocals=False,
         tone_map[identifier]={'original':copy.deepcopy(tones),'keys':mapped}
         tree.add(path,ET.tostring(root,encoding='utf-8',xml_declaration=True))
         tuning=root.find('tuning')
+        # DLC Builder's project holds six offsets; the low B's is in rs7x.json and the XML.
         offsets=[int(tuning.get('string'+str(i),'0')) for i in range(6)]
         tuning_pitch=440*2**(float(root.findtext('centOffset') or 0)/1200)
         dto={'ID':str(uuid.uuid4()),'XML':path,'Name':{'lead':0,'rhythm':2,'bass':3}[role],
@@ -640,6 +659,9 @@ def rs2014_sources(project, arrangement_ids, *, include_vocals=False,
          'AudioPreviewFile':{'Path':'','Volume':0},'AudioPreviewStartTime':0,
          'IgnoredIssues':[],'Arrangements':arrangements,'Tones':all_tones}
     tree.add('project.rs2dlc',_json(dto)); tree.add('tones.json',_json(tone_map))
+    if seven_records:
+        tree.add(rs7x.SIDECAR,_json(rs7x.sidecar(seven_records)))
+        warnings.append('Seven-string RS7X sources: '+', '.join(r['name'] for r in seven_records)+'. Stock DLC Builder builds six-string packages only and cannot write the RS7X block or the Rs7String6 tuning key; build these with an RS7X-aware tool (see rs7x.json). Players need the rs7string mod.')
     if default_cover: warnings.append('Original plain placeholder cover supplied; replace it with your own artwork if desired.')
     manifest={'version':1,'format':SOURCE_FORMAT,
               'readyToPlay':False,'stockCompatibility':compatibility,
@@ -647,6 +669,7 @@ def rs2014_sources(project, arrangement_ids, *, include_vocals=False,
               'masterContainsAllCharts':True,'audioOriginal':original_path,
               'audioSource':audio_path,'warnings':warnings,
               'nativeProjection':native_projection,
+              'rs7x':rs7x.SIDECAR if seven_records else None,
               'projectFormat':'public DLCProject Version 1 DTO',
               'sha256':tree.hashes()}
     tree.add('source-manifest.json',_json(manifest))

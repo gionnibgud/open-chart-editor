@@ -72,9 +72,10 @@ class SourceProjectTests(unittest.TestCase):
 
     def test_incompatible_subset_is_explicit_never_lost(self):
         project=fixture();other=copy.deepcopy(project['arrangements'][0])
-        other.update(id='own-seven',stringCount=7,tuning=[0]*7)
+        # Seven-string now exports in the RS7X layout (test_rs7x); eight-string has no RS2014 target.
+        other.update(id='own-eight',stringCount=8,tuning=[0]*8)
         project['arrangements'].append(other)
-        with self.assertRaises(e.pack_io.ProjectError):e.rs2014_sources(project,['own-seven'])
+        with self.assertRaises(e.pack_io.ProjectError):e.rs2014_sources(project,['own-eight'])
         tree,report=e.rs2014_sources(project,['own-lead'])
         self.assertEqual(len(json.loads(tree.entries['editable.oce.json'])['arrangements']),2)
         self.assertEqual(report['stockCompatibility'][1]['compatible'],False)

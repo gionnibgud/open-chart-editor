@@ -2051,7 +2051,9 @@ def _validate_stock_records(arr):
                 raise ProjectError('Stock Rocksmith2014 supports at most 32 bend points per note; simplify the curve explicitly or retain its complete data as Feedpak/JSON')
 
 
-def save_xml(project, arrangement_id=None):
+def save_xml(project, arrangement_id=None, *, rs7x=False):
+    """rs7x: the arrangement has been put in the RS7X order by rs7x.stock_order
+    (DLC Builder export of seven-string guitar only)."""
     validate_project(project)
     arr = next((a for a in project['arrangements'] if a['id'] == arrangement_id), project['arrangements'][0] if arrangement_id is None else None)
     if arr is None:
@@ -2066,8 +2068,11 @@ def save_xml(project, arrangement_id=None):
     if kind not in BASES:
         raise ProjectError('Rocksmith 2014 XML supports guitar and bass only; save this instrument as Feedpak')
     count = int(arr.get('stringCount', len(arr.get('tuning',[]))))
-    if count != len(BASES[kind]):
+    if rs7x and not (kind == 'guitar' and count == 7 and arr.get('_rs7xOrdered')):
+        raise ProjectError('The RS7X layout is for seven-string guitar in the RS7X string order')
+    if count != len(BASES[kind]) and not rs7x:
         raise ProjectError('Rocksmith 2014 XML requires six-string guitar or four-string bass; extended charts must be saved as Feedpak')
+    columns = 7 if rs7x else 6
     root = ET.fromstring(arr['_xml']) if arr.get('_xml') else ET.Element('song',version='7')
     def text(tag,value):
         el = root.find(tag)
@@ -2093,8 +2098,8 @@ def save_xml(project, arrangement_id=None):
     tuning = root.find('tuning')
     if tuning is None:
         tuning = ET.SubElement(root,'tuning')
-    offsets,_ = _effective_tuning(arr)
-    for i in range(6):
+    offsets = arr['_rs7xOffsets'] if rs7x else _effective_tuning(arr)[0]
+    for i in range(columns):
         tuning.set(f'string{i}',str(offsets[i] if i<len(offsets) else 0))
     def container(parent,tag,items):
         old = parent.find(tag)
@@ -2115,7 +2120,7 @@ def save_xml(project, arrangement_id=None):
                 raise ProjectError('Template arpeggio and hidden-name nop flags are mutually exclusive')
             display_name+='-arp'
         el.set('displayName',display_name)
-        for i in range(6):
+        for i in range(columns):
             for prefix,key in [('fret','frets'),('finger','fingers')]:
                 vals = template.get(key,[])
                 el.set(f'{prefix}{i}',str(vals[i] if i<len(vals) else -1))
@@ -2190,7 +2195,7 @@ def save_xml(project, arrangement_id=None):
             level_arr['_difficulty']=source['difficulty']
             level_arr.update({field:copy.deepcopy(source.get(field,[])) for field in LEVEL_FIELDS})
             subproject={**project,'arrangements':[level_arr]}
-            parsed=ET.fromstring(save_xml(subproject,level_arr['id']))
+            parsed=ET.fromstring(save_xml(subproject,level_arr['id'],rs7x=rs7x))
             authored.append(parsed.find(f'./levels/level[@difficulty="{source["difficulty"]}"]'))
         container(root,'levels',authored)
         highest=arr['difficulties'][-1]['difficulty']
