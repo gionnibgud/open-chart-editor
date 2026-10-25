@@ -84,9 +84,16 @@ test('chord refs, member lanes/frets/times and handshape intervals are checked',
 
 test('anchor ordering never changes chart and phrase start requires a colocated anchor',()=>{
   const p=chart(),a=p.arrangements[0];a.anchors=[{time:5,fret:9,width:4},{time:0,fret:1,width:4}];
-  a.notes=[note('early',1,0,2),note('late',6,0,10)];a.phrases=[{id:'A',time:0},{id:'B',time:5},{id:'C',time:7}];
+  // D is an empty outro phrase: nothing to play, so no anchor is needed there.
+  a.notes=[note('early',1,0,2),note('late',6,0,10),note('last',7.5,0,10)];a.phrases=[{id:'A',time:0},{id:'B',time:5},{id:'C',time:7},{id:'D',time:9}];
   const before=structuredClone(p);assert.equal(issuesWith(p,'note.anchor').length,0);
   assert.deepEqual(issuesWith(p,'phrase.anchor').map(x=>x.note),['C']);assert.deepEqual(p,before);
+});
+
+test('link-next tolerates millisecond rounding from chart XML',()=>{
+  const p=chart(),a=p.arrangements[0];
+  a.notes=[note('a',1,0,5,0.106,{link_next:true}),note('b',1.107,0,7,0.2),note('c',2,1,5,0.1,{link_next:true}),note('d',2.11,1,7)];
+  assert.deepEqual(issuesWith(p,'link.disconnected').map(x=>x.note),['c']);
 });
 
 test('tones validate used names, slot allocation, missing/native definitions and stock count',()=>{

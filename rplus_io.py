@@ -137,6 +137,51 @@ def _vocals(root):
     return ET.tostring(out, encoding='utf-8', xml_declaration=True)
 
 
+def _tone_files(entries):
+    """R+ tone_<id>.json files by lower-case tone id: their toneData is Rocksmith tone gear."""
+    tones = {}
+    for name, data in entries.items():
+        match = re.fullmatch(r'tone_([0-9a-fA-F-]{36})\.json', name)
+        if not match:
+            continue
+        try:
+            doc = json.loads(data.decode('utf-8-sig'))
+        except (ValueError, UnicodeDecodeError):
+            continue
+        if isinstance(doc, dict) and isinstance(doc.get('toneData'), dict):
+            tones[match.group(1).lower()] = doc['toneData']
+    return tones
+
+
+def _chart_tones(arr, root, tones):
+    """A chart's toneIterations as the editor's tones; returns {tone name: R+ tone id}."""
+    iterations = sorted(((float(t.get('startTime', 0)), (t.get('toneId') or '').lower()) for t in root.findall('./toneIterations/toneIteration')), key=lambda r: r[0])
+    if not iterations:
+        return {}
+    names, definitions = {}, {}
+    for _, tone_id in iterations:
+        if tone_id in names.values():
+            continue
+        data = tones.get(tone_id) or {}
+        label = str(data.get('Name') or data.get('Key') or tone_id[:8])
+        name, n = label, 2
+        while name in names:
+            name, n = f'{label} {n}', n + 1
+        names[name] = tone_id
+        if data:
+            definitions[name] = copy.deepcopy(data)
+    by_id = {v: k for k, v in names.items()}
+    arr['tones'] = {'base': by_id[iterations[0][1]],
+                    'changes': [{'time': t, 'name': by_id[i]} for t, i in iterations[1:]],
+                    'definitions': definitions}
+    return names
+
+
+def _nearest_gap(times, t):
+    i = bisect.bisect_left(times, t)
+    return min((abs(times[j] - t) for j in (i - 1, i) if 0 <= j < len(times)), default=0)
+
+
 def load_rplus_folder(entries):
     """Editable project from an R+ song folder's root files."""
     metadata = {}
@@ -155,14 +200,16 @@ def load_rplus_folder(entries):
         charts.append((name, match, root, data))
     if not charts:
         raise pack_io.ProjectError('No R+ song XML (Official_*.xml or UGC_*.xml, version 17/19) in this folder')
-    # One song grid: the Lead chart's beat map, else the first guitar/bass chart's.
+    # A song has one beat map. Official charts carry it; user-made (UGC) charts are often left on a
+    # flat placeholder tempo, so they never set the grid while an official chart is present.
     order = {'lead': 0, 'bass': 1, 'rhythm': 2}
-    grid = min(charts, key=lambda c: (c[2].findtext('instrument') == 'Keyboard', order.get(c[1].group(2).lower(), 3), c[1].group(1) != 'Official', c[0]))
+    grid = min(charts, key=lambda c: (c[1].group(1) != 'Official', c[2].findtext('instrument') == 'Keyboard', order.get(c[1].group(2).lower(), 3), c[0]))
     base = pack_io.load_xml(grid[3].replace(b'<song version="' + grid[2].get('version').encode() + b'"', b'<song version="7"', 1))
     project = copy.deepcopy(base)
     project['arrangements'] = []
     project.pop('import_warnings', None)
     warnings, charts_info, grid_times = [], [], [b['time'] for b in base['beats']]
+    tones = _tone_files(entries)
     for index, (name, match, root, data) in enumerate(charts):
         instrument = root.findtext('instrument', '')
         source, kind, number = match.group(1), match.group(2), match.group(3)
@@ -189,14 +236,19 @@ def load_rplus_folder(entries):
             extras = None
         # Lead 2, Alt Lead and so on; user-made charts are marked so they stand apart from official ones.
         arr['name'] = re.sub(r'^Alt(?=[A-Z])', 'Alt ', arr['name']) + (f' {number}' if number not in ('', '1') else '') + (' (UGC)' if source == 'UGC' else '')
-        times = [float(b.get('time', 0)) for b in root.findall('./ebeats/ebeat')]
-        common = min(len(times), len(grid_times))
-        drift = max((abs(a - b) for a, b in zip(times[:common], grid_times[:common])), default=0)
-        if drift > 0.02:
-            warnings.append(f'{name} was authored on its own beat map (up to {drift:.2f} s from the song grid); its notes keep their times')
+        # Only a second official chart can disagree with the song's beat map; a UGC chart's own grid is
+        # dropped (its notes are timed in seconds and keep their times).
+        if source == 'Official' and grid[1].group(1) == 'Official':
+            drift = max((_nearest_gap(grid_times, float(b.get('time', 0))) for b in root.findall('./ebeats/ebeat')), default=0)
+            if drift > 0.02:
+                warnings.append(f'{name} has a different beat map from {grid[0]} (beats up to {drift:.2f} s apart); the song uses the {grid[0]} beat map and its notes keep their times')
+        if instrument != 'Keyboard':
+            names = _chart_tones(arr, root, tones)
         arr['_rplus'] = {'file': name, 'source': source, 'kind': kind, 'number': number, 'arrangementId': match.group(4).lower(), 'revision': int(match.group(5)),
                          'instrument': instrument, 'version': root.get('version'), 'songId': root.findtext('songId', ''),
                          'toneIds': [t.get('toneId') for t in root.findall('./toneIterations/toneIteration')]}
+        if instrument != 'Keyboard' and names:
+            arr['_rplus']['toneNames'] = names
         # Who made it, as far as metadata.json says: creator type and an opaque profile id, no name.
         row = next((r for r in metadata.get('arrangementInfoList') or [] if isinstance(r, dict)
                     and str(r.get('arrangementId', '')).lower() == arr['_rplus']['arrangementId']), None)
@@ -478,6 +530,21 @@ def _template(project):
     return _parse(base64.b64decode(data)) if data else None
 
 
+def _write_tone_iterations(root, arr, source):
+    """R+ charts name their tones by id; map the editor's tone names back to the ids they came from."""
+    ids = (source.get('toneNames') or {})
+    tones = arr.get('tones') or {}
+    rows = [(0.0, tones.get('base'))] + [(float(c.get('time', 0)), c.get('name')) for c in tones.get('changes') or []]
+    rows = [(t, ids[n]) for t, n in rows if n in ids]
+    if not rows:
+        return
+    for old in root.findall('toneIterations'):
+        root.remove(old)
+    element = ET.SubElement(root, 'toneIterations', count=str(len(rows)))
+    for t, tone_id in rows:
+        ET.SubElement(element, 'toneIteration', startTime=_fmt(t), toneId=tone_id)
+
+
 def rplus_folder(project):
     """New files for the song's R+ folder: changed/new charts only.
 
@@ -521,6 +588,7 @@ def rplus_folder(project):
                     el = ET.Element(tag)
                     root.insert(0 if tag == 'songId' else 1, el)
                 el.text = value
+            _write_tone_iterations(root, arr, source)
             # An edited chart keeps its source (Official or UGC) and number; new charts are Official, number 1.
             name = free_name(kind, arrangement_uuid, revision, source.get('source', 'Official'), source.get('number') or '1')
             files[name] = ET.tostring(root, encoding='utf-8', xml_declaration=True)

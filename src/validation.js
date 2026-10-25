@@ -40,6 +40,8 @@ export function findChartIssues(project, options = {}) {
   const target = options.target ?? 'feedpak';
   const stock = target === 'cdlc' || target === 'xml';
   const epsilon = finite(options.epsilon) && options.epsilon >= 0 ? options.epsilon : 0.001;
+  // Chart XML stores times to the millisecond; a linked note and its target can each round by half of that.
+  const linkTolerance = Math.max(epsilon, 0.002);
   const maxFret = Number.isInteger(options.maxFret) && options.maxFret > 0 ? options.maxFret : 24;
   const issues = [];
   let arrangement = null;
@@ -220,7 +222,7 @@ export function findChartIssues(project, options = {}) {
           const event = lane[index], next = lane[index + 1], previous = lane[index - 1];
           if (previous && Math.abs(event.time - previous.time) <= epsilon) emit('note.duplicate', 'Two events occupy the same lane/pitch and time.', {item: event.note, path: event.path, time: event.time, related: [previous.note.id].filter(Boolean)});
           else if (a.type !== 'drums' && active && active.time + active.sustain > event.time + epsilon) emit('sustain.overlap', 'A sustain crosses a later note on the same string or pitch.', {item: event.note, path: event.path, time: event.time, severity: 'warning', related: [active.note.id].filter(Boolean)});
-          if (getTechnique(event.note, 'link_next', 'linkNext', 'ln') && (!next || Math.abs(event.time + event.sustain - next.time) > epsilon)) emit('link.disconnected', 'Link-next does not reach the next event on this lane.', {item: event.note, path: event.path, time: event.time, severity: 'warning'});
+          if (getTechnique(event.note, 'link_next', 'linkNext', 'ln') && (!next || Math.abs(event.time + event.sustain - next.time) > linkTolerance)) emit('link.disconnected', 'Link-next does not reach the next event on this lane.', {item: event.note, path: event.path, time: event.time, severity: 'warning'});
           if (!active || event.time + event.sustain >= active.time + active.sustain) active = event;
         }
       }
@@ -235,9 +237,14 @@ export function findChartIssues(project, options = {}) {
       if (finite(end) && finite(duration) && end > duration + epsilon) emit('handshape.afterSong', 'Handshape extends beyond the song.', {item: shape, path});
     }
     const phrases = list(a.phrases);
+    // Empty phrases (count-in, outro) have nothing to play, so they need no anchor.
+    const eventTimes = [...list(a.notes), ...list(a.chords)].map(timeOf).filter(finite);
+    const phraseStarts = phrases.map(timeOf);
     for (const [index, phrase] of phrases.entries()) {
       const path = `${basePath}.phrases[${index}]`, start = checkTime(phrase, path), end = phrase?.end_time ?? phrase?.endTime;
-      if (isFretted && finite(start) && !anchors.some(anchor => finite(timeOf(anchor)) && Math.abs(timeOf(anchor) - start) <= epsilon)) emit('phrase.anchor', 'Phrase needs an anchor at its start.', {item: phrase, path, time: start, severity: 'warning'});
+      const until = phraseStarts.slice(index + 1).find(t => finite(t) && t > start) ?? (finite(end) ? end : Infinity);
+      const played = eventTimes.some(t => t >= start - epsilon && t < until - epsilon);
+      if (isFretted && played && finite(start) && !anchors.some(anchor => finite(timeOf(anchor)) && Math.abs(timeOf(anchor) - start) <= epsilon)) emit('phrase.anchor', 'Phrase needs an anchor at its start.', {item: phrase, path, time: start, severity: 'warning'});
       if (end !== undefined && (!finite(end) || !finite(start) || end <= start)) emit('phrase.interval', 'Phrase end must be after its start.', {item: phrase, path});
       if (finite(end) && finite(duration) && end > duration + epsilon) emit('phrase.afterSong', 'Phrase extends beyond the song.', {item: phrase, path});
       if (!has(phrase, 'levels')) continue; // plain editor markers have no DD ladder

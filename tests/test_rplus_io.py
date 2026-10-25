@@ -106,7 +106,27 @@ class ReadTests(unittest.TestCase):
 
     def test_own_beat_map_is_reported(self):
         warnings = ' '.join(open_folder()['import_warnings'])
-        self.assertIn(f'Official_HumStrum1_{STRUM}_v2.xml was authored on its own beat map', warnings)
+        self.assertIn(f'Official_HumStrum1_{STRUM}_v2.xml has a different beat map from Official_Lead1_{LEAD}_v4.xml', warnings)
+
+    def test_tones_come_from_the_tone_files(self):
+        tone, other = 'bbbbbbbb-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002'
+        gear = {'Amp': {'Key': 'Amp_Test', 'Type': 'Amps', 'KnobValues': {'Amp_Test_Gain': 40.0}}}
+        body = LEAD_BODY
+        lead = chart('Lead', 'Guitar', body).replace(b'<toneIterations count="1"><toneIteration toneId="t1" startTime="0.000" /></toneIterations>',
+                                                     f'<toneIterations count="2"><toneIteration toneId="{tone.upper()}" startTime="0.000" />'
+                                                     f'<toneIteration toneId="{other}" startTime="4.000" /></toneIterations>'.encode())
+        project = open_folder(**{f'Official_Lead1_{LEAD}_v4.xml': lead,
+                                 f'tone_{tone}.json': json.dumps({'toneId': tone, 'toneData': {'Key': 'Crunch', 'Name': 'Crunch', 'Volume': -12.0, 'GearList': gear}}).encode(),
+                                 f'tone_{other}.json': json.dumps({'toneId': other, 'toneData': {'Key': 'Lead', 'Name': 'Lead', 'GearList': gear}}).encode()})
+        arr = next(a for a in project['arrangements'] if a['_rplus']['kind'] == 'Lead')
+        self.assertEqual((arr['tones']['base'], arr['tones']['changes']), ('Crunch', [{'time': 4.0, 'name': 'Lead'}]))
+        self.assertEqual(arr['tones']['definitions']['Crunch']['GearList'], gear)
+        # An edited chart names the same tones again.
+        arr['notes'][0]['fret'] += 1
+        files, _ = r.rplus_folder(project)
+        root = ET.fromstring(files[f'Official_Lead1_{LEAD}_v5.xml'])
+        self.assertEqual([(t.get('startTime'), t.get('toneId')) for t in root.findall('./toneIterations/toneIteration')],
+                         [('0.000', tone), ('4.000', other)])
 
     def test_folder_without_audio_still_opens(self):
         entries = folder()
@@ -142,6 +162,14 @@ class UgcTests(unittest.TestCase):
         alt = by_name['Alt Rhythm (UGC)']
         self.assertEqual((alt['role'], alt['priority']), ('rhythm', 'alternative'))
         self.assertTrue(r.is_rplus_folder({f'UGC_Lead1_{LEAD}_v1.xml': chart('Lead', 'Guitar', LEAD_BODY)}))
+
+    def test_song_beat_map_comes_from_an_official_chart(self):
+        # The UGC lead sits on a flat placeholder tempo; the official charts carry the song's beat map.
+        project = open_folder(**{f'Official_Lead1_{LEAD}_v4.xml': chart('Lead', 'Guitar', LEAD_BODY, beats=ebeats(16, 0.52)),
+                                 f'UGC_Lead2_{self.UGC_LEAD}_v1.xml': chart('Lead', 'Guitar', LEAD_BODY, beats=ebeats(8, 1.0))})
+        self.assertEqual(project['_import']['grid'], f'Official_Lead1_{LEAD}_v4.xml')
+        self.assertAlmostEqual(project['beats'][1]['time'], 0.52)
+        self.assertFalse([w for w in project['import_warnings'] if w.startswith('UGC_')], 'one song, one beat map: UGC grids are not reported')
 
     def test_edited_ugc_chart_keeps_its_prefix_and_number(self):
         project = self.project()
