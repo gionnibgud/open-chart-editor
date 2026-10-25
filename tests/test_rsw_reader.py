@@ -5,6 +5,7 @@ import struct
 import sys
 import unittest
 import zlib
+from xml.etree import ElementTree as ET
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import pack_io as p
@@ -107,6 +108,19 @@ class ReaderTests(unittest.TestCase):
         self.assertEqual(project['_import']['format'], 'rplus-oce-rsw')
         self.assertEqual(project['_import']['arrangements'][0]['phraseColours'], {'default': 0, 'A': 5})
         self.assertIn('read-only', ' '.join(project['import_warnings']))
+
+    def test_chord_flags_and_negative_offset_beats(self):
+        members = [(4.0, 0.0, f, s, -1, -1, [], 100, 1 | 1 << 2 | (1 << 3 if s == 0 else 0)) for s, f in enumerate(G[2])]
+        rsw = rr.parse_rsw(build(templates=[G], primary=level(members, chords=[(4.0, 0.0, G[0], [(4.25, 1), (4.5, 2), (4.75, 4), (5.0, 0)])])))
+        chords = ET.fromstring(rr._xml(rsw['song'], rsw['arrangements'][0])).findall('./levels/level/chords/chord')
+        flags = [{k: v for k, v in c.attrib.items() if k not in ('time', 'chordId')} for c in chords]
+        self.assertEqual(flags, [{'highDensity': '0', 'linkNext': '1'}, {'highDensity': '1', 'palmMute': '1'},
+                                 {'highDensity': '1', 'fretHandMute': '1'}, {'highDensity': '1', 'accent': '1'}, {'highDensity': '1'}],
+                         'first strike: flags all its notes share (accent is on one string only); repeats: their flag byte')
+        rsw = rr.parse_rsw(build(**{**SAMPLE}))
+        self.assertEqual(rr._beats(rsw['song'], rsw['arrangements'][0])[0]['time'], 0.0)
+        late = rr.parse_rsw(build(primary=level()).replace(struct.pack('<ff', 12.0, 0.5), struct.pack('<ff', 12.0, -0.468), 1))
+        self.assertAlmostEqual(rr._beats(late['song'], late['arrangements'][0])[0]['time'], 0.468, places=5)
 
     def test_note_flags(self):
         flags = {'accent': 1 << 3, 'mute': 1 << 6, 'harmonic': 1 << 8, 'harmonicPinch': 1 << 9, 'tremolo': 1 << 19}

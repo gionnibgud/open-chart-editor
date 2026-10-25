@@ -8,7 +8,7 @@
       "id": "layout",
       "capability": "Menus, timeline, inspector, transport and error panel",
       "status": "Implemented; contextual menus and keyboard traversal, chart commands scoped to visible Tab/Tempo views, resizing, pointer-anchored zoom, separate view preferences and bounded virtual viewport browser verified. File > Arrangement info and Ctrl+Shift+I reveal the Settings inspector even when it is hidden. This is an original counterpart to captured native menu vocabulary; identical native modal behavior is not claimed",
-      "remaining": "Exact current retail menu behavior is only partially observed."
+      "remaining": "Exact current retail menu behavior is only partially observed. REQUIRED: the bottom panel (Mixer / Stave / History / Scratch / Errors) has no hide/show; it can only be resized down to 100 px. Add a toggle (View menu and the active footer tab), remembered with the other layout preferences."
     },
     {
       "id": "fretted",
@@ -126,9 +126,9 @@
     },
     {
       "id": "retail-rsw",
-      "capability": "Retail native project inspection",
-      "status": "bounded opaque preservation implemented",
-      "remaining": "Editable retail .rsw decoding and encoding are not established; output targets remain FeedBack and RS2014."
+      "capability": "R+ Workshop project (.rsw) import",
+      "status": "Formats 21-23 read in full and the checksum verified; six projects reproduce the R+ server charts made from them (tuning, offsets, beats, every note and chord note with their techniques, chord flags, hand shapes, tones). Opened read-only.",
+      "remaining": "Not confirmed against a server chart (pinned): tap (note bit 12, inferred), natural harmonic (bit 8), ignore (bit 4), right-hand fingers, the hide-name byte, slap/pop (no flag found), and bass arrangements (4-string tuning order, Bass/Alt Bass). Saving to .rsw is not built yet; the checksum is now known."
     },
     {
       "id": "scratch",

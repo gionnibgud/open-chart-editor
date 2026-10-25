@@ -27,7 +27,8 @@ official charts: every file reads to its last byte and passes the checksum.
         notes:      u32 n, n * (f32 time, f32 sustain, u8 fret, u8 string, i8 left hand,
                                 i8 right hand, u32 k, k * (f32 time, f32 step),
                                 u8 slide target (100 = none), u32 flags)
-        chords:     u32 n, n * (f32 time, f32 sustain, str template key, u32 k, k * (f32 time, u8 flags))
+        chords:     u32 n, n * (f32 time, f32 sustain, str template key, u32 k,
+                                k * (f32 repeat time, u8 flags: 1 palm mute, 2 fret-hand mute, 4 accent))
         handshapes: u32 n, n * (f32 start, f32 end, str template key,
                                 u8 mode (0 chord zone, 1 hand shape, 2 arpeggio), u8 hide name)
     Note flags: bit 0 chord member, 1 continues the previous note, 2 linkNext, 3 accent,
@@ -65,6 +66,10 @@ CONTINUES = 1         # continues the previous note's sustain (that note has lin
 UNPITCHED_SLIDE = 18
 HARMONIC, PINCH = 8, 9                    # both set: harmonic wins
 MODE_CHORD, MODE_HAND, MODE_ARPEGGIO = 0, 1, 2   # hand-shape mode: chord zone, normal hand shape, arpeggio
+# Chord-level attributes: on a repeat strum from its flag byte; on the first strike from the
+# flags all of its notes share. Both checked against R+ server charts.
+REPEAT_FLAGS = {1: 'palmMute', 2: 'fretHandMute', 4: 'accent'}
+CHORD_FLAGS_FROM_NOTES = {2: 'linkNext', 3: 'accent', 4: 'ignore', 5: 'palmMute', 6: 'fretHandMute'}
 # Arrangement type (role, alternative, name). 6 and 8 are converted by R+ Workshop's loader
 # to Lead (guitar) or Bass (bass); 666 is "not set" (R+ Workshop's validator error 109001).
 ARRANGEMENT_TYPES = {0: ('lead', False, 'Lead'), 1: ('lead', True, 'Alt Lead'), 2: ('rhythm', False, 'Rhythm'),
@@ -202,7 +207,9 @@ def _beats(song, arr):
     meter = sorted(arr['meter'], key=lambda m: m['beat']) or [{'beat': 0, 'numerator': 4, 'denominator': 4}]
     notes = arr['primary']['notes'] + arr['secondary']['notes']
     end = max(song['length'], arr['length'], max((n['time'] + n['sustain'] for n in notes), default=0)) + 1
-    beats, time, beat, measure, index, bar_start = [], 0.0, 0, 0, 0, None
+    # A negative audio offset moves the beat grid later by the same amount (checked against
+    # the R+ server chart for Funeral Portrait); notes keep their own times.
+    beats, time, beat, measure, index, bar_start = [], max(0.0, -arr['offset']), 0, 0, 0, None
     while time <= end and beat < 200000:
         while index + 1 < len(tempo) and tempo[index + 1][0] <= beat:
             index += 1
@@ -328,9 +335,15 @@ def _xml(song, arr, level=None):
             raise RswError(f"R+ Workshop chord uses an unknown chord shape {c['template']!r}; nothing was imported")
         template = templates[keys[c['template']]]
         own = members.get(round(c['time'], 3), {})
-        # The chord itself, then each repeat strum; repeats flagged 1 are high density.
-        for time, dense in [(c['time'], 0)] + list(c['repeats']):
-            chord = ET.Element('chord', time=f"{time:.3f}", chordId=str(keys[c['template']]), highDensity=str(int(bool(dense))))
+        # The first strike takes the flags all its notes share (as R+ servers write it);
+        # each repeat strum has its own flag byte. Repeats are high density (RS2014 convention).
+        shared = ~0
+        for n in own.values():
+            shared &= n['flags']
+        first = {CHORD_FLAGS_FROM_NOTES[bit]: '1' for bit in CHORD_FLAGS_FROM_NOTES if own and shared >> bit & 1}
+        for time, flags in [(c['time'], None)] + list(c['repeats']):
+            attrs = first if flags is None else {name: '1' for bit, name in REPEAT_FLAGS.items() if flags & bit}
+            chord = ET.Element('chord', time=f"{time:.3f}", chordId=str(keys[c['template']]), highDensity='0' if flags is None else '1', **attrs)
             for s, fret in enumerate(template['frets'][:strings]):
                 if fret < 0:
                     continue
