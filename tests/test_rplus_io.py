@@ -122,6 +122,35 @@ class ReadTests(unittest.TestCase):
         self.assertEqual((bass['type'], bass['role'], bass['stringCount']), ('bass', 'bass', 4))
 
 
+class UgcTests(unittest.TestCase):
+    """User-made (UGC) charts sit beside official ones with the same naming scheme."""
+    UGC_LEAD = '08da9de7-2e66-4a0d-89a8-d2d2d740f5b3'
+
+    def project(self):
+        meta = json.dumps({'songName': 'Test Song', 'arrangementInfoList': [
+            {'arrangementId': self.UGC_LEAD, 'creatorType': 'UGC', 'profileId': 'ef2155c1-afae-46c3-b5ed-3140ff6ed7c7',
+             'publishedAt': '2022-09-25T03:51:02.000Z', 'rating': 3, 'isVerified': False}]}).encode()
+        return open_folder(**{f'UGC_Lead2_{self.UGC_LEAD}_v1.xml': chart('Lead', 'Guitar', LEAD_BODY),
+                              f'UGC_AltRhythm1_{STRUM}_v1.xml': chart('AltRhythm', 'Guitar', LEAD_BODY), 'metadata.json': meta})
+
+    def test_ugc_charts_open_beside_official_ones(self):
+        project = self.project()
+        by_name = {a['name']: a for a in project['arrangements']}
+        self.assertIn('Lead', by_name, 'the official lead is still there')
+        self.assertEqual(by_name['Lead 2 (UGC)']['_rplus']['info'], {'creatorType': 'UGC', 'profileId': 'ef2155c1-afae-46c3-b5ed-3140ff6ed7c7',
+                                                                    'publishedAt': '2022-09-25T03:51:02.000Z', 'rating': 3, 'isVerified': False})
+        alt = by_name['Alt Rhythm (UGC)']
+        self.assertEqual((alt['role'], alt['priority']), ('rhythm', 'alternative'))
+        self.assertTrue(r.is_rplus_folder({f'UGC_Lead1_{LEAD}_v1.xml': chart('Lead', 'Guitar', LEAD_BODY)}))
+
+    def test_edited_ugc_chart_keeps_its_prefix_and_number(self):
+        project = self.project()
+        arr = next(a for a in project['arrangements'] if a['name'] == 'Lead 2 (UGC)')
+        arr['notes'][0]['fret'] += 1
+        files, _ = r.rplus_folder(project)
+        self.assertIn(f'UGC_Lead2_{self.UGC_LEAD}_v2.xml', files)
+
+
 class WriteTests(unittest.TestCase):
     def test_nothing_changed_writes_nothing(self):
         with self.assertRaisesRegex(p.ProjectError, 'Nothing to add'):

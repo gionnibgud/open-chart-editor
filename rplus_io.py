@@ -29,7 +29,8 @@ except ImportError:
     import pack_io
 
 RPLUS_VERSIONS = ('17', '19')
-CHART_NAME = re.compile(r'Official_([A-Za-z]+)(\d*)_([0-9a-fA-F-]{36})_v(\d+)\.xml')
+# Official charts and user-made (UGC) charts share one naming scheme: <source>_<Type><n>_<id>_v<rev>.xml
+CHART_NAME = re.compile(r'(Official|UGC)_([A-Za-z]+)(\d*)_([0-9a-fA-F-]{36})_v(\d+)\.xml')
 # Shared R+ keyboard tone preset: grand piano (the most used keyboard tone).
 GRAND_PIANO = {'id': 'a619a34a-a3d4-5c4e-120d-52e2514542cb', 'event': 'tone:grandpiano',
                'key': 'KeysSwitchGrandPiano', 'synth': 'keys_switch_GrandPiano'}
@@ -54,7 +55,7 @@ def _parse(data):
 
 
 def is_rplus_folder(entries):
-    """A folder with at least one root-level Official_*.xml in R+ song XML."""
+    """A folder with at least one root-level Official_*.xml or UGC_*.xml in R+ song XML."""
     for name, data in _root_xml(entries).items():
         if CHART_NAME.fullmatch(name) and re.search(rb'<song version="(17|19)"', data[:512]):
             return True
@@ -153,10 +154,10 @@ def load_rplus_folder(entries):
             continue
         charts.append((name, match, root, data))
     if not charts:
-        raise pack_io.ProjectError('No R+ song XML (Official_*.xml, version 17/19) in this folder')
+        raise pack_io.ProjectError('No R+ song XML (Official_*.xml or UGC_*.xml, version 17/19) in this folder')
     # One song grid: the Lead chart's beat map, else the first guitar/bass chart's.
     order = {'lead': 0, 'bass': 1, 'rhythm': 2}
-    grid = min(charts, key=lambda c: (c[2].findtext('instrument') == 'Keyboard', order.get(c[1].group(1).lower(), 3), c[0]))
+    grid = min(charts, key=lambda c: (c[2].findtext('instrument') == 'Keyboard', order.get(c[1].group(2).lower(), 3), c[1].group(1) != 'Official', c[0]))
     base = pack_io.load_xml(grid[3].replace(b'<song version="' + grid[2].get('version').encode() + b'"', b'<song version="7"', 1))
     project = copy.deepcopy(base)
     project['arrangements'] = []
@@ -164,7 +165,7 @@ def load_rplus_folder(entries):
     warnings, charts_info, grid_times = [], [], [b['time'] for b in base['beats']]
     for index, (name, match, root, data) in enumerate(charts):
         instrument = root.findtext('instrument', '')
-        kind = match.group(1)
+        source, kind, number = match.group(1), match.group(2), match.group(3)
         events = []
         if instrument == 'Keyboard':
             arr, extras, events = _load_keyboard(root, name, index)
@@ -183,15 +184,24 @@ def load_rplus_folder(entries):
             arr['id'] = f'rplus-{index}'
             arr['role'] = 'bass' if bass else 'rhythm' if kind.lower() in ('humstrum', 'rhythm', 'altrhythm') else 'lead'
             arr['name'] = kind + (f' ({instrument})' if instrument and instrument.lower() not in kind.lower() and kind.lower() == 'humstrum' else '')
+            if kind.lower().startswith('alt'):
+                arr['priority'] = 'alternative'
             extras = None
+        # Lead 2, Alt Lead and so on; user-made charts are marked so they stand apart from official ones.
+        arr['name'] = re.sub(r'^Alt(?=[A-Z])', 'Alt ', arr['name']) + (f' {number}' if number not in ('', '1') else '') + (' (UGC)' if source == 'UGC' else '')
         times = [float(b.get('time', 0)) for b in root.findall('./ebeats/ebeat')]
         common = min(len(times), len(grid_times))
         drift = max((abs(a - b) for a, b in zip(times[:common], grid_times[:common])), default=0)
         if drift > 0.02:
             warnings.append(f'{name} was authored on its own beat map (up to {drift:.2f} s from the song grid); its notes keep their times')
-        arr['_rplus'] = {'file': name, 'kind': kind, 'arrangementId': match.group(3).lower(), 'revision': int(match.group(4)),
+        arr['_rplus'] = {'file': name, 'source': source, 'kind': kind, 'number': number, 'arrangementId': match.group(4).lower(), 'revision': int(match.group(5)),
                          'instrument': instrument, 'version': root.get('version'), 'songId': root.findtext('songId', ''),
                          'toneIds': [t.get('toneId') for t in root.findall('./toneIterations/toneIteration')]}
+        # Who made it, as far as metadata.json says: creator type and an opaque profile id, no name.
+        row = next((r for r in metadata.get('arrangementInfoList') or [] if isinstance(r, dict)
+                    and str(r.get('arrangementId', '')).lower() == arr['_rplus']['arrangementId']), None)
+        if row:
+            arr['_rplus']['info'] = {k: row[k] for k in ('creatorType', 'profileId', 'publishedAt', 'rating', 'isVerified') if k in row}
         if extras is not None:
             arr['_rplus'].update(noteExtras=extras, events=events)
             signature = next((pack_io.key_signature_from_name(e['code'][4:]) for e in events if e.get('code', '').startswith('Key:')), None)
@@ -479,11 +489,11 @@ def rplus_folder(project):
     template = _template(project)
     song_id = project.get('_import', {}).get('songId') or (template.findtext('songId') if template is not None else None) or str(uuid.uuid4())
 
-    def free_name(kind, arrangement_uuid, revision):
-        name = f'Official_{kind}1_{arrangement_uuid}_v{revision}.xml'
+    def free_name(kind, arrangement_uuid, revision, prefix='Official', number='1'):
+        name = f'{prefix}_{kind}{number or 1}_{arrangement_uuid}_v{revision}.xml'
         while name in existing or name in files:
             revision += 1
-            name = f'Official_{kind}1_{arrangement_uuid}_v{revision}.xml'
+            name = f'{prefix}_{kind}{number or 1}_{arrangement_uuid}_v{revision}.xml'
         return name
 
     for arr in project['arrangements']:
@@ -511,7 +521,8 @@ def rplus_folder(project):
                     el = ET.Element(tag)
                     root.insert(0 if tag == 'songId' else 1, el)
                 el.text = value
-            name = free_name(kind, arrangement_uuid, revision)
+            # An edited chart keeps its source (Official or UGC) and number; new charts are Official, number 1.
+            name = free_name(kind, arrangement_uuid, revision, source.get('source', 'Official'), source.get('number') or '1')
             files[name] = ET.tostring(root, encoding='utf-8', xml_declaration=True)
         else:
             skipped.append({'id': arr['id'], 'name': arr.get('name'), 'reason': f"R+ has no {arr.get('type')} chart type"})
