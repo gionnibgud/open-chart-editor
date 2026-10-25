@@ -26,8 +26,8 @@ try{
  await page.locator('#ws-tempo-button').click();assert.equal(await page.locator('#ws-tempo-tools').isVisible(),true);
  const before=await page.locator('#ws-bpm-display').textContent();await page.locator('[data-inspector="settings"]').click();await page.locator('#ws-bpm').fill('100');await page.locator('#ws-bpm').press('Tab');
  assert.equal(await page.locator('#ws-bpm-display').textContent(),'100.00');results.push(`Tempo editing ${before} → 100 BPM`);
- await page.locator('#ws-tempo-button').click({button:'right'});await page.getByRole('menuitem',{name:'Load tempo map from file'}).waitFor();
- const tempoChooserPromise=page.waitForEvent('filechooser');await page.getByRole('menuitem',{name:'Load tempo map from file'}).click();
+ await page.locator('#ws-tempo-button').click({button:'right'});await page.getByRole('menuitem',{name:'Import beat map from file'}).waitFor();
+ const tempoChooserPromise=page.waitForEvent('filechooser');await page.getByRole('menuitem',{name:'Import beat map from file'}).click();
  const tempoChooser=await tempoChooserPromise;await tempoChooser.setFiles({name:'gpa-sync.xml',mimeType:'application/xml',buffer:Buffer.from('<track title="Sync test"><sync>1#1000;0;0;500#</sync></track>')});
  await page.waitForFunction(()=>document.querySelector('#ws-bpm-display').textContent==='120.00');results.push('Tempo-button context menu imports a GPA sync beat map');
  await page.locator('#ws-tones-button').click();await page.waitForSelector('#ws-tone-view:not([hidden])');assert.ok(await page.locator('[data-tone-definition]').count()>0);results.push('Tone allocations view');
