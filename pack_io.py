@@ -2869,6 +2869,7 @@ def load_midi(data,filename='Untitled.mid',*,_program_stream=None,_apply_program
             name=track_names.get(track,f'Track {track+1}')
             arrangements[key]=_import_arrangement(f'midi-{track}-{channel}',f'{name} · channel {channel+1}','drums' if channel==9 else 'keys')
             arrangements[key].update(sourceTrack=track,sourceChannel=channel)
+            if channel!=9:arrangements[key]['instrument']=pitched_instrument(name)
         arr=arrangements[key]
         note={'id':f'n{len(arr["notes"])}','time':seconds(Fraction(start,division)),'sustain':round(seconds(Fraction(stop,division))-seconds(Fraction(start,division)),9),'string':pitch//24,'fret':pitch%24,'pitch':pitch,'velocity':velocity,'channel':channel,'techniques':{}}
         if channel==9:
@@ -2960,7 +2961,7 @@ def _load_musicxml(data,filename='Untitled.musicxml'):
         if fifths is not None and fifths.strip().lstrip('-').isdigit() and -7<=int(fifths)<=7:
             arr['keySignature']={'fifths':int(fifths),'minor':(part.findtext('.//attributes/key/mode') or '').strip().lower()=='minor'}
         if kind=='keys':
-            arr['instrument']=next((instrument for instrument in ('piano','flute','violin','viola','cello','organ','saxophone','trumpet','clarinet','harp','synth') if instrument in name.lower()),'keys')
+            arr['instrument']=pitched_instrument(name)
         arrangements.append(arr)
         dynamics=_musicxml_dynamics.NumericDynamics(pid,kind,event_limit=_musicxml_dynamics.MAX_EVENTS)
         dynamics_contexts.append(dynamics)
@@ -3559,6 +3560,7 @@ def load_guitarpro(data,filename='Untitled.gp5'):
             if named:warnings.append(f'{info["name"]}: named {named} chord shapes from their notes (Rocksmith spelling); rename any that read differently in the song')
             arr['role']=item['role'];arr['priority']='main' if roles.get(item['role'],0)==0 else 'alternative';roles[item['role']]=roles.get(item['role'],0)+1
         else:arr['role']=kind
+        if kind=='keys':arr['instrument']=pitched_instrument(info['name'],info.get('instrument'))
         if kind=='drums':
             if item.get('drumtab'):
                 arr=_arrangement(item['drumtab'],{'id':f'gp-{index}','name':info['name'],'type':'drums','drum_tab':f'arrangements/gp_{index}_drums.json'},index,True)
@@ -3640,6 +3642,36 @@ def core_notation():
 
 
 KEYS_FAMILY_TYPES=('keys','piano','keyboard','organ','synth','electric piano')
+# Instrument labels for pitched (non-fretted, non-drum) parts, so the stave can use the
+# instrument's own clef and written transposition. Names win; a GM program is the fallback.
+_INSTRUMENT_WORDS=(('piccolo','piccolo'),('pan flute','pan flute'),('flute','flute'),('recorder','recorder'),
+    ('english horn','english horn'),('cor anglais','english horn'),('oboe','oboe'),('bass clarinet','bass clarinet'),('clarinet','clarinet'),
+    ('bassoon','bassoon'),('soprano sax','soprano sax'),('alto sax','alto sax'),('tenor sax','tenor sax'),('baritone sax','baritone sax'),
+    ('sax','saxophone'),('trumpet','trumpet'),('cornet','trumpet'),('trombone','trombone'),('tuba','tuba'),('french horn','french horn'),
+    ('horn','french horn'),('violin','violin'),('fiddle','violin'),('viola','viola'),('violoncello','cello'),('cello','cello'),
+    ('contrabass','contrabass'),('double bass','contrabass'),('harp','harp'),('celesta','celesta'),('glockenspiel','glockenspiel'),
+    ('vibraphone','vibraphone'),('marimba','marimba'),('xylophone','xylophone'),('electric piano','electric piano'),('e.piano','electric piano'),
+    ('piano','piano'),('organ','organ'),('synth','synth'),('voice','voice'),('vocal','voice'),('choir','voice'),('strings','strings'))
+_GM_INSTRUMENTS={4:'electric piano',5:'electric piano',8:'celesta',9:'glockenspiel',11:'vibraphone',12:'marimba',13:'xylophone',
+    40:'violin',41:'viola',42:'cello',43:'contrabass',46:'harp',52:'voice',53:'voice',54:'voice',56:'trumpet',57:'trombone',58:'tuba',
+    59:'trumpet',60:'french horn',64:'soprano sax',65:'alto sax',66:'tenor sax',67:'baritone sax',68:'oboe',69:'english horn',
+    70:'bassoon',71:'clarinet',72:'piccolo',73:'flute',74:'recorder',75:'pan flute'}
+
+
+def pitched_instrument(name,program=None):
+    """Instrument label for a pitched part from its track name, else its GM program (0-127)."""
+    lowered=str(name or '').lower()
+    for word,label in _INSTRUMENT_WORDS:
+        if word in lowered:return label
+    if isinstance(program,int) and not isinstance(program,bool):
+        if program in _GM_INSTRUMENTS:return _GM_INSTRUMENTS[program]
+        if 0<=program<=7:return 'piano'
+        if 16<=program<=20:return 'organ'
+        if 44<=program<=51:return 'strings'
+        if 61<=program<=63:return 'brass'
+        if 76<=program<=79:return 'flute'
+        if 80<=program<=103:return 'synth'
+    return 'keys'
 MAJOR_FIFTHS={'Cb':-7,'Gb':-6,'Db':-5,'Ab':-4,'Eb':-3,'Bb':-2,'F':-1,'C':0,'G':1,'D':2,'A':3,'E':4,'B':5,'F#':6,'C#':7,'G#':8,'D#':9,'A#':10}
 MAJOR_BY_FIFTHS={value:name for name,value in MAJOR_FIFTHS.items() if -7<=value<=7}
 MINOR_BY_FIFTHS={-7:'Abm',-6:'Ebm',-5:'Bbm',-4:'Fm',-3:'Cm',-2:'Gm',-1:'Dm',0:'Am',1:'Em',2:'Bm',3:'F#m',4:'C#m',5:'G#m',6:'D#m',7:'A#m'}

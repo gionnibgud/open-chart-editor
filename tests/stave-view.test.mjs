@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {makeArrangement,makeNote,notePitch} from '../src/model.js';
-import {staveLayout,guessKey,keyAlterations,spell,pitchAtStep,noteValue,fretFor,openStrings,drumStepPiece,drumPieceAt,layoutNotes,staveMetrics,CLEF_BOTTOM,DRUM_POSITIONS,hitNote} from '../src/stave-view.js';
+import {staveLayout,guessKey,keyAlterations,spell,pitchAtStep,noteValue,fretFor,openStrings,drumStepPiece,drumPieceAt,layoutNotes,layoutRests,writtenNote,melodicInstrument,staveMetrics,CLEF_BOTTOM,DRUM_POSITIONS,hitNote} from '../src/stave-view.js';
 
 test('spelling follows the key signature', () => {
  assert.equal(spell(60, 0).name, 'C4');
@@ -101,4 +101,31 @@ test('staff metrics map steps to y and back', () => {
  assert.equal(m.staveAt(m.staves[1].bottom), 1);
  assert.equal(hitNote([{id: 'a', x: 10, y: 10, r: 6}, {id: 'b', x: 40, y: 10, r: 6}], 38, 12), 'b');
  assert.equal(hitNote([{id: 'a', x: 10, y: 10, r: 6}], 60, 60), null);
+});
+
+test('single-line pitched instruments get their own clef and written transposition', () => {
+ const part = instrument => makeArrangement('keys', null, {instrument});
+ assert.deepEqual(staveLayout(part('flute')), {staves: [{clef: 'treble'}], transpose: 0, kind: 'melodic', instrument: 'flute'});
+ assert.equal(staveLayout(part('viola')).staves[0].clef, 'alto');
+ assert.equal(staveLayout(part('Alto Sax')).transpose, 9, 'an alto sax reads a major 6th above sounding');
+ assert.equal(staveLayout(part('piano')).staves.length, 2, 'piano keeps the grand staff');
+ const named = makeArrangement('keys'); named.name = 'Flute in C';
+ assert.equal(melodicInstrument(named), 'flute', 'an unlabelled part is recognised by its name');
+ assert.equal(writtenNote(staveLayout(part('clarinet'))), 'written a major 2nd above sounding');
+ assert.equal(writtenNote(staveLayout(part('flute'))), '');
+ // A flute note sits on one treble stave whatever its register, using its sustain as the written length.
+ const flute = part('flute'), low = makeNote(flute, 0, 55, 0, 1), high = makeNote(flute, 1, 84, 0, 0.5);
+ const laid = layoutNotes(flute, [low, high], {beatLength: () => 0.5});
+ assert.deepEqual(laid.map(e => [e.stave, e.value.value]), [[0, 2], [0, 1]]);
+ assert.equal(CLEF_BOTTOM.alto, 24, 'the alto clef bottom line is F3');
+});
+
+test('rests fill the gaps between written notes without crossing a bar line', () => {
+ const beats = Array.from({length: 13}, (_, i) => ({time: i * 0.5, measure: i % 4 === 0 ? i / 4 + 1 : -1}));
+ const flute = makeArrangement('keys', null, {instrument: 'flute'});
+ // Bar 1: a quarter on beat 1 and an eighth on beat 3; bar 2 empty; bar 3 a half note on beat 1.
+ const notes = [makeNote(flute, 0, 72, 0, 0.5), makeNote(flute, 1, 72, 0, 0.25), makeNote(flute, 4, 72, 0, 1)];
+ const rests = layoutRests(layoutNotes(flute, notes, {beatLength: () => 0.5}), beats, {staves: 1});
+ assert.deepEqual(rests.map(r => [r.time, r.value.value, !!r.bar]), [[0.5, 1, false], [1.25, 0.5, false], [1.5, 1, false], [2, 4, true], [5, 2, false]]);
+ assert.equal(layoutRests([], beats, {staves: 2}).filter(r => r.bar).length, 6, 'each empty bar, per stave');
 });

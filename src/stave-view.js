@@ -17,7 +17,27 @@ const MINOR_BY_FIFTHS = {'-7': 'Abm', '-6': 'Ebm', '-5': 'Bbm', '-4': 'Fm', '-3'
 const MAJOR = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88];
 const MINOR = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
 // Diatonic step (octave*7 + letter) of each clef's bottom line.
-export const CLEF_BOTTOM = {treble: 4 * 7 + 2, bass: 2 * 7 + 4, percussion: 4 * 7 + 2};
+export const CLEF_BOTTOM = {treble: 4 * 7 + 2, bass: 2 * 7 + 4, alto: 3 * 7 + 3, percussion: 4 * 7 + 2};
+// Single-line pitched instruments: clef and written transposition (written minus sounding, in
+// semitones), keyed by the part's instrument label. Anything else pitched reads on a grand staff.
+export const MELODIC = Object.freeze({
+ flute: ['treble', 0], piccolo: ['treble', -12], recorder: ['treble', -12], 'pan flute': ['treble', 0], oboe: ['treble', 0],
+ 'english horn': ['treble', 7], clarinet: ['treble', 2], 'bass clarinet': ['treble', 14], bassoon: ['bass', 0],
+ 'soprano sax': ['treble', 2], 'alto sax': ['treble', 9], 'tenor sax': ['treble', 14], 'baritone sax': ['treble', 21], saxophone: ['treble', 9],
+ trumpet: ['treble', 2], 'french horn': ['treble', 7], trombone: ['bass', 0], tuba: ['bass', 0], brass: ['treble', 0],
+ violin: ['treble', 0], viola: ['alto', 0], cello: ['bass', 0], contrabass: ['bass', 12], strings: ['treble', 0],
+ voice: ['treble', 0], glockenspiel: ['treble', -24], xylophone: ['treble', -12], vibraphone: ['treble', 0],
+});
+const MELODIC_NAMES = Object.keys(MELODIC).sort((x, y) => y.length - x.length);
+/** The single-line instrument a pitched part is, from its instrument label (else its name), or null. */
+export function melodicInstrument(a) {
+ for (const text of [a?.instrument, a?.name]) {
+  const lowered = String(text || '').toLowerCase();
+  const hit = MELODIC_NAMES.find(name => lowered.includes(name));
+  if (hit) return hit;
+ }
+ return null;
+}
 // Drum kit on a five-line percussion staff (common drum-notation key); `d` is
 // the treble-position diatonic step, `x` an x-shaped head (cymbals, hi-hat).
 export const DRUM_POSITIONS = Object.freeze({
@@ -37,9 +57,22 @@ export const THEMES = Object.freeze({
 /** Stave layout for an arrangement: which staves, clefs and written transposition. */
 export function staveLayout(a) {
  if (a?.type === 'drums') return {staves: [{clef: 'percussion'}], transpose: 0, kind: 'drums'};
- if (a?.type === 'keys') return {staves: [{clef: 'treble', hand: 'rh'}, {clef: 'bass', hand: 'lh'}], transpose: 0, kind: 'keys'};
+ if (a?.type === 'keys') {
+  const melodic = melodicInstrument(a);
+  if (melodic) return {staves: [{clef: MELODIC[melodic][0]}], transpose: MELODIC[melodic][1], kind: 'melodic', instrument: melodic};
+  return {staves: [{clef: 'treble', hand: 'rh'}, {clef: 'bass', hand: 'lh'}], transpose: 0, kind: 'keys'};
+ }
  if (a?.type === 'bass') return {staves: [{clef: 'bass'}], transpose: 12, kind: 'bass'};
  return {staves: [{clef: 'treble'}], transpose: 12, kind: 'guitar'};
+}
+
+/** How the stave's written pitch relates to sounding pitch, for the panel label ('' when they match). */
+export function writtenNote(layout) {
+ const t = layout?.transpose || 0;
+ if (!t) return '';
+ if (t === 12 || t === -12 || t === 24 || t === -24) return `written ${Math.abs(t) / 12 === 2 ? 'two octaves' : 'an octave'} ${t > 0 ? 'above' : 'below'} sounding`;
+ const names = {2: 'a major 2nd', 7: 'a perfect 5th', 9: 'a major 6th', 14: 'a major 9th', 21: 'an octave and a major 6th'};
+ return `written ${names[Math.abs(t)] || Math.abs(t) + ' semitones'} ${t > 0 ? 'above' : 'below'} sounding`;
 }
 
 /** A known key signature ({fifths, minor}) as {name, fifths}, or null. */
@@ -173,8 +206,62 @@ export function layoutNotes(a, notes, {fifths = 0, beatLength = () => 0.5, barOf
   // Written length: keys use their sustain; tab notes (whose sustain is ring time, often
   // none) run to the next onset, and drum hits to the next hit, at most a beat.
   const next = onsets.find(o => o > Math.round(n.time * 1000) + 1), beat = beatLength(n.time), gap = next != null ? next / 1000 - n.time : beat;
-  const seconds = layout.kind === 'keys' ? (n.sustain > 0.02 ? n.sustain : Math.min(gap, beat * 4)) : layout.kind === 'drums' ? Math.min(gap, beat) : Math.min(Math.max(gap, n.sustain || 0), beat * 4);
+  const seconds = layout.kind === 'keys' || layout.kind === 'melodic' ? (n.sustain > 0.02 ? n.sustain : Math.min(gap, beat * 4)) : layout.kind === 'drums' ? Math.min(gap, beat) : Math.min(Math.max(gap, n.sustain || 0), beat * 4);
   out.push({note: n, stave, step, x, accidental, value: noteValue(seconds / Math.max(0.01, beatLength(n.time)))});
+ }
+ return out;
+}
+
+const REST_VALUES = [4, 2, 1, 0.5, 0.25, 0.125];
+/**
+ * Rests between written notes, per stave: [{stave, time, value: {value, dots, beats}}].
+ * `entries` come from layoutNotes; `beats` is the beat map (measure >= 0 marks a bar).
+ * A bar with nothing in it gets one whole-bar rest; other gaps are filled with the largest
+ * value that lands on its own beat position, never across a bar line. Gaps shorter than a
+ * 32nd are ignored.
+ */
+export function layoutRests(entries, beats, {staves = 1, from = -Infinity, to = Infinity} = {}) {
+ if (!beats?.length || beats.length < 2) return [];
+ const times = beats.map(b => b.time);
+ const beatAt = t => {
+  let lo = 0, hi = times.length - 1;
+  if (t <= times[0]) return (t - times[0]) / Math.max(1e-6, times[1] - times[0]);
+  if (t >= times[hi]) return hi + (t - times[hi]) / Math.max(1e-6, times[hi] - times[hi - 1]);
+  while (hi - lo > 1) {const mid = (lo + hi) >> 1; if (times[mid] <= t) lo = mid; else hi = mid;}
+  return lo + (t - times[lo]) / Math.max(1e-6, times[lo + 1] - times[lo]);
+ };
+ const timeAt = b => {
+  const i = Math.max(0, Math.min(times.length - 2, Math.floor(b)));
+  return times[i] + (b - i) * (times[i + 1] - times[i]);
+ };
+ const bars = beats.map((b, i) => b.measure >= 0 ? i : -1).filter(i => i >= 0);
+ if (!bars.length) bars.push(0);
+ const out = [];
+ for (let stave = 0; stave < staves; stave++) {
+  // Written spans in beats on this stave, merged where chords or voices overlap.
+  const spans = entries.filter(e => e.stave === stave).map(e => {const start = beatAt(e.note.time); return [start, start + e.value.beats];}).sort((x, y) => x[0] - y[0]);
+  const merged = [];
+  for (const span of spans) {if (merged.length && span[0] <= merged.at(-1)[1] + 1e-3) merged.at(-1)[1] = Math.max(merged.at(-1)[1], span[1]); else merged.push([...span]);}
+  for (let b = 0; b < bars.length; b++) {
+   const start = bars[b], end = b + 1 < bars.length ? bars[b + 1] : times.length - 1;
+   if (end <= start || times[end] < from || times[start] > to) continue;
+   const inside = merged.filter(([s, e]) => e > start + 1e-3 && s < end - 1e-3);
+   if (!inside.length) {out.push({stave, time: times[start], end: times[end], bar: true, value: {value: 4, dots: 0, beats: end - start}}); continue;}
+   const gaps = [];
+   let at = start;
+   for (const [s, e] of inside) {if (s > at + 1e-3) gaps.push([at, Math.min(s, end)]); at = Math.max(at, e);}
+   if (at < end - 1e-3) gaps.push([at, end]);
+   for (let [g0, g1] of gaps) {
+    while (g1 - g0 >= 0.125 - 1e-3) {
+     // Each rest starts on a multiple of its own value in the bar, so a gap after an
+     // off-beat note completes the beat first (eighth then quarter, not the reverse).
+     const offset = g0 - start, fits = v => v <= g1 - g0 + 1e-3 && Math.abs(offset / v - Math.round(offset / v)) < 1e-3;
+     const value = REST_VALUES.find(fits) ?? 0.125;
+     out.push({stave, time: timeAt(g0), value: {value, dots: 0, beats: value}});
+     g0 += value;
+    }
+   }
+  }
  }
  return out;
 }
@@ -194,7 +281,9 @@ export function staveMetrics(layout, height, {top = 34} = {}) {
   staveAt: y => staves.reduce((best, s, i) => Math.abs((s.top + s.bottom) / 2 - y) < Math.abs((staves[best].top + staves[best].bottom) / 2 - y) ? i : best, 0)};
 }
 
-const GLYPH = {treble: '\u{1D11E}', bass: '\u{1D122}', percussion: '\u{1D125}', sharp: '♯', flat: '♭', natural: '♮'};
+const GLYPH = {treble: '\u{1D11E}', bass: '\u{1D122}', alto: '\u{1D121}', percussion: '\u{1D125}', sharp: '♯', flat: '♭', natural: '♮'};
+// Rest glyphs by notated value (1 = quarter ... 0.125 = 32nd); whole and half rests are drawn as blocks.
+const REST_GLYPH = {1: '\u{1D13D}', 0.5: '\u{1D13E}', 0.25: '\u{1D13F}', 0.125: '\u{1D140}'};
 
 /**
  * Draw the stave panel. `view` supplies the roll's time mapping and state:
@@ -278,6 +367,24 @@ export function drawStave(ctx, view) {
    }
   }
  }
+ // Rests, centred on each staff; hidden rests keep their place in time but are not drawn.
+ if (view.showRests !== false) for (const rest of view.rests || []) {
+  const s = m.staves[rest.stave];
+  if (!s) continue;
+  const x = rest.bar ? (view.xOf(rest.time) + view.xOf(rest.end ?? rest.time)) / 2 : view.xOf(rest.time) + m.half * 1.5;
+  if (x < left - 20 || x > view.width + 20) continue;
+  ctx.fillStyle = theme.muted;
+  // Whole rests hang from the fourth line and half rests sit on the middle line: drawn as
+  // blocks on the exact line; shorter rests use the music font, centred on the staff.
+  if (rest.value.value >= 2) {
+   const w = m.half * 2.2, h = m.half * 0.9, line = s.bottom - (rest.value.value === 4 ? 6 : 4) * m.half;
+   ctx.fillRect(x - w / 2, rest.value.value === 4 ? line : line - h, w, h);
+   continue;
+  }
+  ctx.font = `${Math.round(m.half * 4.4)}px "Segoe UI Symbol", "Noto Music", serif`; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+  ctx.fillText(REST_GLYPH[rest.value.value] || REST_GLYPH[1], x, s.bottom - 4 * m.half);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+ }
  // Playhead and edit cursor.
  for (const [time, colour, dash] of [[view.cursor, theme.cursor, [3, 3]], [view.playhead, theme.playhead, []]]) {
   if (!Number.isFinite(time)) continue;
@@ -291,12 +398,12 @@ export function drawStave(ctx, view) {
  for (const s of m.staves) for (const step of LINE_STEPS) {const y = Math.round(s.bottom - step * m.half) + .5; ctx.beginPath(); ctx.moveTo(clefX, y); ctx.lineTo(left, y); ctx.stroke();}
  ctx.fillStyle = theme.ink;
  for (const s of m.staves) {
-  const size = s.clef === 'treble' ? m.half * 9.5 : s.clef === 'bass' ? m.half * 7.2 : m.half * 6;
+  const size = s.clef === 'treble' ? m.half * 9.5 : s.clef === 'bass' ? m.half * 7.2 : s.clef === 'alto' ? m.half * 8.4 : m.half * 6;
   ctx.font = `${Math.round(size)}px "Segoe UI Symbol", "Noto Music", serif`; ctx.textBaseline = 'alphabetic';
-  const baseline = s.clef === 'treble' ? s.bottom + m.half * 1.6 : s.clef === 'bass' ? s.bottom - m.half * 1.2 : s.bottom - m.half * 1.4;
+  const baseline = s.clef === 'treble' ? s.bottom + m.half * 1.6 : s.clef === 'bass' ? s.bottom - m.half * 1.2 : s.clef === 'alto' ? s.bottom - m.half * 0.1 : s.bottom - m.half * 1.4;
   ctx.fillText(GLYPH[s.clef], clefX + 4, baseline);
   if (s.clef !== 'percussion') drawKeySignature(ctx, s, m.half, view.fifths, clefX + m.half * 7.5);
-  if (layout.transpose === 12) {ctx.font = '9px system-ui, sans-serif'; ctx.fillText('8', clefX + 4 + m.half * 1.6, s.bottom + m.half * 4.2);}
+  if (layout.transpose === 12 && layout.kind !== 'melodic') {ctx.font = '9px system-ui, sans-serif'; ctx.fillText('8', clefX + 4 + m.half * 1.6, s.bottom + m.half * 4.2);}
  }
  ctx.fillStyle = theme.muted; ctx.font = '11px system-ui, sans-serif';
  ctx.fillText(view.label, clefX + 2, 13);
@@ -306,7 +413,8 @@ export function drawStave(ctx, view) {
 function ledger(ctx, x, y, rx) {ctx.beginPath(); ctx.moveTo(x - rx * 1.7, Math.round(y) + .5); ctx.lineTo(x + rx * 1.7, Math.round(y) + .5); ctx.stroke();}
 
 // Accidental positions (staff steps above the bottom line) for the usual key-signature layout.
-const KEY_STEPS = {treble: {sharp: [8, 5, 9, 6, 3, 7, 4], flat: [4, 7, 3, 6, 2, 5, 1]}, bass: {sharp: [6, 3, 7, 4, 1, 5, 2], flat: [2, 5, 1, 4, 0, 3, -1]}};
+const KEY_STEPS = {treble: {sharp: [8, 5, 9, 6, 3, 7, 4], flat: [4, 7, 3, 6, 2, 5, 1]}, bass: {sharp: [6, 3, 7, 4, 1, 5, 2], flat: [2, 5, 1, 4, 0, 3, -1]},
+ alto: {sharp: [7, 4, 8, 5, 2, 6, 3], flat: [3, 6, 2, 5, 1, 4, 0]}};
 function drawKeySignature(ctx, s, half, fifths, x) {
  if (!fifths) return;
  const sharp = fifths > 0, steps = KEY_STEPS[s.clef][sharp ? 'sharp' : 'flat'].slice(0, Math.abs(fifths));

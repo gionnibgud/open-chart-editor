@@ -8,7 +8,7 @@
       "id": "layout",
       "capability": "Menus, timeline, inspector, transport and error panel",
       "status": "Implemented; contextual menus and keyboard traversal, chart commands scoped to visible Tab/Tempo views, resizing, pointer-anchored zoom, separate view preferences and bounded virtual viewport browser verified. File > Arrangement info and Ctrl+Shift+I reveal the Settings inspector even when it is hidden. This is an original counterpart to captured native menu vocabulary; identical native modal behavior is not claimed",
-      "remaining": "Exact current retail menu behavior is only partially observed. REQUIRED: the bottom panel (Mixer / Stave / History / Scratch / Errors) has no hide/show; it can only be resized down to 100 px. Add a toggle (View menu and the active footer tab), remembered with the other layout preferences."
+      "remaining": "Exact current retail menu behavior is only partially observed. The bottom panel (Mixer / Stave / History / Scratch / Errors) hides and shows with Ctrl+J, View > Show / hide lower panel or the status-bar button; footer tabs reopen it, and the state is remembered with the other layout preferences."
     },
     {
       "id": "fretted",

@@ -279,7 +279,8 @@ Start authoring
   Unsupported browser codecs can use a bounded local FFmpeg preview. Saved
   audio always retains your original source bytes.
   Inspector and bottom panels resize using their dividers or arrow keys while
-  focused. Layout and listening preferences survive reload separately from
+  focused. Ctrl+J hides or shows the bottom panel. View > Show arrangements
+  together stacks several parts on one timeline, each still editable. Layout and listening preferences survive reload separately from
   song data. Error Finder retains all findings and offers pages and severity
   filters; selecting a stored difficulty issue opens the affected level.
   Original synthesized practice audio defaults to 48 kHz so the highest MIDI
