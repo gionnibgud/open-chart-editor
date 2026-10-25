@@ -1,0 +1,20 @@
+// Original local-file cache. Stores only files explicitly opened/saved by this
+// editor; never enumerates disks, requests permissions, or contacts a network.
+// IndexedDB eviction/quota/private-mode failure is nonfatal to authoring.
+export function createRecentProjects({indexedDB=globalThis.indexedDB,maxEntries=12,maxBytes=128*1024*1024,maxFileBytes=64*1024*1024,now=()=>Date.now(),databaseName='open-chart-editor-recent'}={}){
+ if(!Number.isInteger(maxEntries)||maxEntries<1||!Number.isFinite(maxBytes)||maxBytes<1||!Number.isFinite(maxFileBytes)||maxFileBytes<1)throw Error('Invalid recent-project cache limits');
+ const database=()=>new Promise((resolve,reject)=>{if(!indexedDB)return reject(Error('Browser project storage is unavailable'));const request=indexedDB.open(databaseName,1);request.onupgradeneeded=()=>request.result.createObjectStore('files',{keyPath:'id'});request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||Error('Project storage could not open'));request.onblocked=()=>reject(Error('Project storage is blocked by another tab'));});
+ async function transaction(mode,run){const db=await database();try{return await new Promise((resolve,reject)=>{const tx=db.transaction('files',mode);let result;tx.oncomplete=()=>resolve(result);tx.onabort=tx.onerror=()=>reject(tx.error||Error('Project storage failed'));const guard=callback=>(...args)=>{try{return callback(...args);}catch(error){reject(error);try{tx.abort();}catch{}}};guard(()=>run(tx.objectStore('files'),value=>result=value,guard))();});}finally{db.close();}}
+ const order=entries=>entries.sort((a,b)=>b.touched-a.touched||b.sequence-a.sequence);
+ const metadata=({blob,...entry})=>entry;
+ return {
+  async list(){try{const entries=await transaction('readonly',(store,done,guard)=>{const r=store.getAll();r.onsuccess=guard(()=>done(r.result));});return {ok:true,entries:order(entries).map(metadata)};}catch(error){return {ok:false,entries:[],message:`Recent projects unavailable: ${error.message}`};}},
+  async remember(blob,{id=null,name=blob?.name||'project.json',title=name,kind='opened'}={}){
+   if(!(blob instanceof Blob))return {ok:false,message:'Recent projects could not cache this file'};
+   if(blob.size>maxFileBytes||blob.size>maxBytes)return {ok:false,message:`Recent projects: ${name} exceeds the local cache limit; use your saved file to reopen it`};
+   try{return await transaction('readwrite',(store,done,guard)=>{const r=store.getAll();r.onsuccess=guard(()=>{const all=r.result,existing=id&&all.find(entry=>entry.id===id),entry={id:existing?.id||(globalThis.crypto?.randomUUID?.()||`local-${now()}-${Math.random().toString(36).slice(2)}`),name:String(name),title:String(title),kind,bytes:blob.size,type:blob.type,lastModified:blob.lastModified||now(),touched:Math.max(now(),...all.map(x=>x.touched||0)),sequence:Math.max(0,...all.map(x=>x.sequence||0))+1,blob};const retained=order([entry,...all.filter(x=>x.id!==entry.id)]);let bytes=0,count=0;for(const item of retained){if(count<maxEntries&&bytes+item.bytes<=maxBytes){bytes+=item.bytes;count++;}else store.delete(item.id);}store.put(entry);done({ok:true,id:entry.id});});});}catch(error){return {ok:false,message:`Recent projects could not cache this file (${error.name||'storage error'}); your open project and saved file are unaffected`};}
+  },
+  async read(id){try{return await transaction('readonly',(store,done,guard)=>{const r=store.get(id);r.onsuccess=guard(()=>{const entry=r.result;done(entry?{ok:true,file:new File([entry.blob],entry.name,{type:entry.type,lastModified:entry.lastModified}),entry:metadata(entry)}:{ok:false,message:'This recent project is no longer cached; open your saved file'});});});}catch(error){return {ok:false,message:`Recent project could not be read: ${error.message}`};}},
+  async remove(id){try{return await transaction('readwrite',(store,done,guard)=>{store.delete(id);done({ok:true});});}catch(error){return {ok:false,message:`Recent project could not be removed: ${error.message}`};}}
+ };
+}

@@ -1,0 +1,4577 @@
+{
+  "version": "0.7.0",
+  "method": "Frozen actual original0.7plans before any Swole/Eden promotion",
+  "sourceSha256": {
+    "tone-rack.js": "cc7e192aea838f257eb9ddc868f6c2c2a8b57663114c8d59ace6453fa0ac1305",
+    "tone-static-extra.js": "90029563f9a35302c9b012340f52200c70c5efd9aad1d1638f7999763d5114f1",
+    "tone-filters.js": "9f01167da197f5fea5d8f0d5e09d7cedfd94de95a3386bd96d46ada05b34c412",
+    "tone-effects.js": "31895b54417d142b907907f82b3ccbfe291b781990f5f6e350e4f8fbac7135c2",
+    "tone-adaptive-plan.js": "ab309bc2b8803cfbd7ec01e00b75dde21c53fd340e1cf066d58cc2dda646218b",
+    "tone-envelope.js": "99d6f812486fdc11bbed1e37d3a4210a5a69a4aaed71705ed274326f7bbf3eee",
+    "tone-crusher.js": "ea03d1bd083eff9bc3c30018c765613adb3eae037de4e02236f3a03c8b64fae6",
+    "tone-modulation.js": "9facbd7be750e0bdbb8fe0fdcc46b5d49bae58c00255b820e87bb5a7a3915288",
+    "tone-adaptive-rack.js": "36e98aa173d569c5c5e8233f88b3c65456eb0175924aed4ffce2b622cac23680",
+    "tone-retirement.js": "b6ad72ba249b6e1127f5e9ea2e97392584bb3ad762f284ea04f073d850c3155e",
+    "tone-adaptive-worklet.js": "d1d56944791a19fb7e6f30abe9069d5ba1a8fc7e0186940a0a60462ae7d3e228"
+  },
+  "catalogSha256": "83aa32e8d590343a8f117aa9c376579b3ad3a656f9e175e043edaf88ea21bb0f",
+  "rows": [
+    {
+      "key": "Bass_Pedal_BassAutoFilter",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_BassAutoFilter",
+            "KnobValues": {
+              "Bass_Pedal_BassAutoFilter_Sens": 50.5,
+              "Bass_Pedal_BassAutoFilter_Attack": 125.5,
+              "Bass_Pedal_BassAutoFilter_Release": 505,
+              "Bass_Pedal_BassAutoFilter_FilterType": 0,
+              "Bass_Pedal_BassAutoFilter_Res": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassAutoFilter",
+            "label": "Bass Auto Filter",
+            "kind": "adaptive",
+            "processor": {
+              "slot": "PrePedal1",
+              "key": "Bass_Pedal_BassAutoFilter",
+              "kind": "filter",
+              "mode": "lowpass",
+              "attack": 0.1255,
+              "release": 0.505,
+              "sensitivity": 2,
+              "minHz": 60,
+              "maxHz": 2200,
+              "mix": 0.505
+            }
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassAutoFilter",
+            "kind": "approximate",
+            "message": "Original envelope audition; native DSP differs",
+            "usedControls": [
+              "Filter Type",
+              "Attack Speed",
+              "Release Speed",
+              "Sensitivity",
+              "Mix"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "originalDesign": [
+              "Original first-order envelope filter; catalog Mix is wet/dry even where its native key ends in Res. Sensitivity scales detection 0.25..16; original cutoff ranges are 60..2200Hz bass or 100..6000Hz guitar. No native resonance or slope claim."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Bass_Pedal_BassChorus",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_BassChorus",
+            "KnobValues": {
+              "Bass_Pedal_BassChorus_Rate": 5.05,
+              "Bass_Pedal_BassChorus_Mix": 50,
+              "Bass_Pedal_BassChorus_Depth": 50.5,
+              "Bass_Pedal_BassChorus_LoFilter": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassChorus",
+            "label": "Bass Chorus",
+            "kind": "chorus",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 340,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassChorus",
+            "label": "Bass Chorus",
+            "kind": "approximate",
+            "message": "Original generic chorus audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Bass_Pedal_BassEnbig",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_BassEnbig",
+            "KnobValues": {
+              "Bass_Pedal_BassEnbig_Rate": 5.05,
+              "Bass_Pedal_BassEnbig_Mix": 50,
+              "Bass_Pedal_BassEnbig_Depth": 50.5,
+              "Bass_Pedal_BassEnbig_Filter": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassEnbig",
+            "label": "Bass Enbiggenator",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Bass_Pedal_BassEQ8",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_BassEQ8",
+            "KnobValues": {
+              "Bass_Pedal_BassEQ8_30": 0,
+              "Bass_Pedal_BassEQ8_75": 0,
+              "Bass_Pedal_BassEQ8_185": 0,
+              "Bass_Pedal_BassEQ8_460": 0,
+              "Bass_Pedal_BassEQ8_1100": 0,
+              "Bass_Pedal_BassEQ8_2700": 0,
+              "Bass_Pedal_BassEQ8_6800": 0,
+              "Bass_Pedal_BassEQ8_16000": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassEQ8",
+            "label": "8-Band Bass EQ",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "peaking",
+                "frequency": 30,
+                "requestedFrequency": 30,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Bass_Pedal_BassEQ8_30"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 75,
+                "requestedFrequency": 75,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Bass_Pedal_BassEQ8_75"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 185,
+                "requestedFrequency": 185,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Bass_Pedal_BassEQ8_185"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 460,
+                "requestedFrequency": 460,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Bass_Pedal_BassEQ8_460"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 1100,
+                "requestedFrequency": 1100,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Bass_Pedal_BassEQ8_1100"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 2700,
+                "requestedFrequency": 2700,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Bass_Pedal_BassEQ8_2700"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 6800,
+                "requestedFrequency": 6800,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Bass_Pedal_BassEQ8_6800"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 16000,
+                "requestedFrequency": 16000,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Bass_Pedal_BassEQ8_16000"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassEQ8",
+            "label": "8-Band Bass EQ",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "30hz",
+              "75hz",
+              "185hz",
+              "460hz",
+              "1.1khz",
+              "2.7khz",
+              "6.8khz",
+              "16khz"
+            ],
+            "inactiveControls": [],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Independent peaking bands use original fixed Q=1; native bandwidth/phase response is unestablished."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Bass_Pedal_BassFilterDelay",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_BassFilterDelay",
+            "KnobValues": {
+              "Bass_Pedal_BassFilterDelay_Time": 1010,
+              "Bass_Pedal_BassFilterDelay_Feedback": 50,
+              "Bass_Pedal_BassFilterDelay_Mix": 50.5,
+              "Bass_Pedal_BassFilterDelay_Filter": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassFilterDelay",
+            "label": "Bass Filter Delay",
+            "kind": "delay",
+            "time": 1.01,
+            "timeRight": 1.01,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 5150,
+            "depth": 0,
+            "rate": 1
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassFilterDelay",
+            "label": "Bass Filter Delay",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Bass_Pedal_BassFilterEcho",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_BassFilterEcho",
+            "KnobValues": {
+              "Bass_Pedal_BassFilterEcho_Time": 1010,
+              "Bass_Pedal_BassFilterEcho_Feedback": 50,
+              "Bass_Pedal_BassFilterEcho_Mix": 50.5,
+              "Bass_Pedal_BassFilterEcho_Filter": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassFilterEcho",
+            "label": "Bass Filter Echo",
+            "kind": "delay",
+            "time": 1.01,
+            "timeRight": 1.01,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 5150,
+            "depth": 0,
+            "rate": 1
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassFilterEcho",
+            "label": "Bass Filter Echo",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Bass_Pedal_BassFlanger",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_BassFlanger",
+            "KnobValues": {
+              "Bass_Pedal_BassFlanger_Rate": 50.5,
+              "Bass_Pedal_BassFlanger_Depth": 50.5,
+              "Bass_Pedal_BassFlanger_Mix": 50,
+              "Bass_Pedal_BassFlanger_Filter": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassFlanger",
+            "label": "Bass Flange",
+            "kind": "flanger",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 5150,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassFlanger",
+            "label": "Bass Flange",
+            "kind": "approximate",
+            "message": "Original generic flanger audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Bass_Pedal_BassPhase",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_BassPhase",
+            "KnobValues": {
+              "Bass_Pedal_BassPhase_Rate": 50.5,
+              "Bass_Pedal_BassPhase_Depth": 50.5,
+              "Bass_Pedal_BassPhase_Mix": 50,
+              "Bass_Pedal_BassPhase_Filter": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassPhase",
+            "label": "Bass Phase",
+            "kind": "phaser",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 5150,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassPhase",
+            "label": "Bass Phase",
+            "kind": "approximate",
+            "message": "Original generic phaser audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Bass_Pedal_BassWah",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_BassWah",
+            "KnobValues": {
+              "Bass_Pedal_BassWah_Auto": 0,
+              "Bass_Pedal_BassWah_Sens": 50.5,
+              "Bass_Pedal_BassWah_Speed": 50.5,
+              "Bass_Pedal_BassWah_Pedal": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassWah",
+            "label": "Bass Wah",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "bandpass",
+                "frequency": 519.6152422706632,
+                "requestedFrequency": 519.6152422706632,
+                "gain": 0,
+                "Q": 2,
+                "frequencySource": "original-design",
+                "controls": [
+                  "Bass_Pedal_BassWah_Auto",
+                  "Bass_Pedal_BassWah_Pedal"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_BassWah",
+            "label": "Bass Wah",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "Auto-Mode",
+              "Pedal (Auto=OFF)"
+            ],
+            "inactiveControls": [
+              "Sensitivity",
+              "Speed"
+            ],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Original manual logarithmic 150..1800 Hz bandpass with Q=2. Native wah frequency range and response are unknown. Sensitivity/rate/envelope controls are inactive in manual mode."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Bass_Pedal_EdenWTDI",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_EdenWTDI",
+            "KnobValues": {
+              "Bass_Pedal_EdenWTDI_Gain": 50.5,
+              "Bass_Pedal_EdenWTDI_Bass": 0,
+              "Bass_Pedal_EdenWTDI_Mid": 0,
+              "Bass_Pedal_EdenWTDI_Treble": 0,
+              "Bass_Pedal_EdenWTDI_Enhance": 50.5,
+              "Bass_Pedal_EdenWTDI_LoShift": 0,
+              "Bass_Pedal_EdenWTDI_MidShift": 0,
+              "Bass_Pedal_EdenWTDI_Compression": 50
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_EdenWTDI",
+            "label": "Eden WT D.I.",
+            "kind": "bypassed",
+            "message": "No original audition model for this Filter gear; native definition retained unchanged",
+            "usedControls": [],
+            "inactiveControls": [],
+            "unmappedControls": [
+              "Gain",
+              "Bass",
+              "Mid",
+              "Treble",
+              "Enhance",
+              "Bass Boost",
+              "Mid-Shift",
+              "Compression"
+            ],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": []
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Bass_Pedal_MBComp",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Bass_Pedal_MBComp",
+            "KnobValues": {
+              "Bass_Pedal_MBComp_Compress": 50.5,
+              "Bass_Pedal_MBComp_Rate": 50.5,
+              "Bass_Pedal_MBComp_Filter": 550
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Bass_Pedal_MBComp",
+            "label": "MB Comp",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_80sFlanger",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_80sFlanger",
+            "KnobValues": {
+              "Pedal_80sFlanger_Rate": 50.5,
+              "Pedal_80sFlanger_Depth": 50.5,
+              "Pedal_80sFlanger_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_80sFlanger",
+            "label": "80's Flanger",
+            "kind": "flanger",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.505,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_80sFlanger",
+            "label": "80's Flanger",
+            "kind": "approximate",
+            "message": "Original generic flanger audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_AcousticEmulator",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_AcousticEmulator",
+            "KnobValues": {
+              "Pedal_AcousticEmulator_Body": 50.5,
+              "Pedal_AcousticEmulator_Mid": 50.5,
+              "Pedal_AcousticEmulator_MidShift": 2525,
+              "Pedal_AcousticEmulator_Tone": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AcousticEmulator",
+            "label": "Acoustic Emulator",
+            "kind": "filter",
+            "gain": 1,
+            "bands": [
+              {
+                "type": "lowshelf",
+                "frequency": 180,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "original-design"
+              },
+              {
+                "type": "peaking",
+                "frequency": 2525,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-hz"
+              },
+              {
+                "type": "highshelf",
+                "frequency": 3500,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "original-design"
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AcousticEmulator",
+            "label": "Acoustic Emulator",
+            "kind": "approximate",
+            "message": "Original static audition; native DSP differs. Per-stage soft ceiling can reduce peaks at high boost.",
+            "usedControls": [
+              "Body",
+              "Mid-range",
+              "Tone",
+              "Mid Frequency"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Original three-band EQ, not physical acoustic-instrument emulation. Unitless Body/Mid-range/Tone map linearly to-12..+12dB about authored midpoint50.5. Original shelf anchors180Hz/3500Hz and mid Q=1; only Mid Frequency uses factual authored Hz."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_AmpEQ",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_AmpEQ",
+            "KnobValues": {
+              "Pedal_AmpEQ_Bass": 50.5,
+              "Pedal_AmpEQ_BassFreq": 0,
+              "Pedal_AmpEQ_Mid": 50.5,
+              "Pedal_AmpEQ_MidShift": 0,
+              "Pedal_AmpEQ_Treble": 50.5,
+              "Pedal_AmpEQ_TrebleFreq": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AmpEQ",
+            "label": "Amp EQ",
+            "kind": "bypassed",
+            "message": "No original audition model for this Filter gear; native definition retained unchanged",
+            "usedControls": [],
+            "inactiveControls": [],
+            "unmappedControls": [
+              "Bass",
+              "Bass Freq.",
+              "Midrange",
+              "Mid Freq. Shift",
+              "Treble",
+              "Treble Freq."
+            ],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": []
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_AmpTrem",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_AmpTrem",
+            "KnobValues": {
+              "Pedal_AmpTrem_Speed": 50.5,
+              "Pedal_AmpTrem_Depth": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AmpTrem",
+            "label": "Amp Trem",
+            "kind": "tremolo",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "wave": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AmpTrem",
+            "label": "Amp Trem",
+            "kind": "approximate",
+            "message": "Original generic tremolo audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_AmpVibe",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_AmpVibe",
+            "KnobValues": {
+              "Pedal_AmpVibe_Speed": 50.5,
+              "Pedal_AmpVibe_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AmpVibe",
+            "kind": "tremolo",
+            "rate": 5.05,
+            "depth": 1,
+            "mix": 0.505,
+            "wave": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AmpVibe",
+            "kind": "approximate",
+            "message": "Original modulation audition; native DSP differs",
+            "usedControls": [
+              "Speed",
+              "Mix"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "originalDesign": [
+              "Original full-depth amplitude tremolo; unitless Speed maps to0.1..10Hz. Short/Long square variants are original thresholded sine pulses; no native duty-cycle claim."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_AnalogueDelay",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_AnalogueDelay",
+            "KnobValues": {
+              "Pedal_AnalogueDelay_Time": 505,
+              "Pedal_AnalogueDelay_Feedback": 50,
+              "Pedal_AnalogueDelay_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AnalogueDelay",
+            "label": "Analog Delay",
+            "kind": "delay",
+            "time": 0.505,
+            "timeRight": 0.505,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 7650,
+            "depth": 0,
+            "rate": 1
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AnalogueDelay",
+            "label": "Analog Delay",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_AutoFilter",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_AutoFilter",
+            "KnobValues": {
+              "Pedal_AutoFilter_Sens": 50.5,
+              "Pedal_AutoFilter_Attack": 125.5,
+              "Pedal_AutoFilter_Release": 505,
+              "Pedal_AutoFilter_FilterType": 0,
+              "Pedal_AutoFilter_Res": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AutoFilter",
+            "label": "Auto Filter",
+            "kind": "adaptive",
+            "processor": {
+              "slot": "PrePedal1",
+              "key": "Pedal_AutoFilter",
+              "kind": "filter",
+              "mode": "lowpass",
+              "attack": 0.1255,
+              "release": 0.505,
+              "sensitivity": 2,
+              "minHz": 100,
+              "maxHz": 6000,
+              "mix": 0.505
+            }
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AutoFilter",
+            "kind": "approximate",
+            "message": "Original envelope audition; native DSP differs",
+            "usedControls": [
+              "Filter Type",
+              "Attack Speed",
+              "Release Speed",
+              "Sensitivity",
+              "Mix"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "originalDesign": [
+              "Original first-order envelope filter; catalog Mix is wet/dry even where its native key ends in Res. Sensitivity scales detection 0.25..16; original cutoff ranges are 60..2200Hz bass or 100..6000Hz guitar. No native resonance or slope claim."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_AutoVibe",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_AutoVibe",
+            "KnobValues": {
+              "Pedal_AutoVibe_Sens": 50.5,
+              "Pedal_AutoVibe_Mix": 50.5,
+              "Pedal_AutoVibe_Attack": 125.5,
+              "Pedal_AutoVibe_Release": 505
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_AutoVibe",
+            "label": "Auto Vibe",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_BakedRotatoe",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_BakedRotatoe",
+            "KnobValues": {
+              "Pedal_BakedRotatoe_Rate": 50.5,
+              "Pedal_BakedRotatoe_Depth": 50.5,
+              "Pedal_BakedRotatoe_Mix": 50.5,
+              "Pedal_BakedRotatoe_Balance": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_BakedRotatoe",
+            "label": "Baked Rotatoe",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_BassEmulator",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_BassEmulator",
+            "KnobValues": {
+              "Pedal_BassEmulator_Body": 50.5,
+              "Pedal_BassEmulator_Tone": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_BassEmulator",
+            "label": "Guitar>Bass Emulator",
+            "kind": "bypassed",
+            "message": "No original audition model for this Filter gear; native definition retained unchanged",
+            "usedControls": [],
+            "inactiveControls": [],
+            "unmappedControls": [
+              "Body",
+              "Tone"
+            ],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": []
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_BitCruncher",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_BitCruncher",
+            "KnobValues": {
+              "Pedal_BitCruncher_Mix": 50.5,
+              "Pedal_BitCruncher_Attack": 50.5,
+              "Pedal_BitCruncher_Release": 16,
+              "Pedal_BitCruncher_FilterType": 5,
+              "Pedal_BitCruncher_Sens": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_BitCruncher",
+            "label": "Bit Cruncher",
+            "kind": "adaptive",
+            "processor": {
+              "slot": "PrePedal1",
+              "key": "Pedal_BitCruncher",
+              "kind": "crusher",
+              "bits": 5,
+              "holdFrames": 17,
+              "filterHz": 2323.7900077244503,
+              "rectify": 0.5,
+              "mix": 0.505
+            }
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_BitCruncher",
+            "kind": "approximate",
+            "message": "Original bit-crusher audition; native DSP differs",
+            "usedControls": [
+              "Mix",
+              "Filter",
+              "Downsample",
+              "Bit Depth",
+              "Rectify"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "originalDesign": [
+              "Original signed mid-tread2..8-bit quantizer; fractional bit depth rounds only for audition. Downsample maps to1+round(value) sample-hold frames. Native Filter maps to original300..18000Hz first-order lowpass, bounded by sample rate. Rectify blends original signal toward absolute value. Quantization/sample-hold aliasing is intentional; no native distortion/filter claim."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_BobFilter",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_BobFilter",
+            "KnobValues": {
+              "Pedal_BobFilter_Sens": 50.5,
+              "Pedal_BobFilter_Attack": 125.5,
+              "Pedal_BobFilter_Release": 505,
+              "Pedal_BobFilter_Filter": 0,
+              "Pedal_BobFilter_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_BobFilter",
+            "label": "Analog Filter",
+            "kind": "adaptive",
+            "processor": {
+              "slot": "PrePedal1",
+              "key": "Pedal_BobFilter",
+              "kind": "filter",
+              "mode": "lowpass",
+              "attack": 0.1255,
+              "release": 0.505,
+              "sensitivity": 2,
+              "minHz": 100,
+              "maxHz": 6000,
+              "mix": 0.505
+            }
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_BobFilter",
+            "kind": "approximate",
+            "message": "Original envelope audition; native DSP differs",
+            "usedControls": [
+              "Filter Type",
+              "Attack Speed",
+              "Release Speed",
+              "Sensitivity",
+              "Mix"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "originalDesign": [
+              "Original first-order envelope filter; catalog Mix is wet/dry even where its native key ends in Res. Sensitivity scales detection 0.25..16; original cutoff ranges are 60..2200Hz bass or 100..6000Hz guitar. No native resonance or slope claim."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_Chorus",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_Chorus",
+            "KnobValues": {
+              "Pedal_Chorus_Rate": 5.05,
+              "Pedal_Chorus_Depth": 50.5,
+              "Pedal_Chorus_Mix": 50
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Chorus",
+            "label": "Chorus",
+            "kind": "chorus",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Chorus",
+            "label": "Chorus",
+            "kind": "approximate",
+            "message": "Original generic chorus audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_Chorus20",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_Chorus20",
+            "KnobValues": {
+              "Pedal_Chorus20_Rate": 5.05,
+              "Pedal_Chorus20_Depth": 50.5,
+              "Pedal_Chorus20_Mix": 50
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Chorus20",
+            "label": "Chorus 2.0",
+            "kind": "chorus",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Chorus20",
+            "label": "Chorus 2.0",
+            "kind": "approximate",
+            "message": "Original generic chorus audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_ClassicFlanger",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_ClassicFlanger",
+            "KnobValues": {
+              "Pedal_ClassicFlanger_Rate": 50.5,
+              "Pedal_ClassicFlanger_Depth": 50.5,
+              "Pedal_ClassicFlanger_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ClassicFlanger",
+            "label": "Classic Flange",
+            "kind": "flanger",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.505,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ClassicFlanger",
+            "label": "Classic Flange",
+            "kind": "approximate",
+            "message": "Original generic flanger audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_Compression",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_Compression",
+            "KnobValues": {
+              "Pedal_Compression_Comp": 50.5,
+              "Pedal_Compression_Attack": 50.5,
+              "Pedal_Compression_Release": 505
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Compression",
+            "label": "Compression",
+            "kind": "compressor",
+            "threshold": -27,
+            "ratio": 4,
+            "attack": 0.0505,
+            "release": 0.505
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Compression",
+            "label": "Compression",
+            "kind": "approximate",
+            "message": "Original generic compressor audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_CosmicEcho",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_CosmicEcho",
+            "KnobValues": {
+              "Pedal_CosmicEcho_Time": 505,
+              "Pedal_CosmicEcho_Feedback": 50,
+              "Pedal_CosmicEcho_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_CosmicEcho",
+            "label": "Cosmonaut Echo",
+            "kind": "delay",
+            "time": 0.505,
+            "timeRight": 0.505,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 7650,
+            "depth": 0,
+            "rate": 1
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_CosmicEcho",
+            "label": "Cosmonaut Echo",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_DigitalChorus",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_DigitalChorus",
+            "KnobValues": {
+              "Pedal_DigitalChorus_Rate": 5.05,
+              "Pedal_DigitalChorus_Mix": 50,
+              "Pedal_DigitalChorus_Depth": 50.5,
+              "Pedal_DigitalChorus_LoFilter": 50.5,
+              "Pedal_DigitalChorus_HiFilter": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_DigitalChorus",
+            "label": "Digital Chorus",
+            "kind": "chorus",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 340,
+            "filter": 5150,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_DigitalChorus",
+            "label": "Digital Chorus",
+            "kind": "approximate",
+            "message": "Original generic chorus audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_DigitalVerb",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_DigitalVerb",
+            "KnobValues": {
+              "Pedal_DigitalVerb_Time": 50.5,
+              "Pedal_DigitalVerb_Depth": 50.5,
+              "Pedal_DigitalVerb_Mix": 50.5,
+              "Pedal_DigitalVerb_Tone": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_DigitalVerb",
+            "label": "Digital Verb",
+            "kind": "reverb",
+            "seconds": 2.075,
+            "depth": 0.5,
+            "mix": 0.505,
+            "filter": 5150,
+            "voice": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_DigitalVerb",
+            "label": "Digital Verb",
+            "kind": "approximate",
+            "message": "Original generic reverb audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_Enbiggenator",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_Enbiggenator",
+            "KnobValues": {
+              "Pedal_Enbiggenator_Rate": 50.5,
+              "Pedal_Enbiggenator_Depth": 50.5,
+              "Pedal_Enbiggenator_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Enbiggenator",
+            "label": "Enbiggenator",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_EQ5",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_EQ5",
+            "KnobValues": {
+              "Pedal_EQ5_63": 0,
+              "Pedal_EQ5_250": 0,
+              "Pedal_EQ5_750": 0,
+              "Pedal_EQ5_2200": 0,
+              "Pedal_EQ5_5700": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_EQ5",
+            "label": "5-Band Graphic EQ",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "peaking",
+                "frequency": 63,
+                "requestedFrequency": 63,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ5_63"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 250,
+                "requestedFrequency": 250,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ5_250"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 750,
+                "requestedFrequency": 750,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ5_750"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 2200,
+                "requestedFrequency": 2200,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ5_2200"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 5700,
+                "requestedFrequency": 5700,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ5_5700"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_EQ5",
+            "label": "5-Band Graphic EQ",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "63hz",
+              "250hz",
+              "750hz",
+              "2.2khz",
+              "5.7khz"
+            ],
+            "inactiveControls": [],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Independent peaking bands use original fixed Q=1; native bandwidth/phase response is unestablished."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_EQ8",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_EQ8",
+            "KnobValues": {
+              "Pedal_EQ8_50": 0,
+              "Pedal_EQ8_100": 0,
+              "Pedal_EQ8_200": 0,
+              "Pedal_EQ8_400": 0,
+              "Pedal_EQ8_800": 0,
+              "Pedal_EQ8_1600": 0,
+              "Pedal_EQ8_3200": 0,
+              "Pedal_EQ8_6400": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_EQ8",
+            "label": "8-Band Graphic EQ",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "peaking",
+                "frequency": 50,
+                "requestedFrequency": 50,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ8_50"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 100,
+                "requestedFrequency": 100,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ8_100"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 200,
+                "requestedFrequency": 200,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ8_200"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 400,
+                "requestedFrequency": 400,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ8_400"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 800,
+                "requestedFrequency": 800,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ8_800"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 1600,
+                "requestedFrequency": 1600,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ8_1600"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 3200,
+                "requestedFrequency": 3200,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ8_3200"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 6400,
+                "requestedFrequency": 6400,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog-label",
+                "controls": [
+                  "Pedal_EQ8_6400"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_EQ8",
+            "label": "8-Band Graphic EQ",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "50HZ",
+              "100HZ",
+              "200HZ",
+              "400HZ",
+              "800HZ",
+              "1.6KHZ",
+              "3.2KHZ",
+              "6.4KHZ"
+            ],
+            "inactiveControls": [],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Independent peaking bands use original fixed Q=1; native bandwidth/phase response is unestablished."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_Limiter",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_Limiter",
+            "KnobValues": {
+              "Pedal_Limiter_Limit": 50.5,
+              "Pedal_Limiter_Rate": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Limiter",
+            "label": "Limiter",
+            "kind": "compressor",
+            "threshold": -27,
+            "ratio": 4,
+            "attack": 0.01,
+            "release": 0.3
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Limiter",
+            "label": "Limiter",
+            "kind": "approximate",
+            "message": "Original generic compressor audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_LoFiFilter",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_LoFiFilter",
+            "KnobValues": {
+              "Pedal_LoFiFilter_FilterType": 50.5,
+              "Pedal_LoFiFilter_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_LoFiFilter",
+            "label": "Lo-Fi Filter",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "highpass",
+                "frequency": 173.20508075688775,
+                "requestedFrequency": 173.20508075688775,
+                "gain": 0,
+                "Q": 0.7,
+                "frequencySource": "original-design",
+                "controls": [
+                  "Pedal_LoFiFilter_Mix"
+                ]
+              },
+              {
+                "type": "lowpass",
+                "frequency": 5692.099788303083,
+                "requestedFrequency": 5692.099788303083,
+                "gain": 0,
+                "Q": 0.7,
+                "frequencySource": "original-design",
+                "controls": [
+                  "Pedal_LoFiFilter_FilterType"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_LoFiFilter",
+            "label": "Lo-Fi Filter",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "Hi Cut",
+              "Lo Cut"
+            ],
+            "inactiveControls": [],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Catalog labels mean Hi Cut/Lo Cut despite the native key suffixes FilterType/Mix. Original logarithmic cutoff ranges: high-cut18k..1.8kHz; low-cut20..1500Hz. No wet/dry interpretation."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_MarshallSupervibe",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_MarshallSupervibe",
+            "KnobValues": {
+              "Pedal_MarshallSupervibe_Rate": 50.5,
+              "Pedal_MarshallSupervibe_Depth": 50.5,
+              "Pedal_MarshallSupervibe_Wave": 50.5,
+              "Pedal_MarshallSupervibe_Mix": 50
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_MarshallSupervibe",
+            "label": "Marshall Supervibe",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_ModDelay",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_ModDelay",
+            "KnobValues": {
+              "Pedal_ModDelay_Time": 505,
+              "Pedal_ModDelay_Feedback": 50,
+              "Pedal_ModDelay_Mix": 50.5,
+              "Pedal_ModDelay_Depth": 50.5,
+              "Pedal_ModDelay_Rate": 5.05
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ModDelay",
+            "label": "Mod Delay",
+            "kind": "delay",
+            "time": 0.505,
+            "timeRight": 0.505,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 7650,
+            "depth": 0.0015,
+            "rate": 5.05
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ModDelay",
+            "label": "Mod Delay",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_ModernFlanger",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_ModernFlanger",
+            "KnobValues": {
+              "Pedal_ModernFlanger_Rate": 50.5,
+              "Pedal_ModernFlanger_Depth": 50.5,
+              "Pedal_ModernFlanger_Mix": 50.5,
+              "Pedal_ModernFlanger_Regen": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ModernFlanger",
+            "label": "Modern Flange",
+            "kind": "flanger",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.505,
+            "feedback": 0.505,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ModernFlanger",
+            "label": "Modern Flange",
+            "kind": "approximate",
+            "message": "Original generic flanger audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_ModernWah",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_ModernWah",
+            "KnobValues": {
+              "Pedal_ModernWah_Auto": 0,
+              "Pedal_ModernWah_Sens": 50.5,
+              "Pedal_ModernWah_Speed": 50.5,
+              "Pedal_ModernWah_Pedal": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ModernWah",
+            "label": "Modern Wah",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "bandpass",
+                "frequency": 848.5281374238571,
+                "requestedFrequency": 848.5281374238571,
+                "gain": 0,
+                "Q": 2,
+                "frequencySource": "original-design",
+                "controls": [
+                  "Pedal_ModernWah_Auto",
+                  "Pedal_ModernWah_Pedal"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ModernWah",
+            "label": "Modern Wah",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "Auto-Mode",
+              "Pedal (Auto=OFF)"
+            ],
+            "inactiveControls": [
+              "Sensitivity",
+              "Speed"
+            ],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Original manual logarithmic 300..2400 Hz bandpass with Q=2. Native wah frequency range and response are unknown. Sensitivity/rate/envelope controls are inactive in manual mode."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_MultiTrem",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_MultiTrem",
+            "KnobValues": {
+              "Pedal_MultiTrem_Speed": 50.5,
+              "Pedal_MultiTrem_Mix": 50.5,
+              "Pedal_MultiTrem_Waveform": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_MultiTrem",
+            "label": "Multi-Trem",
+            "kind": "tremolo",
+            "rate": 5.05,
+            "depth": 1,
+            "mix": 0.505,
+            "wave": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_MultiTrem",
+            "label": "Multi-Trem",
+            "kind": "approximate",
+            "message": "Original generic tremolo audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_MultiVibe",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_MultiVibe",
+            "KnobValues": {
+              "Pedal_MultiVibe_Speed": 50.5,
+              "Pedal_MultiVibe_Mix": 50.5,
+              "Pedal_MultiVibe_Waveform": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_MultiVibe",
+            "kind": "tremolo",
+            "rate": 5.05,
+            "depth": 1,
+            "mix": 0.505,
+            "wave": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_MultiVibe",
+            "kind": "approximate",
+            "message": "Original modulation audition; native DSP differs",
+            "usedControls": [
+              "Speed",
+              "Mix",
+              "Waveform"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "originalDesign": [
+              "Original full-depth amplitude tremolo; unitless Speed maps to0.1..10Hz. Short/Long square variants are original thresholded sine pulses; no native duty-cycle claim."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_NoFiEcho",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_NoFiEcho",
+            "KnobValues": {
+              "Pedal_NoFiEcho_Time": 505,
+              "Pedal_NoFiEcho_Feedback": 50,
+              "Pedal_NoFiEcho_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_NoFiEcho",
+            "label": "No-Fi Echo",
+            "kind": "delay",
+            "time": 0.505,
+            "timeRight": 0.505,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 7650,
+            "depth": 0,
+            "rate": 1
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_NoFiEcho",
+            "label": "No-Fi Echo",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_NoiseGate",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_NoiseGate",
+            "KnobValues": {
+              "Pedal_NoiseGate_Thresh": -65,
+              "Pedal_NoiseGate_Rate": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_NoiseGate",
+            "label": "Noise Gate",
+            "kind": "adaptive",
+            "processor": {
+              "slot": "PrePedal1",
+              "key": "Pedal_NoiseGate",
+              "kind": "gate",
+              "thresholdDb": -65,
+              "release": 0.255,
+              "attack": 0.001,
+              "hysteresisDb": 2,
+              "hold": 0.02
+            }
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_NoiseGate",
+            "kind": "approximate",
+            "message": "Original envelope audition; native DSP differs",
+            "usedControls": [
+              "Threshold",
+              "Rate"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "originalDesign": [
+              "Original stereo-linked peak follower, 1ms attack, 20ms hold and 2dB hysteresis; Rate maps to an original 10..500ms release."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_NPNDelay",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_NPNDelay",
+            "KnobValues": {
+              "Pedal_NPNDelay_Time": 505,
+              "Pedal_NPNDelay_Feedback": 50,
+              "Pedal_NPNDelay_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_NPNDelay",
+            "label": "Classic NPN Delay",
+            "kind": "delay",
+            "time": 0.505,
+            "timeRight": 0.505,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 7650,
+            "depth": 0,
+            "rate": 1
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_NPNDelay",
+            "label": "Classic NPN Delay",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_OilCanEcho",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_OilCanEcho",
+            "KnobValues": {
+              "Pedal_OilCanEcho_Time": 505,
+              "Pedal_OilCanEcho_Feedback": 50,
+              "Pedal_OilCanEcho_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_OilCanEcho",
+            "label": "Oil-Can Echo",
+            "kind": "delay",
+            "time": 0.505,
+            "timeRight": 0.505,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 7650,
+            "depth": 0,
+            "rate": 1
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_OilCanEcho",
+            "label": "Oil-Can Echo",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_OmniMod",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_OmniMod",
+            "KnobValues": {
+              "Pedal_OmniMod_Rate": 50.5,
+              "Pedal_OmniMod_Depth": 50.5,
+              "Pedal_OmniMod_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_OmniMod",
+            "label": "Omni-Mod",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_Phaser",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_Phaser",
+            "KnobValues": {
+              "Pedal_Phaser_Rate": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Phaser",
+            "label": "Phaser-363",
+            "kind": "phaser",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Phaser",
+            "label": "Phaser-363",
+            "kind": "approximate",
+            "message": "Original generic phaser audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_PlanePhase",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_PlanePhase",
+            "KnobValues": {
+              "Pedal_PlanePhase_Rate": 50.5,
+              "Pedal_PlanePhase_Depth": 50.5,
+              "Pedal_PlanePhase_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_PlanePhase",
+            "label": "Plane Phase",
+            "kind": "phaser",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.505,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_PlanePhase",
+            "label": "Plane Phase",
+            "kind": "approximate",
+            "message": "Original generic phaser audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_PlateVerb",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_PlateVerb",
+            "KnobValues": {
+              "Pedal_PlateVerb_Time": 50.5,
+              "Pedal_PlateVerb_Depth": 50.5,
+              "Pedal_PlateVerb_Mix": 50.5,
+              "Pedal_PlateVerb_Voice": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_PlateVerb",
+            "label": "Plate Reverb",
+            "kind": "reverb",
+            "seconds": 2.075,
+            "depth": 0.5,
+            "mix": 0.505,
+            "filter": 7650,
+            "voice": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_PlateVerb",
+            "label": "Plate Reverb",
+            "kind": "approximate",
+            "message": "Original generic reverb audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_RangeBooster",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_RangeBooster",
+            "KnobValues": {
+              "Pedal_RangeBooster_Boost": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_RangeBooster",
+            "label": "Range Booster",
+            "kind": "filter",
+            "gain": 1.9952623149688795,
+            "bands": []
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_RangeBooster",
+            "label": "Range Booster",
+            "kind": "approximate",
+            "message": "Original static audition; native DSP differs. Per-stage soft ceiling can reduce peaks at high boost.",
+            "usedControls": [
+              "Boost!"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Original broad-band gain: native Boost!1..100% maps to0..+12dB (unity at1%). Native gain range, spectral coloration and nonlinear response are unknown; this is not a frequency-range or amplifier emulation."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_RingMod",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_RingMod",
+            "KnobValues": {
+              "Pedal_RingMod_Attack": 125.5,
+              "Pedal_RingMod_Depth": 50.5,
+              "Pedal_RingMod_Sensitivity": 50.5,
+              "Pedal_RingMod_Waveform": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_RingMod",
+            "label": "Ring Mod",
+            "kind": "modulation",
+            "modulation": {
+              "slot": "PrePedal1",
+              "key": "Pedal_RingMod",
+              "kind": "ringmod",
+              "rate": 7.968127490039841,
+              "depth": 0.505,
+              "mix": 0.505,
+              "wave": 0
+            }
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_RingMod",
+            "kind": "approximate",
+            "message": "Original modulation audition; native DSP differs",
+            "usedControls": [
+              "Rate",
+              "Depth",
+              "Mix",
+              "Funk"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "originalDesign": [
+              "Native key Attack is labelled Rate(ms): original audition interprets this as carrier period. Native Sensitivity is labelled Mix(%). Shared sine/saw carrier preserves channel coherence; native tracking is unestablished."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_SendInTheClones",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_SendInTheClones",
+            "KnobValues": {
+              "Pedal_SendInTheClones_Clones": 50.5,
+              "Pedal_SendInTheClones_Depth": 50.5,
+              "Pedal_SendInTheClones_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_SendInTheClones",
+            "label": "Send In The Clones!",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_ShaverPhaser",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_ShaverPhaser",
+            "KnobValues": {
+              "Pedal_ShaverPhaser_Rate": 50.5,
+              "Pedal_ShaverPhaser_Depth": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ShaverPhaser",
+            "label": "Shaver Phaser",
+            "kind": "phaser",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ShaverPhaser",
+            "label": "Shaver Phaser",
+            "kind": "approximate",
+            "message": "Original generic phaser audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_SpringReverb",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_SpringReverb",
+            "KnobValues": {
+              "Pedal_SpringReverb_Time": 50.5,
+              "Pedal_SpringReverb_Depth": 50.5,
+              "Pedal_SpringReverb_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_SpringReverb",
+            "label": "Spring Reverb",
+            "kind": "reverb",
+            "seconds": 2.075,
+            "depth": 0.5,
+            "mix": 0.505,
+            "filter": 7650,
+            "voice": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_SpringReverb",
+            "label": "Spring Reverb",
+            "kind": "approximate",
+            "message": "Original generic reverb audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_Swole",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_Swole",
+            "KnobValues": {
+              "Pedal_Swole_Smash": 50.5,
+              "Pedal_Swole_Rate": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Swole",
+            "label": "Swole",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_TremOle",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_TremOle",
+            "KnobValues": {
+              "Pedal_TremOle_Sens": 50.5,
+              "Pedal_TremOle_Mix": 50.5,
+              "Pedal_TremOle_Attack": 125.5,
+              "Pedal_TremOle_Release": 505
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_TremOle",
+            "label": "TremOle'",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_Tremolo",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_Tremolo",
+            "KnobValues": {
+              "Pedal_Tremolo_Speed": 50.5,
+              "Pedal_Tremolo_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Tremolo",
+            "label": "Tremolo",
+            "kind": "tremolo",
+            "rate": 5.05,
+            "depth": 1,
+            "mix": 0.505,
+            "wave": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_Tremolo",
+            "label": "Tremolo",
+            "kind": "approximate",
+            "message": "Original generic tremolo audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_TubeSpring",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_TubeSpring",
+            "KnobValues": {
+              "Pedal_TubeSpring_Mix": 50.5,
+              "Pedal_TubeSpring_Depth": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_TubeSpring",
+            "label": "Tube Spring Reverb",
+            "kind": "reverb",
+            "seconds": 1.4974999999999998,
+            "depth": 0.5,
+            "mix": 0.505,
+            "filter": 7650,
+            "voice": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_TubeSpring",
+            "label": "Tube Spring Reverb",
+            "kind": "approximate",
+            "message": "Original generic reverb audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_UKWah",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_UKWah",
+            "KnobValues": {
+              "Pedal_UKWah_Auto": 0,
+              "Pedal_UKWah_Sens": 50.5,
+              "Pedal_UKWah_Speed": 50.5,
+              "Pedal_UKWah_Pedal": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_UKWah",
+            "label": "UK Wah",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "bandpass",
+                "frequency": 848.5281374238571,
+                "requestedFrequency": 848.5281374238571,
+                "gain": 0,
+                "Q": 2,
+                "frequencySource": "original-design",
+                "controls": [
+                  "Pedal_UKWah_Auto",
+                  "Pedal_UKWah_Pedal"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_UKWah",
+            "label": "UK Wah",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "Auto-Mode",
+              "Pedal (Auto=OFF)"
+            ],
+            "inactiveControls": [
+              "Sensitivity",
+              "Speed"
+            ],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Original manual logarithmic 300..2400 Hz bandpass with Q=2. Native wah frequency range and response are unknown. Sensitivity/rate/envelope controls are inactive in manual mode."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_USWah",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_USWah",
+            "KnobValues": {
+              "Pedal_USWah_Auto": 0,
+              "Pedal_USWah_Sens": 50.5,
+              "Pedal_USWah_Speed": 50.5,
+              "Pedal_USWah_Pedal": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_USWah",
+            "label": "US Wah",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "bandpass",
+                "frequency": 848.5281374238571,
+                "requestedFrequency": 848.5281374238571,
+                "gain": 0,
+                "Q": 2,
+                "frequencySource": "original-design",
+                "controls": [
+                  "Pedal_USWah_Auto",
+                  "Pedal_USWah_Pedal"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_USWah",
+            "label": "US Wah",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "Auto-Mode",
+              "Pedal (Auto=OFF)"
+            ],
+            "inactiveControls": [
+              "Sensitivity",
+              "Speed"
+            ],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Original manual logarithmic 300..2400 Hz bandpass with Q=2. Native wah frequency range and response are unknown. Sensitivity/rate/envelope controls are inactive in manual mode."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_ValveEcho",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_ValveEcho",
+            "KnobValues": {
+              "Pedal_ValveEcho_Time": 505,
+              "Pedal_ValveEcho_Feedback": 50,
+              "Pedal_ValveEcho_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ValveEcho",
+            "label": "Valve Echo",
+            "kind": "delay",
+            "time": 0.505,
+            "timeRight": 0.505,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 7650,
+            "depth": 0,
+            "rate": 1
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_ValveEcho",
+            "label": "Valve Echo",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_VintageChorus",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_VintageChorus",
+            "KnobValues": {
+              "Pedal_VintageChorus_Rate": 5.05,
+              "Pedal_VintageChorus_Mix": 50,
+              "Pedal_VintageChorus_Depth": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_VintageChorus",
+            "label": "Vintage Chorus",
+            "kind": "chorus",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_VintageChorus",
+            "label": "Vintage Chorus",
+            "kind": "approximate",
+            "message": "Original generic chorus audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Pedal_VintageFlanger",
+      "tone": {
+        "GearList": {
+          "PrePedal1": {
+            "Key": "Pedal_VintageFlanger",
+            "KnobValues": {
+              "Pedal_VintageFlanger_Rate": 50.5,
+              "Pedal_VintageFlanger_Depth": 50.5,
+              "Pedal_VintageFlanger_Mix": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_VintageFlanger",
+            "label": "Vintage Flanger",
+            "kind": "flanger",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.505,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "PrePedal1",
+            "key": "Pedal_VintageFlanger",
+            "label": "Vintage Flanger",
+            "kind": "approximate",
+            "message": "Original generic flanger audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_RotaVibe",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_RotaVibe",
+            "KnobValues": {
+              "Rack_RotaVibe_Rate": 50.5,
+              "Rack_RotaVibe_Mix": 50,
+              "Rack_RotaVibe_Depth": 50.5,
+              "Rack_RotaVibe_Balance": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_RotaVibe",
+            "label": "RotaVibe",
+            "kind": "bypassed",
+            "message": "No original audition model for this gear; stored settings retained"
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StereoAnalogVibe",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StereoAnalogVibe",
+            "KnobValues": {
+              "Rack_StereoAnalogVibe_Speed": 50.5,
+              "Rack_StereoAnalogVibe_Mix": 50.5,
+              "Rack_StereoAnalogVibe_Waveform": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StereoAnalogVibe",
+            "kind": "tremolo",
+            "rate": 5.05,
+            "depth": 1,
+            "mix": 0.505,
+            "wave": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StereoAnalogVibe",
+            "kind": "approximate",
+            "message": "Original modulation audition; native DSP differs",
+            "usedControls": [
+              "Speed",
+              "Mix",
+              "Waveform"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "originalDesign": [
+              "Original full-depth amplitude tremolo; unitless Speed maps to0.1..10Hz. Short/Long square variants are original thresholded sine pulses; no native duty-cycle claim."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StereoPhaser",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StereoPhaser",
+            "KnobValues": {
+              "Rack_StereoPhaser_Rate": 5.05,
+              "Rack_StereoPhaser_Mix": 50,
+              "Rack_StereoPhaser_Depth": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StereoPhaser",
+            "label": "Stereo Phaser",
+            "kind": "phaser",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StereoPhaser",
+            "label": "Stereo Phaser",
+            "kind": "approximate",
+            "message": "Original generic phaser audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StereoTubeTrem",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StereoTubeTrem",
+            "KnobValues": {
+              "Rack_StereoTubeTrem_Speed": 50.5,
+              "Rack_StereoTubeTrem_Mix": 50.5,
+              "Rack_StereoTubeTrem_Waveform": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StereoTubeTrem",
+            "label": "Stereo Tube Trem",
+            "kind": "tremolo",
+            "rate": 5.05,
+            "depth": 1,
+            "mix": 0.505,
+            "wave": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StereoTubeTrem",
+            "label": "Stereo Tube Trem",
+            "kind": "approximate",
+            "message": "Original generic tremolo audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StudioChamber",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StudioChamber",
+            "KnobValues": {
+              "Rack_StudioChamber_Time": 50.5,
+              "Rack_StudioChamber_Depth": 50.5,
+              "Rack_StudioChamber_Mix": 50.5,
+              "Rack_StudioChamber_Tone": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioChamber",
+            "label": "Studio Chamber Reverb",
+            "kind": "reverb",
+            "seconds": 2.075,
+            "depth": 0.5,
+            "mix": 0.505,
+            "filter": 5150,
+            "voice": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioChamber",
+            "label": "Studio Chamber Reverb",
+            "kind": "approximate",
+            "message": "Original generic reverb audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StudioChorus",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StudioChorus",
+            "KnobValues": {
+              "Rack_StudioChorus_Rate": 5.05,
+              "Rack_StudioChorus_Mix": 50,
+              "Rack_StudioChorus_Depth": 50.5,
+              "Rack_StudioChorus_Stereo": 50.5,
+              "Rack_StudioChorus_Delay": 50.5,
+              "Rack_StudioChorus_LoFilter": 50.5,
+              "Rack_StudioChorus_HiFilter": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioChorus",
+            "label": "Studio Chorus",
+            "kind": "chorus",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0,
+            "lowFilter": 340,
+            "filter": 5150,
+            "delay": 0.016,
+            "tone": 7650
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioChorus",
+            "label": "Studio Chorus",
+            "kind": "approximate",
+            "message": "Original generic chorus audition; branded/native DSP differs",
+            "unmappedControls": [
+              "Stereo"
+            ],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StudioCompressor",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StudioCompressor",
+            "KnobValues": {
+              "Rack_StudioCompressor_Threshold": -25,
+              "Rack_StudioCompressor_Ratio": 0,
+              "Rack_StudioCompressor_Attack": 125,
+              "Rack_StudioCompressor_Release": 505
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioCompressor",
+            "label": "Studio Compressor",
+            "kind": "compressor",
+            "threshold": -25,
+            "ratio": 1.5,
+            "attack": 0.125,
+            "release": 0.505
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioCompressor",
+            "label": "Studio Compressor",
+            "kind": "approximate",
+            "message": "Original generic compressor audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StudioDelay",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StudioDelay",
+            "KnobValues": {
+              "Rack_StudioDelay_TimeL": 510,
+              "Rack_StudioDelay_TimeR": 510,
+              "Rack_StudioDelay_Feedback": 50,
+              "Rack_StudioDelay_Mix": 50.5,
+              "Rack_StudioDelay_Filter": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioDelay",
+            "label": "Studio Delay",
+            "kind": "delay",
+            "time": 0.51,
+            "timeRight": 0.51,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 5150,
+            "depth": 0,
+            "rate": 1
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioDelay",
+            "label": "Studio Delay",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StudioEQ",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StudioEQ",
+            "KnobValues": {
+              "Rack_StudioEQ_Bass": 0,
+              "Rack_StudioEQ_BassFreq": 260,
+              "Rack_StudioEQ_LoMid": 0,
+              "Rack_StudioEQ_LoMidFreq": 1050,
+              "Rack_StudioEQ_LoMidQ": 0,
+              "Rack_StudioEQ_HiMid": 0,
+              "Rack_StudioEQ_HiMidFreq": 4.4,
+              "Rack_StudioEQ_HiMidQ": 0,
+              "Rack_StudioEQ_Treble": 0,
+              "Rack_StudioEQ_TrebleFreq": 11
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioEQ",
+            "label": "Studio Parametric EQ",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "lowshelf",
+                "frequency": 260,
+                "requestedFrequency": 260,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog",
+                "controls": [
+                  "Rack_StudioEQ_BassFreq",
+                  "Rack_StudioEQ_Bass"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 1050,
+                "requestedFrequency": 1050,
+                "gain": 0,
+                "Q": 0.7,
+                "frequencySource": "catalog",
+                "controls": [
+                  "Rack_StudioEQ_LoMidFreq",
+                  "Rack_StudioEQ_LoMid",
+                  "Rack_StudioEQ_LoMidQ"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 4400,
+                "requestedFrequency": 4400,
+                "gain": 0,
+                "Q": 0.7,
+                "frequencySource": "catalog",
+                "controls": [
+                  "Rack_StudioEQ_HiMidFreq",
+                  "Rack_StudioEQ_HiMid",
+                  "Rack_StudioEQ_HiMidQ"
+                ]
+              },
+              {
+                "type": "highshelf",
+                "frequency": 11000,
+                "requestedFrequency": 11000,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog",
+                "controls": [
+                  "Rack_StudioEQ_TrebleFreq",
+                  "Rack_StudioEQ_Treble"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioEQ",
+            "label": "Studio Parametric EQ",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "Bass Freq.",
+              "Bass",
+              "Low-Mid Freq.",
+              "Low-Mid",
+              "Low-Mid \"Q\"",
+              "High-Mid Freq.",
+              "High-Mid",
+              "High-Mid \"Q\"",
+              "Treble Freq.",
+              "Treble"
+            ],
+            "inactiveControls": [],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Original low/high shelves and peaking middle bands; native filter slopes are unestablished.",
+              "Wide/Narrow catalog choices map to original Q=0.7/2.8, not known native numeric Q."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StudioFlanger",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StudioFlanger",
+            "KnobValues": {
+              "Rack_StudioFlanger_Rate": 5.05,
+              "Rack_StudioFlanger_Mix": 50,
+              "Rack_StudioFlanger_Regen": 50.5,
+              "Rack_StudioFlanger_Depth": 50.5,
+              "Rack_StudioFlanger_Tone": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioFlanger",
+            "label": "Studio Flanger",
+            "kind": "flanger",
+            "rate": 5.05,
+            "depth": 0.5,
+            "mix": 0.5,
+            "feedback": 0.505,
+            "lowFilter": 40,
+            "filter": 7650,
+            "delay": 0.016,
+            "tone": 5150
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioFlanger",
+            "label": "Studio Flanger",
+            "kind": "approximate",
+            "message": "Original generic flanger audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StudioGraphicEQ",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StudioGraphicEQ",
+            "KnobValues": {
+              "Rack_StudioGraphicEQ_Bass": 0,
+              "Rack_StudioGraphicEQ_BassFreq": 260,
+              "Rack_StudioGraphicEQ_LoMid": 0,
+              "Rack_StudioGraphicEQ_LoMidFreq": 1100,
+              "Rack_StudioGraphicEQ_Mid": 0,
+              "Rack_StudioGraphicEQ_MidFreq": 2.75,
+              "Rack_StudioGraphicEQ_HiMid": 0,
+              "Rack_StudioGraphicEQ_HiMidFreq": 5.5,
+              "Rack_StudioGraphicEQ_Treble": 0,
+              "Rack_StudioGraphicEQ_TrebleFreq": 11
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioGraphicEQ",
+            "label": "Studio ParaGraphic EQ",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "lowshelf",
+                "frequency": 260,
+                "requestedFrequency": 260,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog",
+                "controls": [
+                  "Rack_StudioGraphicEQ_BassFreq",
+                  "Rack_StudioGraphicEQ_Bass"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 1100,
+                "requestedFrequency": 1100,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog",
+                "controls": [
+                  "Rack_StudioGraphicEQ_LoMidFreq",
+                  "Rack_StudioGraphicEQ_LoMid"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 2750,
+                "requestedFrequency": 2750,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog",
+                "controls": [
+                  "Rack_StudioGraphicEQ_MidFreq",
+                  "Rack_StudioGraphicEQ_Mid"
+                ]
+              },
+              {
+                "type": "peaking",
+                "frequency": 5500,
+                "requestedFrequency": 5500,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog",
+                "controls": [
+                  "Rack_StudioGraphicEQ_HiMidFreq",
+                  "Rack_StudioGraphicEQ_HiMid"
+                ]
+              },
+              {
+                "type": "highshelf",
+                "frequency": 11000,
+                "requestedFrequency": 11000,
+                "gain": 0,
+                "Q": 1,
+                "frequencySource": "catalog",
+                "controls": [
+                  "Rack_StudioGraphicEQ_TrebleFreq",
+                  "Rack_StudioGraphicEQ_Treble"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioGraphicEQ",
+            "label": "Studio ParaGraphic EQ",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "Bass Freq.",
+              "Bass",
+              "Low-Mid Freq.",
+              "Low-Mid",
+              "Mid Freq.",
+              "Mid",
+              "High-Mid Freq.",
+              "High-Mid",
+              "Treble Freq.",
+              "Treble"
+            ],
+            "inactiveControls": [],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Original low/high shelves and peaking middle bands; native filter slopes are unestablished."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StudioPlate",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StudioPlate",
+            "KnobValues": {
+              "Rack_StudioPlate_Time": 50.5,
+              "Rack_StudioPlate_Depth": 50.5,
+              "Rack_StudioPlate_Mix": 50.5,
+              "Rack_StudioPlate_Tone": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioPlate",
+            "label": "Studio Plate Reverb",
+            "kind": "reverb",
+            "seconds": 2.075,
+            "depth": 0.5,
+            "mix": 0.505,
+            "filter": 5150,
+            "voice": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioPlate",
+            "label": "Studio Plate Reverb",
+            "kind": "approximate",
+            "message": "Original generic reverb audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StudioVerb",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StudioVerb",
+            "KnobValues": {
+              "Rack_StudioVerb_Time": 50.5,
+              "Rack_StudioVerb_Depth": 50.5,
+              "Rack_StudioVerb_Mix": 50.5,
+              "Rack_StudioVerb_Tone": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioVerb",
+            "label": "Studio Hall Reverb",
+            "kind": "reverb",
+            "seconds": 2.075,
+            "depth": 0.5,
+            "mix": 0.505,
+            "filter": 5150,
+            "voice": 0
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioVerb",
+            "label": "Studio Hall Reverb",
+            "kind": "approximate",
+            "message": "Original generic reverb audition; branded/native DSP differs",
+            "unmappedControls": [],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_StudioWahFilter",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_StudioWahFilter",
+            "KnobValues": {
+              "Rack_StudioWahFilter_Auto": 0,
+              "Rack_StudioWahFilter_Sens": 50.5,
+              "Rack_StudioWahFilter_Attack": 500,
+              "Rack_StudioWahFilter_Release": 505,
+              "Rack_StudioWahFilter_Pedal": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioWahFilter",
+            "label": "Studio Wah Filter",
+            "kind": "filter",
+            "mix": 1,
+            "bands": [
+              {
+                "type": "bandpass",
+                "frequency": 848.5281374238571,
+                "requestedFrequency": 848.5281374238571,
+                "gain": 0,
+                "Q": 2,
+                "frequencySource": "original-design",
+                "controls": [
+                  "Rack_StudioWahFilter_Auto",
+                  "Rack_StudioWahFilter_Pedal"
+                ]
+              }
+            ]
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_StudioWahFilter",
+            "label": "Studio Wah Filter",
+            "kind": "approximate",
+            "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+            "usedControls": [
+              "Auto-Mode",
+              "Pedal"
+            ],
+            "inactiveControls": [
+              "Sensitivity",
+              "Attack",
+              "Release"
+            ],
+            "unmappedControls": [],
+            "invalidControls": [],
+            "frequencyLimits": [],
+            "originalDesign": [
+              "Original manual logarithmic 300..2400 Hz bandpass with Q=2. Native wah frequency range and response are unknown. Sensitivity/rate/envelope controls are inactive in manual mode."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_SynthFilter",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_SynthFilter",
+            "KnobValues": {
+              "Rack_SynthFilter_Sens": 50.5,
+              "Rack_SynthFilter_Attack": 505,
+              "Rack_SynthFilter_Release": 505,
+              "Rack_SynthFilter_FilterType": 0,
+              "Rack_SynthFilter_Res": 50.5
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_SynthFilter",
+            "label": "Synth Filter",
+            "kind": "adaptive",
+            "processor": {
+              "slot": "Rack1",
+              "key": "Rack_SynthFilter",
+              "kind": "filter",
+              "mode": "lowpass",
+              "attack": 0.505,
+              "release": 0.505,
+              "sensitivity": 2,
+              "minHz": 100,
+              "maxHz": 6000,
+              "mix": 0.505
+            }
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_SynthFilter",
+            "kind": "approximate",
+            "message": "Original envelope audition; native DSP differs",
+            "usedControls": [
+              "Filter Type",
+              "Attack Speed",
+              "Release Speed",
+              "Sensitivity",
+              "Mix"
+            ],
+            "invalidControls": [],
+            "unmappedControls": [],
+            "originalDesign": [
+              "Original first-order envelope filter; catalog Mix is wet/dry even where its native key ends in Res. Sensitivity scales detection 0.25..16; original cutoff ranges are 60..2200Hz bass or 100..6000Hz guitar. No native resonance or slope claim."
+            ]
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    },
+    {
+      "key": "Rack_TapeEcho",
+      "tone": {
+        "GearList": {
+          "Rack1": {
+            "Key": "Rack_TapeEcho",
+            "KnobValues": {
+              "Rack_TapeEcho_Time": 1010,
+              "Rack_TapeEcho_Feedback": 50,
+              "Rack_TapeEcho_Mix": 50.5,
+              "Rack_TapeEcho_Stereo": 50.5,
+              "Rack_TapeEcho_Filter": 0
+            },
+            "opaque": {
+              "native": "keep source"
+            }
+          }
+        }
+      },
+      "plan": {
+        "effects": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_TapeEcho",
+            "label": "Tape Echo",
+            "kind": "delay",
+            "time": 1.01,
+            "timeRight": 1.01,
+            "feedback": 0.5,
+            "mix": 0.505,
+            "filter": 1600,
+            "depth": 0,
+            "rate": 1
+          }
+        ],
+        "disclosures": [
+          {
+            "slot": "Rack1",
+            "key": "Rack_TapeEcho",
+            "label": "Tape Echo",
+            "kind": "approximate",
+            "message": "Original generic delay audition; branded/native DSP differs",
+            "unmappedControls": [
+              "Hi Filter"
+            ],
+            "invalidControls": []
+          },
+          {
+            "slot": "Output",
+            "kind": "approximate",
+            "message": "Local effects audition uses an output soft ceiling after tone volume; extreme stacks may be reduced. Native exports are unchanged."
+          }
+        ],
+        "sourcePreserved": true
+      }
+    }
+  ]
+}

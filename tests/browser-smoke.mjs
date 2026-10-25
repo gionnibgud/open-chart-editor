@@ -1,0 +1,40 @@
+// Uses already-installed tooling; never downloads a browser or a dependency.
+import {createRequire} from 'node:module';
+import {mkdir,writeFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const require=createRequire(import.meta.url);
+const {chromium}=require(process.env.OCE_PLAYWRIGHT||'C:/Users/zagat/AppData/Roaming/npm/node_modules/rea-agents/node_modules/playwright-core');
+const browser=await chromium.launch({headless:true,executablePath:process.env.OCE_CHROMIUM||'C:/Users/zagat/AppData/Local/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-win64/chrome-headless-shell.exe'});
+const context=await browser.newContext({viewport:{width:1600,height:1000},acceptDownloads:true});
+const page=await context.newPage(),errors=[];
+page.on('pageerror',e=>{errors.push(e.message);console.error('Browser error:',e.message);});
+page.on('response',response=>{if(response.status()>=400)console.error('HTTP',response.status(),response.url());});
+page.setDefaultTimeout(10000);
+const results=[];
+try{
+ await page.goto(process.env.OCE_URL||'http://127.0.0.1:8766');
+ await page.waitForSelector('#ws-app[data-mounted="true"]');
+ await page.waitForFunction(()=>document.querySelector('#ws-title').textContent.includes('Chart study'));
+ assert.equal(await page.locator('#ws-arrangement option').count(),1);results.push('Boots original study without runtime errors');
+ await page.locator('#ws-canvas').click({position:{x:300,y:220}});await page.keyboard.press('5');
+ await page.locator('[data-inspector="properties"]').click();await page.waitForSelector('#ws-note-fret');assert.equal(await page.locator('#ws-note-fret').inputValue(),'5');results.push('Fret keyboard entry and property inspector');
+ await page.keyboard.press('Control+z');await page.keyboard.press('Control+y');results.push('Undo and redo');
+ await page.locator('#ws-tab-button').click({button:'right'});await page.getByRole('menuitem',{name:'Import tab'}).waitFor();
+ const importChooserPromise=page.waitForEvent('filechooser');await page.getByRole('menuitem',{name:'Import tab'}).click();
+ const importChooser=await importChooserPromise;assert.equal(await importChooser.element().evaluate(element=>element.id),'ws-import-file');
+ results.push('Tab-button context menu uses the existing Import arrangements file chooser');
+ await page.locator('#ws-tempo-button').click();assert.equal(await page.locator('#ws-tempo-tools').isVisible(),true);
+ const before=await page.locator('#ws-bpm-display').textContent();await page.locator('[data-inspector="settings"]').click();await page.locator('#ws-bpm').fill('100');await page.locator('#ws-bpm').press('Tab');
+ assert.equal(await page.locator('#ws-bpm-display').textContent(),'100.00');results.push(`Tempo editing ${before} → 100 BPM`);
+ await page.locator('#ws-tempo-button').click({button:'right'});await page.getByRole('menuitem',{name:'Load tempo map from file'}).waitFor();
+ const tempoChooserPromise=page.waitForEvent('filechooser');await page.getByRole('menuitem',{name:'Load tempo map from file'}).click();
+ const tempoChooser=await tempoChooserPromise;await tempoChooser.setFiles({name:'gpa-sync.xml',mimeType:'application/xml',buffer:Buffer.from('<track title="Sync test"><sync>1#1000;0;0;500#</sync></track>')});
+ await page.waitForFunction(()=>document.querySelector('#ws-bpm-display').textContent==='120.00');results.push('Tempo-button context menu imports a GPA sync beat map');
+ await page.locator('#ws-tones-button').click();await page.waitForSelector('#ws-tone-view:not([hidden])');assert.ok(await page.locator('[data-tone-definition]').count()>0);results.push('Tone allocations view');
+ await page.locator('#ws-tab-button').click();await page.locator('[data-action="track"]').nth(1).click();await page.locator('#ws-new-arr-family').selectOption('keys');await page.locator('#ws-new-arr-name').fill('Piano study');await page.locator('#ws-dialog-submit').click();
+ await page.waitForFunction(()=>document.querySelectorAll('#ws-arrangement option').length===2);await page.locator('#ws-canvas').click({position:{x:250,y:400}});await page.keyboard.press('3');await page.locator('[data-inspector="properties"]').click();await page.waitForSelector('#ws-note-pitch');results.push('Piano arrangement and pitch entry');
+ await page.locator('#ws-speed').fill('75');await page.locator('#ws-pitch').fill('-2');await page.locator('#ws-pitch').press('Tab');await page.locator('#ws-play').click();await page.waitForTimeout(250);await page.locator('#ws-play').click();results.push('Transport with independent speed and pitch');
+ await page.screenshot({path:new URL('../preview.png',import.meta.url).pathname.replace(/^\/([A-Za-z]:)/,'$1'),fullPage:true});
+ assert.deepEqual(errors,[]);results.push('No browser runtime errors');
+ await mkdir(new URL('../verification/',import.meta.url),{recursive:true});await writeFile(new URL('../verification/browser-smoke.json',import.meta.url),JSON.stringify({ok:true,results,errors},null,2));console.log(JSON.stringify({ok:true,results}));
+}finally{await page.screenshot({path:new URL('../browser-last.png',import.meta.url).pathname.replace(/^\/([A-Za-z]:)/,'$1'),fullPage:true}).catch(()=>{});await browser.close();}

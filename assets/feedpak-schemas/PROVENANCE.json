@@ -1,0 +1,19 @@
+{
+ "source": "I:/Dev/freedBack/feedback-feedpak-spec",
+ "specificationVersion": "1.25.0",
+ "license": "MIT; LICENSE-CODE.txt",
+ "files": {
+  "arrangement.schema.json": "0cdeee8aa7c8880fa5a1fa38d0ca015e111805fe5be94247b953c4dbcafd2352",
+  "drum-tab.schema.json": "cf2fef0e7a8ecb1470172dc981fcae568213c70c5eeafe44717d07db8b3a3ded",
+  "harmony.schema.json": "6dfe4da7ad1341a4e9a9845aa7e75271aa374a5e0ddc4c1d9f74663131cfb132",
+  "keys.schema.json": "d46abc34bb2b45c1927f572b88543fc5cfa4ebd02bedee169b38af648734f4c9",
+  "lesson.schema.json": "2f23edea2d49a99e68c4a4a0b12e17bcb74c4758acc45ec0ecacc00311ced452",
+  "lyrics.schema.json": "4bd17eae9f14a8283404aedf098460292d831d00a80f832869e0de6b6123ea75",
+  "manifest.schema.json": "7cf5e85b5f8d0c9b9aa67ea356d95b1ebda1c4dbd7229ac2b4e7c97be78933c7",
+  "notation.schema.json": "0ca2725fe887c6b26d4aee48b237e2aed718acea4d67b18a7a43593160526708",
+  "rigs.schema.json": "728d4105b3ec504a44cd3235a58015d489b6e46c4160a7a9614cf1a8637d4823",
+  "song-timeline.schema.json": "7b50596ecae946d389bbfcc7c6ef5023e679f31d5c3385fc67d0c1ae5e92063d",
+  "vocal-pitch-contour.schema.json": "d0c525031b0847c2e4c073630dddb111cc05517011190256450ffa5321f8ceea",
+  "vocal-pitch.schema.json": "010fea9d3f84c76e238af301eda5ad18eea898f3341264a20ec20f7d8cfb0507"
+ }
+}

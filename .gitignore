@@ -1,0 +1,26 @@
+# Caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+
+# Local research, evidence and generated output (kept on the author's machine)
+research/
+verification/
+dist/
+imports/
+builds/
+tools/.host-runs/
+tools/.host-backups/
+tools/.highway-runs/
+*.log
+
+# Local environment
+.env
+.vscode/
+.idea/
+
+# Screenshots written by browser test runs
+browser-last.png
+preview.png
+

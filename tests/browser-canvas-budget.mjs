@@ -1,0 +1,26 @@
+// Measures bounded real examples. Historical full-height backing projections
+// are explicitly counterfactual after viewport virtualization. No runtime patch.
+import {createRequire} from 'node:module';import {mkdir,writeFile} from 'node:fs/promises';import {fileURLToPath} from 'node:url';import assert from 'node:assert/strict';
+import {makeProject,makeArrangement,makeNote,DRUMS} from '../src/model.js';
+const output=new URL('../research/browser-canvas-budget/',import.meta.url);await mkdir(output,{recursive:true});const temp=fileURLToPath(new URL('tmp/',output));await mkdir(temp,{recursive:true});process.env.TEMP=process.env.TMP=temp;
+const require=createRequire(import.meta.url),{chromium}=require(process.env.OCE_PLAYWRIGHT||'C:/Users/zagat/AppData/Roaming/npm/node_modules/rea-agents/node_modules/playwright-core');const browser=await chromium.launch({headless:true,executablePath:process.env.OCE_CHROMIUM||'C:/Users/zagat/AppData/Local/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-win64/chrome-headless-shell.exe'}),context=await browser.newContext({viewport:{width:1700,height:1050},deviceScaleFactor:1,acceptDownloads:true});await context.addInitScript(()=>Object.defineProperty(window,'showSaveFilePicker',{value:undefined,configurable:true}));const page=await context.newPage(),errors=[],samples=[];page.on('pageerror',e=>errors.push(e.message));
+await page.route('**/*',route=>{const u=new URL(route.request().url());return u.hostname==='127.0.0.1'||['blob:','data:'].includes(u.protocol)?route.continue():route.abort();});
+async function action(name){const button=page.locator(`[data-action="${name}"]`).first();await button.evaluate(el=>{const menu=el.closest('details');if(menu)menu.open=true;});await button.click();}
+async function snapshot(){const pending=page.waitForEvent('download');pending.catch(()=>{});await action('saveas');await page.locator('#ws-export-format').selectOption('json');await page.locator('#ws-dialog-submit').click();const stream=await(await pending).createReadStream(),chunks=[];for await(const chunk of stream)chunks.push(chunk);return JSON.parse(Buffer.concat(chunks));}
+async function metrics(){return page.evaluate(()=>{const c=document.querySelector('#ws-canvas'),s=document.querySelector('#ws-timeline-scroll');return {backingWidth:c.width,backingHeight:c.height,cssWidth:parseFloat(c.style.width),cssHeight:parseFloat(c.style.height),viewportWidth:s.clientWidth,viewportHeight:s.clientHeight,scrollHeight:s.scrollHeight,dpr:devicePixelRatio,rgbaMiB:c.width*c.height*4/2**20};});}
+let report;
+try{
+ await page.goto(process.env.OCE_URL||'http://127.0.0.1:8766');await page.waitForSelector('#ws-app[data-mounted="true"]');
+ for(const type of ['keys','drums']){
+  const p=makeProject(),a=makeArrangement(type);p.title='Original canvas budget '+type;p.duration=4;p.arrangements=[a];
+  if(type==='keys')a.notes=[makeNote(a,1,0,0,.5),makeNote(a,2,127,0,.5)];
+  else{a._wire={kit:Array.from({length:64-DRUMS.length},(_,i)=>({id:'own-custom-'+i,name:'Own custom '+i}))};a.notes=[{id:'first',time:1,piece:'own-custom-0',velocity:90,sustain:0,techniques:{}},{id:'last',time:2,piece:'own-custom-'+(63-DRUMS.length),velocity:90,sustain:0,techniques:{}}];}
+  await page.locator('#ws-open-file').setInputFiles({name:'own-budget.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(p))});await page.waitForFunction(title=>document.querySelector('#ws-title').textContent.includes(title),p.title);await action('tab');const before=await snapshot(),normal=await metrics();
+  const rect=await page.locator('#ws-timeline-scroll').boundingBox();await page.mouse.move(rect.x+400,rect.y+250);await page.keyboard.down('Alt');try{for(let i=0;i<3;i++){await page.mouse.wheel(0,-200);await page.waitForTimeout(80);}}finally{await page.keyboard.up('Alt');}
+  const stretched=await metrics();assert.ok(stretched.scrollHeight>normal.scrollHeight);assert.equal(stretched.backingHeight,normal.backingHeight);assert.equal(stretched.cssHeight,stretched.viewportHeight);assert.ok(stretched.backingWidth*stretched.backingHeight<=8000000);assert.deepEqual(await snapshot(),before);samples.push({type,laneCount:type==='keys'?128:64,normal,stretched,sourceUnchanged:true});
+ }
+ assert.deepEqual(errors,[]);const width=samples[1].stretched.cssWidth;
+ const projections=[{kind:'keys128-max-stretch-DPR2',lanes:128,row:72,dpr:2},{kind:'drums1024-normal-DPR2',lanes:1024,row:26,dpr:2},{kind:'drums1024-max-stretch-DPR2',lanes:1024,row:104,dpr:2}].map(p=>{const cssHeight=174+p.lanes*p.row+40,backingHeight=cssHeight*p.dpr;return {...p,cssWidth:width,cssHeight,backingHeight,rgbaMiB:width*p.dpr*backingHeight*4/2**20,measured:false,counterfactual:true,method:'Historical pre-virtualization full-height backing formula; not the current canvas allocation'};});
+ report={auditCompleted:true,samples,projections,errors,sourceWrites:false,nativeCanvasLimitMeasured:false,conclusion:'Current virtual backing remains fixed as logical lane height grows. Projections describe the removed full-height allocation, not current memory use.'};
+}catch(error){report={auditCompleted:false,error:error.stack,samples,errors};process.exitCode=1;}
+finally{await writeFile(new URL('report.json',output),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close();}

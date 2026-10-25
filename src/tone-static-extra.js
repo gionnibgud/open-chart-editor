@@ -1,0 +1,88 @@
+// Original static audition models. Never native DSP/presets.
+// Acoustic mid Hz comes from factual metadata. Shelf anchors, +/-12dB mapping
+// and broad 0..12dB booster policy are original choices disclosed per gear.
+import {ToneFilterRack} from './tone-filters.js';
+import {EFFECT_SLOT_ORDER} from './tone-effects.js';
+const KEYS=new Set(['Pedal_AcousticEmulator','Pedal_RangeBooster','Pedal_AmpEQ']);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+export function staticOutputCurve(){return Float32Array.from({length:1025},(_,i)=>{const x=i/512-1,a=Math.abs(x);return a<=.5?x:Math.sign(x)*(.5+.45*Math.tanh((a-.5)/.45));});}
+// Original Amp EQ policy. The catalog does not establish gain dB or enum Hz.
+function compileAmpEq(gear,definition,{slot='PrePedal1',sampleRate=48000}={}){
+ if(!Number.isFinite(sampleRate)||sampleRate<8000||sampleRate>384000)throw Error('Choose sampling rate8000..384000');
+ const invalid=[],used=new Set(),limited=[],bands=[],expected=[
+  ['Bass','Bass','number',1,100,1,null],['BassFreq','Bass Freq.','enum',0,1,1,['One','Two']],
+  ['Mid','Midrange','number',1,100,1,null],['MidShift','Mid Freq. Shift','enum',0,2,1,['One','Two','Three']],
+  ['Treble','Treble','number',1,100,1,null],['TrebleFreq','Treble Freq.','enum',0,1,1,['One','Two']],
+ ];
+ const controls=Array.isArray(definition?.knobs)?definition.knobs:[];
+ if(definition?.key!=='Pedal_AmpEQ'||definition?.type!=='Pedals'||definition?.category!=='Filter')invalid.push('Matching factual Amp EQ metadata');
+ const values={};
+ for(const [suffix,label,unit,min,max,step,choices]of expected){
+  const key='Pedal_AmpEQ_'+suffix,matches=controls.filter(control=>control.key===key),control=matches[0];used.add(key);
+  const metadata=matches.length===1&&control.label===label&&control.unit===unit&&control.min===min&&control.max===max&&control.step===step&&(choices?JSON.stringify(control.choices)===JSON.stringify(choices):control.choices===undefined);
+  if(!metadata)invalid.push(key+' metadata');
+  const value=gear.KnobValues?.[key];
+  if(!Number.isFinite(value)||value<min||value>max||(unit==='enum'&&!Number.isInteger(value)))invalid.push(key);
+  values[suffix]=value;
+ }
+ const unknown=[...new Set([...controls.map(control=>control.key),...Object.keys(gear.KnobValues||{})].filter(key=>!used.has(key)))];
+ if(!invalid.length){
+  const add=(type,requestedFrequency,value,suffix)=>{const frequency=clamp(requestedFrequency,20,sampleRate*.45);if(frequency!==requestedFrequency)limited.push({controls:['Pedal_AmpEQ_'+suffix],requestedHz:requestedFrequency,effectiveHz:frequency});bands.push({type,frequency,requestedFrequency,gain:(value-50.5)*24/99,Q:1,frequencySource:'original-design'});};
+  add('lowshelf',[80,160][values.BassFreq],values.Bass,'BassFreq');
+  add('peaking',[400,800,1600][values.MidShift],values.Mid,'MidShift');
+  add('highshelf',[2500,5000][values.TrebleFreq],values.Treble,'TrebleFreq');
+ }
+ const effect=invalid.length?null:{slot,key:gear.Key,label:definition.label,kind:'filter',gain:1,bands};
+ const disclosure={slot,key:gear.Key,label:definition?.label??'Amp EQ',kind:effect?'approximate':'bypassed',message:effect?'Original Amp EQ three-band audition; native DSP differs. Per-stage soft ceiling can reduce peaks.':'Invalid factual Amp EQ controls; entire gear bypassed',usedControls:[...used],invalidControls:[...new Set(invalid)],unmappedControls:unknown,frequencyLimits:limited,originalDesign:[
+  'Original three-band EQ only. Unitless Bass/Midrange/Treble1..100 map linearly to-12..+12dB; authored50.5 is unity. Native gain calibration is unknown.',
+  'Original enum anchors: Bass Freq.One/Two=80/160Hz; Mid Freq. Shift.One/Two/Three=400/800/1600Hz; Treble Freq.One/Two=2500/5000Hz. These Hz values are design choices, not recovered native frequencies. Original Q=1 and shelf/peak topology; frequencies clamp to20Hz..45% of sample rate without rewriting authored controls.',
+ ]};
+ return{handled:true,effect,disclosure};
+}
+
+export function compileStaticFilterGear(gear,definition,{slot='PrePedal1',sampleRate=48000}={}){
+ if(gear?.Key==='Pedal_AmpEQ')return compileAmpEq(gear,definition,{slot,sampleRate});
+ if(!KEYS.has(gear?.Key))return{handled:false,effect:null,disclosure:null};
+ if(!definition||definition.key!==gear.Key||definition.category!=='Filter'||!Array.isArray(definition.knobs))throw Error('Matching factual Filter metadata required');
+ if(!Number.isFinite(sampleRate)||sampleRate<8000||sampleRate>384000)throw Error('Choose sampling rate8000..384000');
+ const used=new Set(),invalid=[],limited=[],design=[],bands=[];
+ const read=(suffix,label,unit)=>{const key=gear.Key+'_'+suffix,control=definition.knobs.find(k=>k.key===key);used.add(key);if(!control||control.label!==label||String(control.unit).toLowerCase()!==unit||!Number.isFinite(control.min)||!Number.isFinite(control.max)||control.max<=control.min){invalid.push(label+' metadata');return null;}const value=gear.KnobValues?.[key];if(!Number.isFinite(value)||value<control.min||value>control.max){invalid.push(label);return null;}return{control,value};};
+ const normalized=(suffix,label)=>{const result=read(suffix,label,'number');return result?(result.value-result.control.min)/(result.control.max-result.control.min):.5;};
+ const band=(type,requestedFrequency,gain,source)=>{const frequency=clamp(requestedFrequency,20,sampleRate*.45);if(frequency!==requestedFrequency)limited.push({requestedHz:requestedFrequency,effectiveHz:frequency});bands.push({type,frequency,gain,Q:1,frequencySource:source});};
+ let gain=1;
+ if(gear.Key==='Pedal_AcousticEmulator'){
+  const body=normalized('Body','Body'),mid=normalized('Mid','Mid-range'),tone=normalized('Tone','Tone'),frequency=read('MidShift','Mid Frequency','hz');
+  band('lowshelf',180,(body-.5)*24,'original-design');band('peaking',frequency?.value??750,(mid-.5)*24,'catalog-hz');band('highshelf',3500,(tone-.5)*24,'original-design');
+  design.push('Original three-band EQ, not physical acoustic-instrument emulation. Unitless Body/Mid-range/Tone map linearly to-12..+12dB about authored midpoint50.5. Original shelf anchors180Hz/3500Hz and mid Q=1; only Mid Frequency uses factual authored Hz.');
+ }else{
+  const boost=read('Boost','Boost!','%');gain=10**(((boost?(boost.value-boost.control.min)/(boost.control.max-boost.control.min):0)*12)/20);
+  design.push('Original broad-band gain: native Boost!1..100% maps to0..+12dB (unity at1%). Native gain range, spectral coloration and nonlinear response are unknown; this is not a frequency-range or amplifier emulation.');
+ }
+ const effect=invalid.length?null:{slot,key:gear.Key,label:definition.label,kind:'filter',gain,bands};
+ const disclosure={slot,key:gear.Key,label:definition.label,kind:effect?'approximate':'bypassed',message:effect?'Original static audition; native DSP differs. Per-stage soft ceiling can reduce peaks at high boost.':'Invalid factual controls; entire gear bypassed',usedControls:[...used],invalidControls:invalid,unmappedControls:definition.knobs.filter(k=>!used.has(k.key)).map(k=>k.key),frequencyLimits:limited,originalDesign:design};
+ return{handled:true,effect,disclosure};
+}
+export function compileAdditionalStaticFilters(tone,catalog,options={}){
+ if(!Array.isArray(catalog))throw Error('Factual gear catalog required');const effects=[],disclosures=[],claimedSlots=[];
+ for(const slot of EFFECT_SLOT_ORDER){const gear=tone?.GearList?.[slot];if(!KEYS.has(gear?.Key))continue;const definition=catalog.find(d=>d.key===gear.Key);if(definition?.category!=='Filter')continue;const result=compileStaticFilterGear(gear,definition,{...options,slot});claimedSlots.push(slot);if(result.effect)effects.push(result.effect);disclosures.push(result.disclosure);}return{effects,disclosures,claimedSlots};
+}
+export function mergeAdditionalStaticFilters(base,extra){if(!extra.claimedSlots.length)return base;const claimed=new Set(extra.claimedSlots),position=slot=>{const i=EFFECT_SLOT_ORDER.indexOf(slot);return i<0?999:i;},sort=(a,b)=>position(a.slot)-position(b.slot);return{...base,effects:[...base.effects.filter(e=>!claimed.has(e.slot)),...extra.effects].sort(sort),disclosures:[...base.disclosures.filter(e=>!claimed.has(e.slot)),...extra.disclosures].sort(sort)};}
+// Finite-signal scalar reference for real Waveshaper proof. Source samples are
+// read-only. Table interpolation models the model's exact curve.
+export function rangeBoosterSample(sample,effect,curve=staticOutputCurve()){
+ if(!Number.isFinite(sample)||effect?.key!=='Pedal_RangeBooster'||!Number.isFinite(effect.gain)||effect.gain<1||effect.gain>4)throw Error('Finite range-booster reference required');
+ const index=(clamp(sample*effect.gain,-1,1)+1)*.5*(curve.length-1),lo=Math.floor(index),hi=Math.min(curve.length-1,lo+1);return curve[lo]+(curve[hi]-curve[lo])*(index-lo);
+}
+export class StaticFilterRack{
+ constructor(context,effect){
+  if(!KEYS.has(effect?.key)||effect.kind!=='filter'||!Number.isFinite(effect.gain)||effect.gain<1||effect.gain>4||!Array.isArray(effect.bands)||effect.bands.length!==(['Pedal_AcousticEmulator','Pedal_AmpEQ'].includes(effect.key)?3:0))throw Error('Bounded static filter plan required');
+  this.context=context;this.nodes=[];this.filterRack=null;this.disposed=false;
+  try{this.input=context.createGain();this.nodes.push(this.input);this.output=context.createGain();this.nodes.push(this.output);this.input.gain.value=effect.gain;
+   if(effect.bands.length){this.filterRack=new ToneFilterRack(context,{effects:[{kind:'filter',bands:effect.bands}]});this.input.connect(this.filterRack.input);this.filterRack.connect(this.output);}
+   else{const guard=context.createWaveShaper();this.nodes.push(guard);guard.curve=staticOutputCurve();guard.oversample='none';this.input.connect(guard);guard.connect(this.output);}
+  }catch(error){this.dispose();throw error;}
+ }
+ get nodeCount(){return this.nodes.length+(this.filterRack?.nodes.length??0);}
+ connect(destination){if(this.disposed)throw Error('Static filter rack disposed');this.output.connect(destination);return this;}
+ dispose(){if(this.disposed)return;this.disposed=true;this.filterRack?.dispose();this.filterRack=null;for(const node of this.nodes)try{node.disconnect();}catch{}this.nodes=[];}
+}

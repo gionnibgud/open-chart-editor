@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://got-feedback.github.io/feedpak-spec/schemas/lesson.schema.json",
+  "$comment": "SPDX-License-Identifier: MIT. feedpak lesson.json — interactive lesson definition. See spec/lesson-format.md.",
+  "title": "feedpak lesson",
+  "type": "object",
+  "required": ["version", "id", "title", "input", "stages"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "enum": [1],
+      "description": "Schema version. Currently always 1."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$",
+      "description": "Stable, filesystem-safe, lowercase lesson identifier."
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "input": {
+      "type": "object",
+      "required": ["source"],
+      "additionalProperties": true,
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Input source. 'midi' is the only defined v1 value."
+        }
+      }
+    },
+    "presentation": { "$ref": "#/$defs/presentation" },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/stage" }
+    },
+    "rewards": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "stars": {
+          "type": "array",
+          "$comment": "uniqueItems catches fully-duplicate objects but cannot express 'unique min_accuracy' across objects with different threshold values; tools/validate.py enforces that (Writer MUST NOT, lesson-format §5).",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "required": ["threshold", "min_accuracy"],
+            "additionalProperties": true,
+            "properties": {
+              "threshold":    { "type": "integer", "minimum": 1 },
+              "min_accuracy": { "type": "number",  "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "presentation": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "hand_icons":    { "type": "boolean" },
+        "staff_visible": { "type": "boolean" }
+      }
+    },
+
+    "chart_ref": {
+      "type": "object",
+      "required": ["arrangement", "bars"],
+      "additionalProperties": true,
+      "properties": {
+        "feedpak": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!\\.{1,2}(/|$))(?!.*/\\.{1,2}(/|$)).*[^/]$",
+          "description": "DLC-relative path to the feedpak. MUST be a safe relative path: no leading slash, no backslash, no colon, no '..' or '.' segments, no empty segments. Absent = enclosing feedpak (embedded lessons only)."
+        },
+        "arrangement": {
+          "type": "string",
+          "description": "Arrangement id within the referenced feedpak."
+        },
+        "bars": {
+          "type": "array",
+          "$comment": "Cross-item ordering (last_bar >= first_bar) cannot be expressed in JSON Schema draft-2020-12 without $data. Enforced by the validator (tools/validate.py). See spec §3.2.",
+          "prefixItems": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "first_bar: 1-based measure number, or 0 to include the pickup bar before measure 1."
+            },
+            {
+              "type": "integer",
+              "minimum": 1,
+              "description": "last_bar: 1-based measure number. Must be >= first_bar."
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "hand": {
+          "type": "string",
+          "enum": ["left", "right", "both"],
+          "description": "Hand selection for piano arrangements. Absent = 'both'."
+        }
+      }
+    },
+
+    "gate": {
+      "$comment": "Flat union: static stages use correctness; rhythm/song/generated-drill stages use accuracy+timing. The engine selects the relevant fields based on stage type.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "correctness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "accuracy":    { "type": "number", "minimum": 0, "maximum": 1 },
+        "timing":      { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+
+    "practice_params": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "tempo_pct":     { "type": "integer", "minimum": 1, "maximum": 100 },
+        "metronome":     { "type": "boolean" },
+        "wait_for_note": { "type": "boolean" }
+      }
+    },
+
+    "yellow_streak": {
+      "type": "object",
+      "required": ["threshold", "action"],
+      "additionalProperties": true,
+      "properties": {
+        "threshold": { "type": "integer", "minimum": 1 },
+        "action": {
+          "type": "string",
+          "enum": ["repeat_bars"],
+          "description": "Currently the only defined value is 'repeat_bars' — restart the current bar range from the beginning."
+        }
+      }
+    },
+
+    "red_streak": {
+      "type": "object",
+      "required": ["threshold", "action"],
+      "additionalProperties": true,
+      "properties": {
+        "threshold": { "type": "integer", "minimum": 1 },
+        "action": {
+          "type": "string",
+          "enum": ["practice_mode"],
+          "description": "Currently the only defined value is 'practice_mode' — switch to a slower, scaffolded playback."
+        },
+        "practice": { "$ref": "#/$defs/practice_params" }
+      },
+      "if": {
+        "properties": { "action": { "const": "practice_mode" } },
+        "required": ["action"]
+      },
+      "then": {
+        "required": ["practice"],
+        "$comment": "F4: practice block is required when action is 'practice_mode'. See spec §4.3."
+      }
+    },
+
+    "adaptive": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "yellow_streak": { "$ref": "#/$defs/yellow_streak" },
+        "red_streak":    { "$ref": "#/$defs/red_streak" }
+      }
+    },
+
+    "instruction": {
+      "type": "object",
+      "required": ["type", "file"],
+      "additionalProperties": true,
+      "properties": {
+        "type": { "type": "string", "enum": ["audio", "video"] },
+        "file": { "type": "string", "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*//)(?!\\.{1,2}(/|$))(?!.*/\\.{1,2}(/|$)).*[^/]$" }
+      }
+    },
+
+    "stage": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": true,
+      "properties": {
+        "id":           { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["video", "static", "rhythm", "song", "generated-drill"]
+        },
+        "title":        { "type": "string" },
+        "presentation": { "$ref": "#/$defs/presentation" },
+        "instruction":  { "$ref": "#/$defs/instruction" },
+        "chart":        { "$ref": "#/$defs/chart_ref" },
+        "gate":         { "$ref": "#/$defs/gate" },
+        "adaptive":     { "$ref": "#/$defs/adaptive" },
+        "generator":    { "$ref": "#/$defs/generator_ref" }
+      },
+      "allOf": [
+        {
+          "$comment": "F2: chart is required for chart-fragment stage types. See spec §3.4–§3.6.",
+          "if": {
+            "properties": { "type": { "enum": ["static", "rhythm", "song"] } },
+            "required": ["type"]
+          },
+          "then": { "required": ["chart"] }
+        },
+        {
+          "$comment": "Round-2 F1: generator is required for generated-drill stages. See spec §3.7.",
+          "if": {
+            "properties": { "type": { "const": "generated-drill" } },
+            "required": ["type"]
+          },
+          "then": { "required": ["generator"] }
+        }
+      ]
+    },
+
+    "generator_ref": {
+      "$comment": "Generated-drill generator reference. 'params' is opaque — the generator plugin is the sole authority on its shape.",
+      "type": "object",
+      "required": ["plugin", "params"],
+      "additionalProperties": true,
+      "properties": {
+        "plugin": {
+          "type": "string",
+          "description": "The plugin.json id of the generator plugin."
+        },
+        "params": {
+          "type": "object",
+          "description": "Opaque parameter block; not validated by this schema.",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

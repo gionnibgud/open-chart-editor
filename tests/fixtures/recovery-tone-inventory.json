@@ -1,0 +1,6592 @@
+{
+  "schema": "oce.recovery-tone-inventory.v1",
+  "at": "2026-10-24T07:52:01.896Z",
+  "version": "0.8.0",
+  "sourceHashes": {
+    "assets/tone-rack-data.json": "83aa32e8d590343a8f117aa9c376579b3ad3a656f9e175e043edaf88ea21bb0f",
+    "src/tone-adaptive-plan.js": "ab309bc2b8803cfbd7ec01e00b75dde21c53fd340e1cf066d58cc2dda646218b",
+    "src/tone-adaptive-rack.js": "36e98aa173d569c5c5e8233f88b3c65456eb0175924aed4ffce2b622cac23680",
+    "src/tone-adaptive-worklet.js": "d1d56944791a19fb7e6f30abe9069d5ba1a8fc7e0186940a0a60462ae7d3e228",
+    "src/tone-crusher.js": "ea03d1bd083eff9bc3c30018c765613adb3eae037de4e02236f3a03c8b64fae6",
+    "src/tone-effects.js": "31895b54417d142b907907f82b3ccbfe291b781990f5f6e350e4f8fbac7135c2",
+    "src/tone-envelope.js": "99d6f812486fdc11bbed1e37d3a4210a5a69a4aaed71705ed274326f7bbf3eee",
+    "src/tone-filters.js": "9f01167da197f5fea5d8f0d5e09d7cedfd94de95a3386bd96d46ada05b34c412",
+    "src/tone-modulation.js": "9facbd7be750e0bdbb8fe0fdcc46b5d49bae58c00255b820e87bb5a7a3915288",
+    "src/tone-rack.js": "cd36e0093eb6cec2862781c686cbe46e70de51dc6f16b02955990c8ccd54a0fa",
+    "src/tone-retirement.js": "b6ad72ba249b6e1127f5e9ea2e97392584bb3ad762f284ea04f073d850c3155e",
+    "src/tone-static-extra.js": "90029563f9a35302c9b012340f52200c70c5efd9aad1d1638f7999763d5114f1",
+    "src/tone-swole-eden.js": "bda136b6e18b7aa9a0bb17e3326ab5777cab3d01cf3bbdb586406b35886625fb",
+    "tests/fixtures/tone-swole-eden-legacy-07-plans.json": "0ad30481adabe0c8429f0a32126c57593e30b2bd8555bae72adc148d33c8d390"
+  },
+  "method": "Pure production toneAuditionPlan at valid production defaults with adaptiveStatus ready. No AudioContext/browser/native DSP execution. Approximate means at least one original model or aggregate drive, not every control modeled.",
+  "counts": {
+    "allKeys": 100,
+    "approximate": 83,
+    "bypassed": 17,
+    "historicalFixtureKeys": 79,
+    "historicalFixtureApproximate": 67,
+    "historicalFixtureBypassed": 12
+  },
+  "rows": [
+    {
+      "key": "Pedal_Distortion",
+      "label": "Distortion",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Distortion",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_Distortion_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_Distortion_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_AnalogueDelay",
+      "label": "Analog Delay",
+      "type": "Pedals",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AnalogueDelay",
+        "label": "Analog Delay",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AnalogueDelay",
+        "label": "Analog Delay",
+        "kind": "delay",
+        "time": 0.51,
+        "timeRight": 0.51,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 7650,
+        "depth": 0,
+        "rate": 1
+      },
+      "controls": [
+        {
+          "key": "Pedal_AnalogueDelay_Time",
+          "label": "Time",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_AnalogueDelay_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_AnalogueDelay_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioCompressor",
+      "label": "Studio Compressor",
+      "type": "Racks",
+      "category": "Dynamics",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioCompressor",
+        "label": "Studio Compressor",
+        "kind": "approximate",
+        "message": "Original generic compressor audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StudioCompressor",
+        "label": "Studio Compressor",
+        "kind": "compressor",
+        "threshold": -25,
+        "ratio": 4,
+        "attack": 0.125,
+        "release": 0.51
+      },
+      "controls": [
+        {
+          "key": "Rack_StudioCompressor_Threshold",
+          "label": "Threshold",
+          "min": -50,
+          "max": 0,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Rack_StudioCompressor_Ratio",
+          "label": "Ratio",
+          "min": 0,
+          "max": 4,
+          "step": 1,
+          "choices": [
+            "1.5:1",
+            "2:1",
+            "4:1",
+            "8:1",
+            "20:1"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Rack_StudioCompressor_Attack",
+          "label": "Attack",
+          "min": 0,
+          "max": 250,
+          "step": 1,
+          "unit": "ms"
+        },
+        {
+          "key": "Rack_StudioCompressor_Release",
+          "label": "Release",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassAutoFilter",
+      "label": "Bass Auto Filter",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassAutoFilter",
+        "kind": "approximate",
+        "message": "Original envelope audition; native DSP differs",
+        "usedControls": [
+          "Filter Type",
+          "Attack Speed",
+          "Release Speed",
+          "Sensitivity",
+          "Mix"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "originalDesign": [
+          "Original first-order envelope filter; catalog Mix is wet/dry even where its native key ends in Res. Sensitivity scales detection 0.25..16; original cutoff ranges are 60..2200Hz bass or 100..6000Hz guitar. No native resonance or slope claim."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassAutoFilter",
+        "label": "Bass Auto Filter",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "PrePedal1",
+          "key": "Bass_Pedal_BassAutoFilter",
+          "kind": "filter",
+          "mode": "bandpass",
+          "attack": 0.126,
+          "release": 0.51,
+          "sensitivity": 2.042453212630728,
+          "minHz": 60,
+          "maxHz": 2200,
+          "mix": 0.51
+        }
+      },
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassAutoFilter_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassAutoFilter_Attack",
+          "label": "Attack Speed",
+          "min": 1,
+          "max": 250,
+          "step": 1,
+          "unit": "ms"
+        },
+        {
+          "key": "Bass_Pedal_BassAutoFilter_Release",
+          "label": "Release Speed",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Bass_Pedal_BassAutoFilter_FilterType",
+          "label": "Filter Type",
+          "min": 0,
+          "max": 2,
+          "step": 1,
+          "choices": [
+            "LP",
+            "BP",
+            "HP"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Bass_Pedal_BassAutoFilter_Res",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassChorus",
+      "label": "Bass Chorus",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassChorus",
+        "label": "Bass Chorus",
+        "kind": "approximate",
+        "message": "Original generic chorus audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassChorus",
+        "label": "Bass Chorus",
+        "kind": "chorus",
+        "rate": 5.1,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 343.03030303030306,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassChorus_Rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "hz"
+        },
+        {
+          "key": "Bass_Pedal_BassChorus_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassChorus_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassChorus_LoFilter",
+          "label": "Low Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassDistortion",
+      "label": "Bass Distortion",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassDistortion",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone",
+          "Filter"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassDistortion_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassDistortion_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassDistortion_Filter",
+          "label": "Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassEnbig",
+      "label": "Bass Enbiggenator",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassEnbig",
+        "label": "Bass Enbiggenator",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassEnbig_Rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "hz"
+        },
+        {
+          "key": "Bass_Pedal_BassEnbig_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassEnbig_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassEnbig_Filter",
+          "label": "Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassEQ8",
+      "label": "8-Band Bass EQ",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassEQ8",
+        "label": "8-Band Bass EQ",
+        "kind": "approximate",
+        "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+        "usedControls": [
+          "30hz",
+          "75hz",
+          "185hz",
+          "460hz",
+          "1.1khz",
+          "2.7khz",
+          "6.8khz",
+          "16khz"
+        ],
+        "inactiveControls": [],
+        "unmappedControls": [],
+        "invalidControls": [],
+        "frequencyLimits": [],
+        "originalDesign": [
+          "Independent peaking bands use original fixed Q=1; native bandwidth/phase response is unestablished."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassEQ8",
+        "label": "8-Band Bass EQ",
+        "kind": "filter",
+        "mix": 1,
+        "bands": [
+          {
+            "type": "peaking",
+            "frequency": 30,
+            "requestedFrequency": 30,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Bass_Pedal_BassEQ8_30"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 75,
+            "requestedFrequency": 75,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Bass_Pedal_BassEQ8_75"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 185,
+            "requestedFrequency": 185,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Bass_Pedal_BassEQ8_185"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 460,
+            "requestedFrequency": 460,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Bass_Pedal_BassEQ8_460"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 1100,
+            "requestedFrequency": 1100,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Bass_Pedal_BassEQ8_1100"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 2700,
+            "requestedFrequency": 2700,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Bass_Pedal_BassEQ8_2700"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 6800,
+            "requestedFrequency": 6800,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Bass_Pedal_BassEQ8_6800"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 16000,
+            "requestedFrequency": 16000,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Bass_Pedal_BassEQ8_16000"
+            ]
+          }
+        ]
+      },
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassEQ8_30",
+          "label": "30hz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Bass_Pedal_BassEQ8_75",
+          "label": "75hz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Bass_Pedal_BassEQ8_185",
+          "label": "185hz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Bass_Pedal_BassEQ8_460",
+          "label": "460hz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Bass_Pedal_BassEQ8_1100",
+          "label": "1.1khz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Bass_Pedal_BassEQ8_2700",
+          "label": "2.7khz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Bass_Pedal_BassEQ8_6800",
+          "label": "6.8khz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Bass_Pedal_BassEQ8_16000",
+          "label": "16khz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassFilterDelay",
+      "label": "Bass Filter Delay",
+      "type": "Pedals",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassFilterDelay",
+        "label": "Bass Filter Delay",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassFilterDelay",
+        "label": "Bass Filter Delay",
+        "kind": "delay",
+        "time": 1.01,
+        "timeRight": 1.01,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 5200.505050505051,
+        "depth": 0,
+        "rate": 1
+      },
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassFilterDelay_Time",
+          "label": "Time",
+          "min": 20,
+          "max": 2000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Bass_Pedal_BassFilterDelay_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassFilterDelay_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassFilterDelay_Filter",
+          "label": "Low Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassFilterEcho",
+      "label": "Bass Filter Echo",
+      "type": "Pedals",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassFilterEcho",
+        "label": "Bass Filter Echo",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassFilterEcho",
+        "label": "Bass Filter Echo",
+        "kind": "delay",
+        "time": 1.01,
+        "timeRight": 1.01,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 5200.505050505051,
+        "depth": 0,
+        "rate": 1
+      },
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassFilterEcho_Time",
+          "label": "Time",
+          "min": 20,
+          "max": 2000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Bass_Pedal_BassFilterEcho_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassFilterEcho_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassFilterEcho_Filter",
+          "label": "Low Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassFlanger",
+      "label": "Bass Flange",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassFlanger",
+        "label": "Bass Flange",
+        "kind": "approximate",
+        "message": "Original generic flanger audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassFlanger",
+        "label": "Bass Flange",
+        "kind": "flanger",
+        "rate": 5.1000000000000005,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 5200.505050505051,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassFlanger_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassFlanger_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassFlanger_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassFlanger_Filter",
+          "label": "Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassFuzz",
+      "label": "Bass Fuzz",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassFuzz",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone",
+          "Filter"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassFuzz_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassFuzz_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassFuzz_Filter",
+          "label": "Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassOverdrive",
+      "label": "Bass Overdrive",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassOverdrive",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone",
+          "Blend",
+          "Filter"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassOverdrive_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassOverdrive_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassOverdrive_Blend",
+          "label": "Blend",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassOverdrive_Filter",
+          "label": "Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassPhase",
+      "label": "Bass Phase",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassPhase",
+        "label": "Bass Phase",
+        "kind": "approximate",
+        "message": "Original generic phaser audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassPhase",
+        "label": "Bass Phase",
+        "kind": "phaser",
+        "rate": 5.1000000000000005,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 5200.505050505051,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassPhase_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassPhase_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassPhase_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassPhase_Filter",
+          "label": "Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassSubOctave",
+      "label": "Bass Sub Octave",
+      "type": "Pedals",
+      "category": "Pitch",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassSubOctave",
+        "label": "Bass Sub Octave",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassSubOctave_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_BassSubOctave_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_BassWah",
+      "label": "Bass Wah",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassWah",
+        "kind": "approximate",
+        "message": "Original envelope audition; native DSP differs",
+        "usedControls": [
+          "Auto-Mode",
+          "Speed",
+          "Sensitivity"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [
+          "Pedal (Auto=OFF)"
+        ],
+        "originalDesign": [
+          "Original linked envelope-driven first-order bandpass; manual Pedal is inactive in Auto mode. Missing attack uses original10ms; unitless Speed maps to original20..500ms release. Native wah tracking and response are unknown."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_BassWah",
+        "label": "Bass Wah",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "PrePedal1",
+          "key": "Bass_Pedal_BassWah",
+          "kind": "filter",
+          "mode": "bandpass",
+          "attack": 0.01,
+          "release": 0.26242424242424245,
+          "sensitivity": 2.042453212630728,
+          "minHz": 150,
+          "maxHz": 1800,
+          "mix": 1
+        }
+      },
+      "controls": [
+        {
+          "key": "Bass_Pedal_BassWah_Auto",
+          "label": "Auto-Mode",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "OFF",
+            "ON"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Bass_Pedal_BassWah_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassWah_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_BassWah_Pedal",
+          "label": "Pedal (Auto=OFF)",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_EdenWTDI",
+      "label": "Eden WT D.I.",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_EdenWTDI",
+        "label": "Eden WT D.I.",
+        "kind": "approximate",
+        "message": "PARTIAL original3-band EQ only; Eden preamp/enhance/shift/compression are NOT heard locally",
+        "usedControls": [
+          "Bass",
+          "Mid",
+          "Treble"
+        ],
+        "unmappedControls": [
+          "Gain",
+          "Enhance",
+          "Bass Boost",
+          "Mid-Shift",
+          "Compression"
+        ],
+        "invalidControls": [],
+        "originalDesign": [
+          "PARTIAL original three-band EQ only: actual authored Bass/Mid/Treble dB gains; original80/600/3500Hz anchors and Q=1. Native frequencies/response are unknown. Gain, Enhance, Bass Boost, Mid-Shift and Compression are stored but NOT modeled."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_EdenWTDI",
+        "label": "Eden WT D.I.",
+        "kind": "filter",
+        "mix": 1,
+        "bands": [
+          {
+            "type": "lowshelf",
+            "frequency": 80,
+            "requestedFrequency": 80,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "original-design"
+          },
+          {
+            "type": "peaking",
+            "frequency": 600,
+            "requestedFrequency": 600,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "original-design"
+          },
+          {
+            "type": "highshelf",
+            "frequency": 3500,
+            "requestedFrequency": 3500,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "original-design"
+          }
+        ]
+      },
+      "controls": [
+        {
+          "key": "Bass_Pedal_EdenWTDI_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_EdenWTDI_Bass",
+          "label": "Bass",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Bass_Pedal_EdenWTDI_Mid",
+          "label": "Mid",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Bass_Pedal_EdenWTDI_Treble",
+          "label": "Treble",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Bass_Pedal_EdenWTDI_Enhance",
+          "label": "Enhance",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Bass_Pedal_EdenWTDI_LoShift",
+          "label": "Bass Boost",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "Off",
+            "On"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Bass_Pedal_EdenWTDI_MidShift",
+          "label": "Mid-Shift",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "Off",
+            "On"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Bass_Pedal_EdenWTDI_Compression",
+          "label": "Compression",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Bass_Pedal_MBComp",
+      "label": "MB Comp",
+      "type": "Pedals",
+      "category": "Dynamics",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Bass_Pedal_MBComp",
+        "label": "MB Comp",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Bass_Pedal_MBComp_Compress",
+          "label": "Compression",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_MBComp_Rate",
+          "label": "Recovery Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Bass_Pedal_MBComp_Filter",
+          "label": "Transition Band",
+          "min": 100,
+          "max": 1000,
+          "step": 10,
+          "unit": "hz"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_80sFlanger",
+      "label": "80's Flanger",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_80sFlanger",
+        "label": "80's Flanger",
+        "kind": "approximate",
+        "message": "Original generic flanger audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_80sFlanger",
+        "label": "80's Flanger",
+        "kind": "flanger",
+        "rate": 5.1000000000000005,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_80sFlanger_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_80sFlanger_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_80sFlanger_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_AcousticEmulator",
+      "label": "Acoustic Emulator",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AcousticEmulator",
+        "label": "Acoustic Emulator",
+        "kind": "approximate",
+        "message": "Original static audition; native DSP differs. Per-stage soft ceiling can reduce peaks at high boost.",
+        "usedControls": [
+          "Body",
+          "Mid-range",
+          "Tone",
+          "Mid Frequency"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "frequencyLimits": [],
+        "originalDesign": [
+          "Original three-band EQ, not physical acoustic-instrument emulation. Unitless Body/Mid-range/Tone map linearly to-12..+12dB about authored midpoint50.5. Original shelf anchors180Hz/3500Hz and mid Q=1; only Mid Frequency uses factual authored Hz."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AcousticEmulator",
+        "label": "Acoustic Emulator",
+        "kind": "filter",
+        "gain": 1,
+        "bands": [
+          {
+            "type": "lowshelf",
+            "frequency": 180,
+            "gain": 0.12121212121212199,
+            "Q": 1,
+            "frequencySource": "original-design"
+          },
+          {
+            "type": "peaking",
+            "frequency": 2525,
+            "gain": 0.12121212121212199,
+            "Q": 1,
+            "frequencySource": "catalog-hz"
+          },
+          {
+            "type": "highshelf",
+            "frequency": 3500,
+            "gain": 0.12121212121212199,
+            "Q": 1,
+            "frequencySource": "original-design"
+          }
+        ]
+      },
+      "controls": [
+        {
+          "key": "Pedal_AcousticEmulator_Body",
+          "label": "Body",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_AcousticEmulator_Mid",
+          "label": "Mid-range",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_AcousticEmulator_MidShift",
+          "label": "Mid Frequency",
+          "min": 50,
+          "max": 5000,
+          "step": 25,
+          "unit": "hz"
+        },
+        {
+          "key": "Pedal_AcousticEmulator_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_AmpEQ",
+      "label": "Amp EQ",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AmpEQ",
+        "label": "Amp EQ",
+        "kind": "bypassed",
+        "message": "No original audition model for this Filter gear; native definition retained unchanged",
+        "usedControls": [],
+        "inactiveControls": [],
+        "unmappedControls": [
+          "Bass",
+          "Bass Freq.",
+          "Midrange",
+          "Mid Freq. Shift",
+          "Treble",
+          "Treble Freq."
+        ],
+        "invalidControls": [],
+        "frequencyLimits": [],
+        "originalDesign": []
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_AmpEQ_Bass",
+          "label": "Bass",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_AmpEQ_BassFreq",
+          "label": "Bass Freq.",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "One",
+            "Two"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Pedal_AmpEQ_Mid",
+          "label": "Midrange",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_AmpEQ_MidShift",
+          "label": "Mid Freq. Shift",
+          "min": 0,
+          "max": 2,
+          "step": 1,
+          "choices": [
+            "One",
+            "Two",
+            "Three"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Pedal_AmpEQ_Treble",
+          "label": "Treble",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_AmpEQ_TrebleFreq",
+          "label": "Treble Freq.",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "One",
+            "Two"
+          ],
+          "unit": "enum"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_AmpTrem",
+      "label": "Amp Trem",
+      "type": "Pedals",
+      "category": "Tremolo",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AmpTrem",
+        "label": "Amp Trem",
+        "kind": "approximate",
+        "message": "Original generic tremolo audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AmpTrem",
+        "label": "Amp Trem",
+        "kind": "tremolo",
+        "rate": 5.1000000000000005,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "wave": 0
+      },
+      "controls": [
+        {
+          "key": "Pedal_AmpTrem_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_AmpTrem_Depth",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_AmpVibe",
+      "label": "Amp Vibe",
+      "type": "Pedals",
+      "category": "Tremolo",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AmpVibe",
+        "kind": "approximate",
+        "message": "Original modulation audition; native DSP differs",
+        "usedControls": [
+          "Speed",
+          "Mix"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "originalDesign": [
+          "Original full-depth amplitude tremolo; unitless Speed maps to0.1..10Hz. Short/Long square variants are original thresholded sine pulses; no native duty-cycle claim."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AmpVibe",
+        "kind": "tremolo",
+        "rate": 5.1000000000000005,
+        "depth": 1,
+        "mix": 0.51,
+        "wave": 0
+      },
+      "controls": [
+        {
+          "key": "Pedal_AmpVibe_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_AmpVibe_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_AutoFilter",
+      "label": "Auto Filter",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AutoFilter",
+        "kind": "approximate",
+        "message": "Original envelope audition; native DSP differs",
+        "usedControls": [
+          "Filter Type",
+          "Attack Speed",
+          "Release Speed",
+          "Sensitivity",
+          "Mix"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "originalDesign": [
+          "Original first-order envelope filter; catalog Mix is wet/dry even where its native key ends in Res. Sensitivity scales detection 0.25..16; original cutoff ranges are 60..2200Hz bass or 100..6000Hz guitar. No native resonance or slope claim."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AutoFilter",
+        "label": "Auto Filter",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "PrePedal1",
+          "key": "Pedal_AutoFilter",
+          "kind": "filter",
+          "mode": "bandpass",
+          "attack": 0.126,
+          "release": 0.51,
+          "sensitivity": 2.042453212630728,
+          "minHz": 100,
+          "maxHz": 6000,
+          "mix": 0.51
+        }
+      },
+      "controls": [
+        {
+          "key": "Pedal_AutoFilter_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_AutoFilter_Attack",
+          "label": "Attack Speed",
+          "min": 1,
+          "max": 250,
+          "step": 1,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_AutoFilter_Release",
+          "label": "Release Speed",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_AutoFilter_FilterType",
+          "label": "Filter Type",
+          "min": 0,
+          "max": 2,
+          "step": 1,
+          "choices": [
+            "LP",
+            "BP",
+            "HP"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Pedal_AutoFilter_Res",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_AutoVibe",
+      "label": "Auto Vibe",
+      "type": "Pedals",
+      "category": "Tremolo",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_AutoVibe",
+        "label": "Auto Vibe",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_AutoVibe_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_AutoVibe_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_AutoVibe_Attack",
+          "label": "Attack Speed",
+          "min": 1,
+          "max": 250,
+          "step": 1,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_AutoVibe_Release",
+          "label": "Release Speed",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_BakedRotatoe",
+      "label": "Baked Rotatoe",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_BakedRotatoe",
+        "label": "Baked Rotatoe",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_BakedRotatoe_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_BakedRotatoe_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_BakedRotatoe_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_BakedRotatoe_Balance",
+          "label": "Balance",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_BassEmulator",
+      "label": "Guitar>Bass Emulator",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_BassEmulator",
+        "label": "Guitar>Bass Emulator",
+        "kind": "bypassed",
+        "message": "No original audition model for this Filter gear; native definition retained unchanged",
+        "usedControls": [],
+        "inactiveControls": [],
+        "unmappedControls": [
+          "Body",
+          "Tone"
+        ],
+        "invalidControls": [],
+        "frequencyLimits": [],
+        "originalDesign": []
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_BassEmulator_Body",
+          "label": "Body",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_BassEmulator_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_BitCruncher",
+      "label": "Bit Cruncher",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_BitCruncher",
+        "kind": "approximate",
+        "message": "Original bit-crusher audition; native DSP differs",
+        "usedControls": [
+          "Mix",
+          "Filter",
+          "Downsample",
+          "Bit Depth",
+          "Rectify"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "originalDesign": [
+          "Original signed mid-tread2..8-bit quantizer; fractional bit depth rounds only for audition. Downsample maps to1+round(value) sample-hold frames. Native Filter maps to original300..18000Hz first-order lowpass, bounded by sample rate. Rectify blends original signal toward absolute value. Quantization/sample-hold aliasing is intentional; no native distortion/filter claim."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_BitCruncher",
+        "label": "Bit Cruncher",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "PrePedal1",
+          "key": "Pedal_BitCruncher",
+          "kind": "crusher",
+          "bits": 5,
+          "holdFrames": 17,
+          "filterHz": 2372.342787162423,
+          "rectify": 0.5050505050505051,
+          "mix": 0.51
+        }
+      },
+      "controls": [
+        {
+          "key": "Pedal_BitCruncher_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_BitCruncher_Attack",
+          "label": "Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_BitCruncher_Release",
+          "label": "Downsample",
+          "min": 0,
+          "max": 32,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_BitCruncher_FilterType",
+          "label": "Bit Depth",
+          "min": 2,
+          "max": 8,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_BitCruncher_Sens",
+          "label": "Rectify",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_BobFilter",
+      "label": "Analog Filter",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_BobFilter",
+        "kind": "approximate",
+        "message": "Original envelope audition; native DSP differs",
+        "usedControls": [
+          "Filter Type",
+          "Attack Speed",
+          "Release Speed",
+          "Sensitivity",
+          "Mix"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "originalDesign": [
+          "Original first-order envelope filter; catalog Mix is wet/dry even where its native key ends in Res. Sensitivity scales detection 0.25..16; original cutoff ranges are 60..2200Hz bass or 100..6000Hz guitar. No native resonance or slope claim."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_BobFilter",
+        "label": "Analog Filter",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "PrePedal1",
+          "key": "Pedal_BobFilter",
+          "kind": "filter",
+          "mode": "bandpass",
+          "attack": 0.126,
+          "release": 0.51,
+          "sensitivity": 2.042453212630728,
+          "minHz": 100,
+          "maxHz": 6000,
+          "mix": 0.51
+        }
+      },
+      "controls": [
+        {
+          "key": "Pedal_BobFilter_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_BobFilter_Attack",
+          "label": "Attack Speed",
+          "min": 1,
+          "max": 250,
+          "step": 1,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_BobFilter_Release",
+          "label": "Release Speed",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_BobFilter_Filter",
+          "label": "Filter Type",
+          "min": 0,
+          "max": 2,
+          "step": 1,
+          "choices": [
+            "LP",
+            "BP",
+            "HP"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Pedal_BobFilter_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_BuzzOne",
+      "label": "Buzz 1",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_BuzzOne",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_BuzzOne_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_BuzzOne_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_BuzzToo",
+      "label": "Buzz 2",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_BuzzToo",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_BuzzToo_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_BuzzToo_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_CaptFuzzle",
+      "label": "Captain Fuzzle",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_CaptFuzzle",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_CaptFuzzle_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 150,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_CaptFuzzle_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_Chorus",
+      "label": "Chorus",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Chorus",
+        "label": "Chorus",
+        "kind": "approximate",
+        "message": "Original generic chorus audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Chorus",
+        "label": "Chorus",
+        "kind": "chorus",
+        "rate": 5.1,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_Chorus_Rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "hz"
+        },
+        {
+          "key": "Pedal_Chorus_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_Chorus_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_Chorus20",
+      "label": "Chorus 2.0",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Chorus20",
+        "label": "Chorus 2.0",
+        "kind": "approximate",
+        "message": "Original generic chorus audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Chorus20",
+        "label": "Chorus 2.0",
+        "kind": "chorus",
+        "rate": 5.1,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_Chorus20_Rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "hz"
+        },
+        {
+          "key": "Pedal_Chorus20_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_Chorus20_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_ClassicFlanger",
+      "label": "Classic Flange",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ClassicFlanger",
+        "label": "Classic Flange",
+        "kind": "approximate",
+        "message": "Original generic flanger audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ClassicFlanger",
+        "label": "Classic Flange",
+        "kind": "flanger",
+        "rate": 5.1000000000000005,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_ClassicFlanger_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_ClassicFlanger_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_ClassicFlanger_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_Compression",
+      "label": "Compression",
+      "type": "Pedals",
+      "category": "Dynamics",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Compression",
+        "label": "Compression",
+        "kind": "approximate",
+        "message": "Original generic compressor audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Compression",
+        "label": "Compression",
+        "kind": "compressor",
+        "threshold": -27.212121212121215,
+        "ratio": 4,
+        "attack": 0.051,
+        "release": 0.51
+      },
+      "controls": [
+        {
+          "key": "Pedal_Compression_Comp",
+          "label": "Compression",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_Compression_Attack",
+          "label": "Attack",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_Compression_Release",
+          "label": "Release",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_CosmicEcho",
+      "label": "Cosmonaut Echo",
+      "type": "Pedals",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_CosmicEcho",
+        "label": "Cosmonaut Echo",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_CosmicEcho",
+        "label": "Cosmonaut Echo",
+        "kind": "delay",
+        "time": 0.51,
+        "timeRight": 0.51,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 7650,
+        "depth": 0,
+        "rate": 1
+      },
+      "controls": [
+        {
+          "key": "Pedal_CosmicEcho_Time",
+          "label": "Time",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_CosmicEcho_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_CosmicEcho_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_CustomDrive",
+      "label": "Custom Drive",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_CustomDrive",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone",
+          "Voicing"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_CustomDrive_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_CustomDrive_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_CustomDrive_Voice",
+          "label": "Voicing",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "UK",
+            "CA"
+          ],
+          "unit": "enum"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_DigitalChorus",
+      "label": "Digital Chorus",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_DigitalChorus",
+        "label": "Digital Chorus",
+        "kind": "approximate",
+        "message": "Original generic chorus audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_DigitalChorus",
+        "label": "Digital Chorus",
+        "kind": "chorus",
+        "rate": 5.1,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 343.03030303030306,
+        "filter": 5200.505050505051,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_DigitalChorus_Rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "hz"
+        },
+        {
+          "key": "Pedal_DigitalChorus_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_DigitalChorus_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_DigitalChorus_LoFilter",
+          "label": "LoFilter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_DigitalChorus_HiFilter",
+          "label": "HiFilter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_DigitalVerb",
+      "label": "Digital Verb",
+      "type": "Pedals",
+      "category": "Reverb",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_DigitalVerb",
+        "label": "Digital Verb",
+        "kind": "approximate",
+        "message": "Original generic reverb audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_DigitalVerb",
+        "label": "Digital Verb",
+        "kind": "reverb",
+        "seconds": 2.0944444444444446,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "filter": 5200.505050505051,
+        "voice": 0
+      },
+      "controls": [
+        {
+          "key": "Pedal_DigitalVerb_Time",
+          "label": "Time",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_DigitalVerb_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_DigitalVerb_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_DigitalVerb_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_Enbiggenator",
+      "label": "Enbiggenator",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Enbiggenator",
+        "label": "Enbiggenator",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_Enbiggenator_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_Enbiggenator_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_Enbiggenator_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_EQ5",
+      "label": "5-Band Graphic EQ",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_EQ5",
+        "label": "5-Band Graphic EQ",
+        "kind": "approximate",
+        "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+        "usedControls": [
+          "63hz",
+          "250hz",
+          "750hz",
+          "2.2khz",
+          "5.7khz"
+        ],
+        "inactiveControls": [],
+        "unmappedControls": [],
+        "invalidControls": [],
+        "frequencyLimits": [],
+        "originalDesign": [
+          "Independent peaking bands use original fixed Q=1; native bandwidth/phase response is unestablished."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_EQ5",
+        "label": "5-Band Graphic EQ",
+        "kind": "filter",
+        "mix": 1,
+        "bands": [
+          {
+            "type": "peaking",
+            "frequency": 63,
+            "requestedFrequency": 63,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ5_63"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 250,
+            "requestedFrequency": 250,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ5_250"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 750,
+            "requestedFrequency": 750,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ5_750"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 2200,
+            "requestedFrequency": 2200,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ5_2200"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 5700,
+            "requestedFrequency": 5700,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ5_5700"
+            ]
+          }
+        ]
+      },
+      "controls": [
+        {
+          "key": "Pedal_EQ5_63",
+          "label": "63hz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ5_250",
+          "label": "250hz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ5_750",
+          "label": "750hz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ5_2200",
+          "label": "2.2khz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ5_5700",
+          "label": "5.7khz",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_EQ8",
+      "label": "8-Band Graphic EQ",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_EQ8",
+        "label": "8-Band Graphic EQ",
+        "kind": "approximate",
+        "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+        "usedControls": [
+          "50HZ",
+          "100HZ",
+          "200HZ",
+          "400HZ",
+          "800HZ",
+          "1.6KHZ",
+          "3.2KHZ",
+          "6.4KHZ"
+        ],
+        "inactiveControls": [],
+        "unmappedControls": [],
+        "invalidControls": [],
+        "frequencyLimits": [],
+        "originalDesign": [
+          "Independent peaking bands use original fixed Q=1; native bandwidth/phase response is unestablished."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_EQ8",
+        "label": "8-Band Graphic EQ",
+        "kind": "filter",
+        "mix": 1,
+        "bands": [
+          {
+            "type": "peaking",
+            "frequency": 50,
+            "requestedFrequency": 50,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ8_50"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 100,
+            "requestedFrequency": 100,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ8_100"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 200,
+            "requestedFrequency": 200,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ8_200"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 400,
+            "requestedFrequency": 400,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ8_400"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 800,
+            "requestedFrequency": 800,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ8_800"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 1600,
+            "requestedFrequency": 1600,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ8_1600"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 3200,
+            "requestedFrequency": 3200,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ8_3200"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 6400,
+            "requestedFrequency": 6400,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog-label",
+            "controls": [
+              "Pedal_EQ8_6400"
+            ]
+          }
+        ]
+      },
+      "controls": [
+        {
+          "key": "Pedal_EQ8_50",
+          "label": "50HZ",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ8_100",
+          "label": "100HZ",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ8_200",
+          "label": "200HZ",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ8_400",
+          "label": "400HZ",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ8_800",
+          "label": "800HZ",
+          "min": -15,
+          "max": 15,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ8_1600",
+          "label": "1.6KHZ",
+          "min": -12,
+          "max": 12,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ8_3200",
+          "label": "3.2KHZ",
+          "min": -12,
+          "max": 12,
+          "step": 1,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_EQ8_6400",
+          "label": "6.4KHZ",
+          "min": -12,
+          "max": 12,
+          "step": 1,
+          "unit": "db"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_FuzzWasHe",
+      "label": "Fuzz Was He?",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_FuzzWasHe",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_FuzzWasHe_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_FuzzWasHe_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_GermaniumDrive",
+      "label": "Germanium Drive",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_GermaniumDrive",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_GermaniumDrive_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_GermaniumDrive_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_Limiter",
+      "label": "Limiter",
+      "type": "Pedals",
+      "category": "Dynamics",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Limiter",
+        "label": "Limiter",
+        "kind": "approximate",
+        "message": "Original generic compressor audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Limiter",
+        "label": "Limiter",
+        "kind": "compressor",
+        "threshold": -27.212121212121215,
+        "ratio": 4,
+        "attack": 0.01,
+        "release": 0.30252525252525253
+      },
+      "controls": [
+        {
+          "key": "Pedal_Limiter_Limit",
+          "label": "Limit",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_Limiter_Rate",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_LineDrive",
+      "label": "Line Drive",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_LineDrive",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_LineDrive_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_LineDrive_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_LoFiFilter",
+      "label": "Lo-Fi Filter",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_LoFiFilter",
+        "label": "Lo-Fi Filter",
+        "kind": "approximate",
+        "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+        "usedControls": [
+          "Hi Cut",
+          "Lo Cut"
+        ],
+        "inactiveControls": [],
+        "unmappedControls": [],
+        "invalidControls": [],
+        "frequencyLimits": [],
+        "originalDesign": [
+          "Catalog labels mean Hi Cut/Lo Cut despite the native key suffixes FilterType/Mix. Original logarithmic cutoff ranges: high-cut18k..1.8kHz; low-cut20..1500Hz. No wet/dry interpretation."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_LoFiFilter",
+        "label": "Lo-Fi Filter",
+        "kind": "filter",
+        "mix": 1,
+        "bands": [
+          {
+            "type": "highpass",
+            "frequency": 177.0233820532793,
+            "requestedFrequency": 177.0233820532793,
+            "gain": 0,
+            "Q": 0.7,
+            "frequencySource": "original-design",
+            "controls": [
+              "Pedal_LoFiFilter_Mix"
+            ]
+          },
+          {
+            "type": "lowpass",
+            "frequency": 5626.288529438824,
+            "requestedFrequency": 5626.288529438824,
+            "gain": 0,
+            "Q": 0.7,
+            "frequencySource": "original-design",
+            "controls": [
+              "Pedal_LoFiFilter_FilterType"
+            ]
+          }
+        ]
+      },
+      "controls": [
+        {
+          "key": "Pedal_LoFiFilter_FilterType",
+          "label": "Hi Cut",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_LoFiFilter_Mix",
+          "label": "Lo Cut",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_MarshallGuvnorPlus",
+      "label": "Marshall Guv'nor Plus",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_MarshallGuvnorPlus",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Deep",
+          "Bass",
+          "Mid",
+          "Treble"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_MarshallGuvnorPlus_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_MarshallGuvnorPlus_Deep",
+          "label": "Deep",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_MarshallGuvnorPlus_Bass",
+          "label": "Bass",
+          "min": 1,
+          "max": 100,
+          "step": 0.01,
+          "continuous": true,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_MarshallGuvnorPlus_Mid",
+          "label": "Mid",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_MarshallGuvnorPlus_Treble",
+          "label": "Treble",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_MarshallSupervibe",
+      "label": "Marshall Supervibe",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_MarshallSupervibe",
+        "label": "Marshall Supervibe",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_MarshallSupervibe_Rate",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_MarshallSupervibe_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_MarshallSupervibe_Wave",
+          "label": "Wave",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_MarshallSupervibe_Mix",
+          "label": "Filter",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_MetalDistortion",
+      "label": "Alloy Distortion",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_MetalDistortion",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_MetalDistortion_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_MetalDistortion_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_ModDelay",
+      "label": "Mod Delay",
+      "type": "Pedals",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ModDelay",
+        "label": "Mod Delay",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ModDelay",
+        "label": "Mod Delay",
+        "kind": "delay",
+        "time": 0.51,
+        "timeRight": 0.51,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 7650,
+        "depth": 0.0015151515151515154,
+        "rate": 5.1
+      },
+      "controls": [
+        {
+          "key": "Pedal_ModDelay_Time",
+          "label": "Time",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_ModDelay_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_ModDelay_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_ModDelay_Depth",
+          "label": "Mod Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_ModDelay_Rate",
+          "label": "Mod Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "hz"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_ModernFlanger",
+      "label": "Modern Flange",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ModernFlanger",
+        "label": "Modern Flange",
+        "kind": "approximate",
+        "message": "Original generic flanger audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ModernFlanger",
+        "label": "Modern Flange",
+        "kind": "flanger",
+        "rate": 5.1000000000000005,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "feedback": 0.51,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_ModernFlanger_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_ModernFlanger_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_ModernFlanger_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_ModernFlanger_Regen",
+          "label": "Regen.",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_ModernWah",
+      "label": "Modern Wah",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ModernWah",
+        "kind": "approximate",
+        "message": "Original envelope audition; native DSP differs",
+        "usedControls": [
+          "Auto-Mode",
+          "Speed",
+          "Sensitivity"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [
+          "Pedal (Auto=OFF)"
+        ],
+        "originalDesign": [
+          "Original linked envelope-driven first-order bandpass; manual Pedal is inactive in Auto mode. Missing attack uses original10ms; unitless Speed maps to original20..500ms release. Native wah tracking and response are unknown."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ModernWah",
+        "label": "Modern Wah",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "PrePedal1",
+          "key": "Pedal_ModernWah",
+          "kind": "filter",
+          "mode": "bandpass",
+          "attack": 0.01,
+          "release": 0.26242424242424245,
+          "sensitivity": 2.042453212630728,
+          "minHz": 300,
+          "maxHz": 2400,
+          "mix": 1
+        }
+      },
+      "controls": [
+        {
+          "key": "Pedal_ModernWah_Auto",
+          "label": "Auto-Mode",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "OFF",
+            "ON"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Pedal_ModernWah_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_ModernWah_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_ModernWah_Pedal",
+          "label": "Pedal (Auto=OFF)",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_MultiPitch",
+      "label": "MultiPitch",
+      "type": "Pedals",
+      "category": "Pitch",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_MultiPitch",
+        "label": "MultiPitch",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_MultiPitch_Pitch1",
+          "label": "Pitch 1",
+          "min": -24,
+          "max": 24,
+          "step": 0.5,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_MultiPitch_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_MultiPitch_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_MultiTrem",
+      "label": "Multi-Trem",
+      "type": "Pedals",
+      "category": "Tremolo",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_MultiTrem",
+        "label": "Multi-Trem",
+        "kind": "approximate",
+        "message": "Original generic tremolo audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_MultiTrem",
+        "label": "Multi-Trem",
+        "kind": "tremolo",
+        "rate": 5.1000000000000005,
+        "depth": 1,
+        "mix": 0.51,
+        "wave": 2
+      },
+      "controls": [
+        {
+          "key": "Pedal_MultiTrem_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_MultiTrem_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_MultiTrem_Waveform",
+          "label": "Waveform",
+          "min": 0,
+          "max": 4,
+          "step": 1,
+          "choices": [
+            "Sine",
+            "Triangle",
+            "Square",
+            "Square Short",
+            "Square Long"
+          ],
+          "unit": "enum"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_MultiVibe",
+      "label": "Multi-Vibe",
+      "type": "Pedals",
+      "category": "Tremolo",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_MultiVibe",
+        "kind": "approximate",
+        "message": "Original modulation audition; native DSP differs",
+        "usedControls": [
+          "Speed",
+          "Mix",
+          "Waveform"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "originalDesign": [
+          "Original full-depth amplitude tremolo; unitless Speed maps to0.1..10Hz. Short/Long square variants are original thresholded sine pulses; no native duty-cycle claim."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_MultiVibe",
+        "kind": "tremolo",
+        "rate": 5.1000000000000005,
+        "depth": 1,
+        "mix": 0.51,
+        "wave": 2
+      },
+      "controls": [
+        {
+          "key": "Pedal_MultiVibe_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_MultiVibe_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_MultiVibe_Waveform",
+          "label": "Waveform",
+          "min": 0,
+          "max": 4,
+          "step": 1,
+          "choices": [
+            "Sine",
+            "Triangle",
+            "Square",
+            "Square Short",
+            "Square Long"
+          ],
+          "unit": "enum"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_NoFiEcho",
+      "label": "No-Fi Echo",
+      "type": "Pedals",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_NoFiEcho",
+        "label": "No-Fi Echo",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_NoFiEcho",
+        "label": "No-Fi Echo",
+        "kind": "delay",
+        "time": 0.51,
+        "timeRight": 0.51,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 7650,
+        "depth": 0,
+        "rate": 1
+      },
+      "controls": [
+        {
+          "key": "Pedal_NoFiEcho_Time",
+          "label": "Time",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_NoFiEcho_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_NoFiEcho_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_NoiseGate",
+      "label": "Noise Gate",
+      "type": "Pedals",
+      "category": "Dynamics",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_NoiseGate",
+        "kind": "approximate",
+        "message": "Original envelope audition; native DSP differs",
+        "usedControls": [
+          "Threshold",
+          "Rate"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "originalDesign": [
+          "Original stereo-linked peak follower, 1ms attack, 20ms hold and 2dB hysteresis; Rate maps to an original 10..500ms release."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_NoiseGate",
+        "label": "Noise Gate",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "PrePedal1",
+          "key": "Pedal_NoiseGate",
+          "kind": "gate",
+          "thresholdDb": -65,
+          "release": 0.25747474747474747,
+          "attack": 0.001,
+          "hysteresisDb": 2,
+          "hold": 0.02
+        }
+      },
+      "controls": [
+        {
+          "key": "Pedal_NoiseGate_Thresh",
+          "label": "Threshold",
+          "min": -90,
+          "max": -40,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_NoiseGate_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_NPNDelay",
+      "label": "Classic NPN Delay",
+      "type": "Pedals",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_NPNDelay",
+        "label": "Classic NPN Delay",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_NPNDelay",
+        "label": "Classic NPN Delay",
+        "kind": "delay",
+        "time": 0.51,
+        "timeRight": 0.51,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 7650,
+        "depth": 0,
+        "rate": 1
+      },
+      "controls": [
+        {
+          "key": "Pedal_NPNDelay_Time",
+          "label": "Time",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_NPNDelay_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_NPNDelay_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_OctaveUp",
+      "label": "OctaveUp!",
+      "type": "Pedals",
+      "category": "Pitch",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_OctaveUp",
+        "label": "OctaveUp!",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_OctaveUp_Mix",
+          "label": "Octave-UP!",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_OctaveUp_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_Octavius",
+      "label": "Octavius",
+      "type": "Pedals",
+      "category": "Pitch",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Octavius",
+        "label": "Octavius",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_Octavius_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_Octavius_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_OilCanEcho",
+      "label": "Oil-Can Echo",
+      "type": "Pedals",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_OilCanEcho",
+        "label": "Oil-Can Echo",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_OilCanEcho",
+        "label": "Oil-Can Echo",
+        "kind": "delay",
+        "time": 0.51,
+        "timeRight": 0.51,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 7650,
+        "depth": 0,
+        "rate": 1
+      },
+      "controls": [
+        {
+          "key": "Pedal_OilCanEcho_Time",
+          "label": "Time",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_OilCanEcho_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_OilCanEcho_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_OmniMod",
+      "label": "Omni-Mod",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_OmniMod",
+        "label": "Omni-Mod",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_OmniMod_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_OmniMod_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_OmniMod_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_Phaser",
+      "label": "Phaser-363",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Phaser",
+        "label": "Phaser-363",
+        "kind": "approximate",
+        "message": "Original generic phaser audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Phaser",
+        "label": "Phaser-363",
+        "kind": "phaser",
+        "rate": 5.1000000000000005,
+        "depth": 0.5,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_Phaser_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_PlanePhase",
+      "label": "Plane Phase",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_PlanePhase",
+        "label": "Plane Phase",
+        "kind": "approximate",
+        "message": "Original generic phaser audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_PlanePhase",
+        "label": "Plane Phase",
+        "kind": "phaser",
+        "rate": 5.1000000000000005,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_PlanePhase_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_PlanePhase_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_PlanePhase_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_PlateVerb",
+      "label": "Plate Reverb",
+      "type": "Pedals",
+      "category": "Reverb",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_PlateVerb",
+        "label": "Plate Reverb",
+        "kind": "approximate",
+        "message": "Original generic reverb audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_PlateVerb",
+        "label": "Plate Reverb",
+        "kind": "reverb",
+        "seconds": 2.0944444444444446,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "filter": 7650,
+        "voice": 1
+      },
+      "controls": [
+        {
+          "key": "Pedal_PlateVerb_Time",
+          "label": "Time",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_PlateVerb_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_PlateVerb_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_PlateVerb_Voice",
+          "label": "Voice",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "1",
+            "2"
+          ],
+          "unit": "enum"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_RangeBooster",
+      "label": "Range Booster",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_RangeBooster",
+        "label": "Range Booster",
+        "kind": "approximate",
+        "message": "Original static audition; native DSP differs. Per-stage soft ceiling can reduce peaks at high boost.",
+        "usedControls": [
+          "Boost!"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "frequencyLimits": [],
+        "originalDesign": [
+          "Original broad-band gain: native Boost!1..100% maps to0..+12dB (unity at1%). Native gain range, spectral coloration and nonlinear response are unknown; this is not a frequency-range or amplifier emulation."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_RangeBooster",
+        "label": "Range Booster",
+        "kind": "filter",
+        "gain": 2.0092330025650473,
+        "bands": []
+      },
+      "controls": [
+        {
+          "key": "Pedal_RangeBooster_Boost",
+          "label": "Boost!",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_RingMod",
+      "label": "Ring Mod",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_RingMod",
+        "kind": "approximate",
+        "message": "Original modulation audition; native DSP differs",
+        "usedControls": [
+          "Rate",
+          "Depth",
+          "Mix",
+          "Funk"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "originalDesign": [
+          "Native key Attack is labelled Rate(ms): original audition interprets this as carrier period. Native Sensitivity is labelled Mix(%). Shared sine/saw carrier preserves channel coherence; native tracking is unestablished."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_RingMod",
+        "label": "Ring Mod",
+        "kind": "modulation",
+        "modulation": {
+          "slot": "PrePedal1",
+          "key": "Pedal_RingMod",
+          "kind": "ringmod",
+          "rate": 7.936507936507937,
+          "depth": 0.51,
+          "mix": 0.51,
+          "wave": 1
+        }
+      },
+      "controls": [
+        {
+          "key": "Pedal_RingMod_Attack",
+          "label": "Rate",
+          "min": 1,
+          "max": 250,
+          "step": 5,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_RingMod_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_RingMod_Sensitivity",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_RingMod_Waveform",
+          "label": "Funk",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "Sine",
+            "Saw"
+          ],
+          "unit": "enum"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_SendInTheClones",
+      "label": "Send In The Clones!",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_SendInTheClones",
+        "label": "Send In The Clones!",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_SendInTheClones_Clones",
+          "label": "CLONES!",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_SendInTheClones_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_SendInTheClones_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_ShaverPhaser",
+      "label": "Shaver Phaser",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ShaverPhaser",
+        "label": "Shaver Phaser",
+        "kind": "approximate",
+        "message": "Original generic phaser audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ShaverPhaser",
+        "label": "Shaver Phaser",
+        "kind": "phaser",
+        "rate": 5.1000000000000005,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_ShaverPhaser_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_ShaverPhaser_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_ShredZone",
+      "label": "Shred Zone",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ShredZone",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Bass",
+          "Mid",
+          "Treble"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_ShredZone_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_ShredZone_Bass",
+          "label": "Bass",
+          "min": -9,
+          "max": 9,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_ShredZone_Mid",
+          "label": "Mid",
+          "min": -9,
+          "max": 9,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Pedal_ShredZone_Treble",
+          "label": "Treble",
+          "min": -9,
+          "max": 9,
+          "step": 0.5,
+          "unit": "db"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_SpringReverb",
+      "label": "Spring Reverb",
+      "type": "Pedals",
+      "category": "Reverb",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_SpringReverb",
+        "label": "Spring Reverb",
+        "kind": "approximate",
+        "message": "Original generic reverb audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_SpringReverb",
+        "label": "Spring Reverb",
+        "kind": "reverb",
+        "seconds": 2.0944444444444446,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "filter": 7650,
+        "voice": 0
+      },
+      "controls": [
+        {
+          "key": "Pedal_SpringReverb_Time",
+          "label": "Time",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_SpringReverb_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_SpringReverb_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_SuperDrive",
+      "label": "Super Drive",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_SuperDrive",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_SuperDrive_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_SuperDrive_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_Swole",
+      "label": "Swole",
+      "type": "Pedals",
+      "category": "Dynamics",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Swole",
+        "label": "Swole",
+        "kind": "approximate",
+        "message": "Original generic compressor audition; native Swole DSP differs",
+        "usedControls": [
+          "Smash",
+          "Rate"
+        ],
+        "unmappedControls": [],
+        "invalidControls": [],
+        "originalDesign": [
+          "Original generic compressor: Smash maps to threshold-6..-36dB/ratio1..12; original attack5ms and knee6dB. Existing browser compressor includes automatic makeup and fixed lookahead; no additional makeup stage is added. Unitless Rate controls only original logarithmic recovery500..50ms. These are not recovered native values; Smash is not calibrated monotonic output loudness."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Swole",
+        "label": "Swole",
+        "kind": "compressor",
+        "threshold": -21.151515151515152,
+        "ratio": 6.555555555555556,
+        "attack": 0.005,
+        "release": 0.1562857924844118
+      },
+      "controls": [
+        {
+          "key": "Pedal_Swole_Smash",
+          "label": "Smash",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_Swole_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_TremOle",
+      "label": "TremOle'",
+      "type": "Pedals",
+      "category": "Tremolo",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_TremOle",
+        "label": "TremOle'",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_TremOle_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_TremOle_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_TremOle_Attack",
+          "label": "Attack Speed",
+          "min": 1,
+          "max": 250,
+          "step": 1,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_TremOle_Release",
+          "label": "Release Speed",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_Tremolo",
+      "label": "Tremolo",
+      "type": "Pedals",
+      "category": "Tremolo",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Tremolo",
+        "label": "Tremolo",
+        "kind": "approximate",
+        "message": "Original generic tremolo audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_Tremolo",
+        "label": "Tremolo",
+        "kind": "tremolo",
+        "rate": 5.1000000000000005,
+        "depth": 1,
+        "mix": 0.51,
+        "wave": 0
+      },
+      "controls": [
+        {
+          "key": "Pedal_Tremolo_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_Tremolo_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_TubeSpring",
+      "label": "Tube Spring Reverb",
+      "type": "Pedals",
+      "category": "Reverb",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_TubeSpring",
+        "label": "Tube Spring Reverb",
+        "kind": "approximate",
+        "message": "Original generic reverb audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_TubeSpring",
+        "label": "Tube Spring Reverb",
+        "kind": "reverb",
+        "seconds": 1.4974999999999998,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "filter": 7650,
+        "voice": 0
+      },
+      "controls": [
+        {
+          "key": "Pedal_TubeSpring_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_TubeSpring_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_UKWah",
+      "label": "UK Wah",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_UKWah",
+        "kind": "approximate",
+        "message": "Original envelope audition; native DSP differs",
+        "usedControls": [
+          "Auto-Mode",
+          "Speed",
+          "Sensitivity"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [
+          "Pedal (Auto=OFF)"
+        ],
+        "originalDesign": [
+          "Original linked envelope-driven first-order bandpass; manual Pedal is inactive in Auto mode. Missing attack uses original10ms; unitless Speed maps to original20..500ms release. Native wah tracking and response are unknown."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_UKWah",
+        "label": "UK Wah",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "PrePedal1",
+          "key": "Pedal_UKWah",
+          "kind": "filter",
+          "mode": "bandpass",
+          "attack": 0.01,
+          "release": 0.26242424242424245,
+          "sensitivity": 2.042453212630728,
+          "minHz": 300,
+          "maxHz": 2400,
+          "mix": 1
+        }
+      },
+      "controls": [
+        {
+          "key": "Pedal_UKWah_Auto",
+          "label": "Auto-Mode",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "OFF",
+            "ON"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Pedal_UKWah_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_UKWah_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_UKWah_Pedal",
+          "label": "Pedal (Auto=OFF)",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_USWah",
+      "label": "US Wah",
+      "type": "Pedals",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_USWah",
+        "kind": "approximate",
+        "message": "Original envelope audition; native DSP differs",
+        "usedControls": [
+          "Auto-Mode",
+          "Speed",
+          "Sensitivity"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [
+          "Pedal (Auto=OFF)"
+        ],
+        "originalDesign": [
+          "Original linked envelope-driven first-order bandpass; manual Pedal is inactive in Auto mode. Missing attack uses original10ms; unitless Speed maps to original20..500ms release. Native wah tracking and response are unknown."
+        ]
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_USWah",
+        "label": "US Wah",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "PrePedal1",
+          "key": "Pedal_USWah",
+          "kind": "filter",
+          "mode": "bandpass",
+          "attack": 0.01,
+          "release": 0.26242424242424245,
+          "sensitivity": 2.042453212630728,
+          "minHz": 300,
+          "maxHz": 2400,
+          "mix": 1
+        }
+      },
+      "controls": [
+        {
+          "key": "Pedal_USWah_Auto",
+          "label": "Auto-Mode",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "OFF",
+            "ON"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Pedal_USWah_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_USWah_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_USWah_Pedal",
+          "label": "Pedal (Auto=OFF)",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_ValveEcho",
+      "label": "Valve Echo",
+      "type": "Pedals",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ValveEcho",
+        "label": "Valve Echo",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_ValveEcho",
+        "label": "Valve Echo",
+        "kind": "delay",
+        "time": 0.51,
+        "timeRight": 0.51,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 7650,
+        "depth": 0,
+        "rate": 1
+      },
+      "controls": [
+        {
+          "key": "Pedal_ValveEcho_Time",
+          "label": "Time",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Pedal_ValveEcho_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_ValveEcho_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_VintageChorus",
+      "label": "Vintage Chorus",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_VintageChorus",
+        "label": "Vintage Chorus",
+        "kind": "approximate",
+        "message": "Original generic chorus audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_VintageChorus",
+        "label": "Vintage Chorus",
+        "kind": "chorus",
+        "rate": 5.1,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_VintageChorus_Rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "hz"
+        },
+        {
+          "key": "Pedal_VintageChorus_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_VintageChorus_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_VintageDistortion",
+      "label": "Vintage Distortion",
+      "type": "Pedals",
+      "category": "Distortion",
+      "inHistorical79Fixture": false,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_VintageDistortion",
+        "kind": "approximate",
+        "message": "Original aggregate drive; individual pedal routing and branded response differ",
+        "unmappedControls": [
+          "Tone"
+        ]
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Pedal_VintageDistortion_Gain",
+          "label": "Gain",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_VintageDistortion_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Pedal_VintageFlanger",
+      "label": "Vintage Flanger",
+      "type": "Pedals",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "PrePedal1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "PrePedal1",
+        "key": "Pedal_VintageFlanger",
+        "label": "Vintage Flanger",
+        "kind": "approximate",
+        "message": "Original generic flanger audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "PrePedal1",
+        "key": "Pedal_VintageFlanger",
+        "label": "Vintage Flanger",
+        "kind": "flanger",
+        "rate": 5.1000000000000005,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Pedal_VintageFlanger_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Pedal_VintageFlanger_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Pedal_VintageFlanger_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Rack_RotaVibe",
+      "label": "RotaVibe",
+      "type": "Racks",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_RotaVibe",
+        "label": "RotaVibe",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Rack_RotaVibe_Rate",
+          "label": "Rate",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_RotaVibe_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_RotaVibe_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_RotaVibe_Balance",
+          "label": "Balance",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StereoAnalogVibe",
+      "label": "Stereo Analog Vibrato",
+      "type": "Racks",
+      "category": "Tremolo",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StereoAnalogVibe",
+        "kind": "approximate",
+        "message": "Original modulation audition; native DSP differs",
+        "usedControls": [
+          "Speed",
+          "Mix",
+          "Waveform"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "originalDesign": [
+          "Original full-depth amplitude tremolo; unitless Speed maps to0.1..10Hz. Short/Long square variants are original thresholded sine pulses; no native duty-cycle claim."
+        ]
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StereoAnalogVibe",
+        "kind": "tremolo",
+        "rate": 5.1000000000000005,
+        "depth": 1,
+        "mix": 0.51,
+        "wave": 1
+      },
+      "controls": [
+        {
+          "key": "Rack_StereoAnalogVibe_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StereoAnalogVibe_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StereoAnalogVibe_Waveform",
+          "label": "Waveform",
+          "min": 0,
+          "max": 2,
+          "step": 1,
+          "choices": [
+            "Sine",
+            "Triangle",
+            "Square"
+          ],
+          "unit": "enum"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StereoPhaser",
+      "label": "Stereo Phaser",
+      "type": "Racks",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StereoPhaser",
+        "label": "Stereo Phaser",
+        "kind": "approximate",
+        "message": "Original generic phaser audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StereoPhaser",
+        "label": "Stereo Phaser",
+        "kind": "phaser",
+        "rate": 5.1,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Rack_StereoPhaser_Rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "hz"
+        },
+        {
+          "key": "Rack_StereoPhaser_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StereoPhaser_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StereoTubeTrem",
+      "label": "Stereo Tube Trem",
+      "type": "Racks",
+      "category": "Tremolo",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StereoTubeTrem",
+        "label": "Stereo Tube Trem",
+        "kind": "approximate",
+        "message": "Original generic tremolo audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StereoTubeTrem",
+        "label": "Stereo Tube Trem",
+        "kind": "tremolo",
+        "rate": 5.1000000000000005,
+        "depth": 1,
+        "mix": 0.51,
+        "wave": 1
+      },
+      "controls": [
+        {
+          "key": "Rack_StereoTubeTrem_Speed",
+          "label": "Speed",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StereoTubeTrem_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StereoTubeTrem_Waveform",
+          "label": "Waveform",
+          "min": 0,
+          "max": 2,
+          "step": 1,
+          "choices": [
+            "Sine",
+            "Triangle",
+            "Square"
+          ],
+          "unit": "enum"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioChamber",
+      "label": "Studio Chamber Reverb",
+      "type": "Racks",
+      "category": "Reverb",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioChamber",
+        "label": "Studio Chamber Reverb",
+        "kind": "approximate",
+        "message": "Original generic reverb audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StudioChamber",
+        "label": "Studio Chamber Reverb",
+        "kind": "reverb",
+        "seconds": 2.0944444444444446,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "filter": 5200.505050505051,
+        "voice": 0
+      },
+      "controls": [
+        {
+          "key": "Rack_StudioChamber_Time",
+          "label": "Decay",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StudioChamber_Depth",
+          "label": "Diffusion",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StudioChamber_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioChamber_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioChorus",
+      "label": "Studio Chorus",
+      "type": "Racks",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioChorus",
+        "label": "Studio Chorus",
+        "kind": "approximate",
+        "message": "Original generic chorus audition; branded/native DSP differs",
+        "unmappedControls": [
+          "Stereo"
+        ],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StudioChorus",
+        "label": "Studio Chorus",
+        "kind": "chorus",
+        "rate": 5.1,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0,
+        "lowFilter": 343.03030303030306,
+        "filter": 5200.505050505051,
+        "delay": 0.016121212121212123,
+        "tone": 7650
+      },
+      "controls": [
+        {
+          "key": "Rack_StudioChorus_Rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "hz"
+        },
+        {
+          "key": "Rack_StudioChorus_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioChorus_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioChorus_Stereo",
+          "label": "Stereo",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioChorus_Delay",
+          "label": "Delay",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StudioChorus_LoFilter",
+          "label": "LoFilter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioChorus_HiFilter",
+          "label": "HiFilter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioDelay",
+      "label": "Studio Delay",
+      "type": "Racks",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioDelay",
+        "label": "Studio Delay",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StudioDelay",
+        "label": "Studio Delay",
+        "kind": "delay",
+        "time": 0.51,
+        "timeRight": 0.51,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 5200.505050505051,
+        "depth": 0,
+        "rate": 1
+      },
+      "controls": [
+        {
+          "key": "Rack_StudioDelay_TimeL",
+          "label": "Time Left",
+          "min": 20,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Rack_StudioDelay_TimeR",
+          "label": "Time Right",
+          "min": 20,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Rack_StudioDelay_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioDelay_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioDelay_Filter",
+          "label": "Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioEQ",
+      "label": "Studio Parametric EQ",
+      "type": "Racks",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioEQ",
+        "label": "Studio Parametric EQ",
+        "kind": "approximate",
+        "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+        "usedControls": [
+          "Bass Freq.",
+          "Bass",
+          "Low-Mid Freq.",
+          "Low-Mid",
+          "Low-Mid \"Q\"",
+          "High-Mid Freq.",
+          "High-Mid",
+          "High-Mid \"Q\"",
+          "Treble Freq.",
+          "Treble"
+        ],
+        "inactiveControls": [],
+        "unmappedControls": [],
+        "invalidControls": [],
+        "frequencyLimits": [],
+        "originalDesign": [
+          "Original low/high shelves and peaking middle bands; native filter slopes are unestablished.",
+          "Wide/Narrow catalog choices map to original Q=0.7/2.8, not known native numeric Q."
+        ]
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StudioEQ",
+        "label": "Studio Parametric EQ",
+        "kind": "filter",
+        "mix": 1,
+        "bands": [
+          {
+            "type": "lowshelf",
+            "frequency": 260,
+            "requestedFrequency": 260,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog",
+            "controls": [
+              "Rack_StudioEQ_BassFreq",
+              "Rack_StudioEQ_Bass"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 1060,
+            "requestedFrequency": 1060,
+            "gain": 0,
+            "Q": 2.8,
+            "frequencySource": "catalog",
+            "controls": [
+              "Rack_StudioEQ_LoMidFreq",
+              "Rack_StudioEQ_LoMid",
+              "Rack_StudioEQ_LoMidQ"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 4400,
+            "requestedFrequency": 4400,
+            "gain": 0,
+            "Q": 2.8,
+            "frequencySource": "catalog",
+            "controls": [
+              "Rack_StudioEQ_HiMidFreq",
+              "Rack_StudioEQ_HiMid",
+              "Rack_StudioEQ_HiMidQ"
+            ]
+          },
+          {
+            "type": "highshelf",
+            "frequency": 11000,
+            "requestedFrequency": 11000,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog",
+            "controls": [
+              "Rack_StudioEQ_TrebleFreq",
+              "Rack_StudioEQ_Treble"
+            ]
+          }
+        ]
+      },
+      "controls": [
+        {
+          "key": "Rack_StudioEQ_Bass",
+          "label": "Bass",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Rack_StudioEQ_BassFreq",
+          "label": "Bass Freq.",
+          "min": 20,
+          "max": 500,
+          "step": 5,
+          "unit": "hz"
+        },
+        {
+          "key": "Rack_StudioEQ_LoMid",
+          "label": "Low-Mid",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Rack_StudioEQ_LoMidFreq",
+          "label": "Low-Mid Freq.",
+          "min": 100,
+          "max": 2000,
+          "step": 20,
+          "unit": "hz"
+        },
+        {
+          "key": "Rack_StudioEQ_LoMidQ",
+          "label": "Low-Mid \"Q\"",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "Wide",
+            "Narrow"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Rack_StudioEQ_HiMid",
+          "label": "High-Mid",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Rack_StudioEQ_HiMidFreq",
+          "label": "High-Mid Freq.",
+          "min": 0.8,
+          "max": 8,
+          "step": 0.1,
+          "unit": "khz"
+        },
+        {
+          "key": "Rack_StudioEQ_HiMidQ",
+          "label": "High-Mid \"Q\"",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "Wide",
+            "Narrow"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Rack_StudioEQ_Treble",
+          "label": "Treble",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Rack_StudioEQ_TrebleFreq",
+          "label": "Treble Freq.",
+          "min": 2,
+          "max": 20,
+          "step": 0.2,
+          "unit": "khz"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioFlanger",
+      "label": "Studio Flanger",
+      "type": "Racks",
+      "category": "Modulation",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioFlanger",
+        "label": "Studio Flanger",
+        "kind": "approximate",
+        "message": "Original generic flanger audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StudioFlanger",
+        "label": "Studio Flanger",
+        "kind": "flanger",
+        "rate": 5.1,
+        "depth": 0.5050505050505051,
+        "mix": 0.5,
+        "feedback": 0.51,
+        "lowFilter": 40,
+        "filter": 7650,
+        "delay": 0.016,
+        "tone": 5200.505050505051
+      },
+      "controls": [
+        {
+          "key": "Rack_StudioFlanger_Rate",
+          "label": "Rate",
+          "min": 0.1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "hz"
+        },
+        {
+          "key": "Rack_StudioFlanger_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioFlanger_Regen",
+          "label": "Regen",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioFlanger_Depth",
+          "label": "Depth",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioFlanger_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioGraphicEQ",
+      "label": "Studio ParaGraphic EQ",
+      "type": "Racks",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioGraphicEQ",
+        "label": "Studio ParaGraphic EQ",
+        "kind": "approximate",
+        "message": "Original generic filter audition; branded/native DSP differs; filter-stage output is locally bounded",
+        "usedControls": [
+          "Bass Freq.",
+          "Bass",
+          "Low-Mid Freq.",
+          "Low-Mid",
+          "Mid Freq.",
+          "Mid",
+          "High-Mid Freq.",
+          "High-Mid",
+          "Treble Freq.",
+          "Treble"
+        ],
+        "inactiveControls": [],
+        "unmappedControls": [],
+        "invalidControls": [],
+        "frequencyLimits": [],
+        "originalDesign": [
+          "Original low/high shelves and peaking middle bands; native filter slopes are unestablished."
+        ]
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StudioGraphicEQ",
+        "label": "Studio ParaGraphic EQ",
+        "kind": "filter",
+        "mix": 1,
+        "bands": [
+          {
+            "type": "lowshelf",
+            "frequency": 260,
+            "requestedFrequency": 260,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog",
+            "controls": [
+              "Rack_StudioGraphicEQ_BassFreq",
+              "Rack_StudioGraphicEQ_Bass"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 1100,
+            "requestedFrequency": 1100,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog",
+            "controls": [
+              "Rack_StudioGraphicEQ_LoMidFreq",
+              "Rack_StudioGraphicEQ_LoMid"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 2750,
+            "requestedFrequency": 2750,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog",
+            "controls": [
+              "Rack_StudioGraphicEQ_MidFreq",
+              "Rack_StudioGraphicEQ_Mid"
+            ]
+          },
+          {
+            "type": "peaking",
+            "frequency": 5500,
+            "requestedFrequency": 5500,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog",
+            "controls": [
+              "Rack_StudioGraphicEQ_HiMidFreq",
+              "Rack_StudioGraphicEQ_HiMid"
+            ]
+          },
+          {
+            "type": "highshelf",
+            "frequency": 11000,
+            "requestedFrequency": 11000,
+            "gain": 0,
+            "Q": 1,
+            "frequencySource": "catalog",
+            "controls": [
+              "Rack_StudioGraphicEQ_TrebleFreq",
+              "Rack_StudioGraphicEQ_Treble"
+            ]
+          }
+        ]
+      },
+      "controls": [
+        {
+          "key": "Rack_StudioGraphicEQ_Bass",
+          "label": "Bass",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Rack_StudioGraphicEQ_BassFreq",
+          "label": "Bass Freq.",
+          "min": 20,
+          "max": 500,
+          "step": 5,
+          "unit": "hz"
+        },
+        {
+          "key": "Rack_StudioGraphicEQ_LoMid",
+          "label": "Low-Mid",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Rack_StudioGraphicEQ_LoMidFreq",
+          "label": "Low-Mid Freq.",
+          "min": 200,
+          "max": 2000,
+          "step": 20,
+          "unit": "hz"
+        },
+        {
+          "key": "Rack_StudioGraphicEQ_Mid",
+          "label": "Mid",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Rack_StudioGraphicEQ_MidFreq",
+          "label": "Mid Freq.",
+          "min": 0.5,
+          "max": 5,
+          "step": 0.05,
+          "unit": "khz"
+        },
+        {
+          "key": "Rack_StudioGraphicEQ_HiMid",
+          "label": "High-Mid",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Rack_StudioGraphicEQ_HiMidFreq",
+          "label": "High-Mid Freq.",
+          "min": 1,
+          "max": 10,
+          "step": 0.1,
+          "unit": "khz"
+        },
+        {
+          "key": "Rack_StudioGraphicEQ_Treble",
+          "label": "Treble",
+          "min": -12,
+          "max": 12,
+          "step": 0.5,
+          "unit": "db"
+        },
+        {
+          "key": "Rack_StudioGraphicEQ_TrebleFreq",
+          "label": "Treble Freq.",
+          "min": 2,
+          "max": 20,
+          "step": 0.2,
+          "unit": "khz"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioPitch",
+      "label": "Studio Pitch",
+      "type": "Racks",
+      "category": "Pitch",
+      "inHistorical79Fixture": false,
+      "slot": "Rack1",
+      "kind": "bypassed",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioPitch",
+        "label": "Studio Pitch",
+        "kind": "bypassed",
+        "message": "No original audition model for this gear; stored settings retained"
+      },
+      "effect": null,
+      "controls": [
+        {
+          "key": "Rack_StudioPitch_Pitch",
+          "label": "Pitch",
+          "min": -24,
+          "max": 24,
+          "step": 0.5,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StudioPitch_Mix",
+          "label": "Mix",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioPitch_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StudioPitch_Pan",
+          "label": "Pan",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioPlate",
+      "label": "Studio Plate Reverb",
+      "type": "Racks",
+      "category": "Reverb",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioPlate",
+        "label": "Studio Plate Reverb",
+        "kind": "approximate",
+        "message": "Original generic reverb audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StudioPlate",
+        "label": "Studio Plate Reverb",
+        "kind": "reverb",
+        "seconds": 2.0944444444444446,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "filter": 5200.505050505051,
+        "voice": 0
+      },
+      "controls": [
+        {
+          "key": "Rack_StudioPlate_Time",
+          "label": "Decay",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StudioPlate_Depth",
+          "label": "Diffusion",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StudioPlate_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioPlate_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioVerb",
+      "label": "Studio Hall Reverb",
+      "type": "Racks",
+      "category": "Reverb",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioVerb",
+        "label": "Studio Hall Reverb",
+        "kind": "approximate",
+        "message": "Original generic reverb audition; branded/native DSP differs",
+        "unmappedControls": [],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StudioVerb",
+        "label": "Studio Hall Reverb",
+        "kind": "reverb",
+        "seconds": 2.0944444444444446,
+        "depth": 0.5050505050505051,
+        "mix": 0.51,
+        "filter": 5200.505050505051,
+        "voice": 0
+      },
+      "controls": [
+        {
+          "key": "Rack_StudioVerb_Time",
+          "label": "Decay",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StudioVerb_Depth",
+          "label": "Diffusion",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StudioVerb_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_StudioVerb_Tone",
+          "label": "Tone",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Rack_StudioWahFilter",
+      "label": "Studio Wah Filter",
+      "type": "Racks",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_StudioWahFilter",
+        "kind": "approximate",
+        "message": "Original envelope audition; native DSP differs",
+        "usedControls": [
+          "Auto-Mode",
+          "Attack",
+          "Release",
+          "Sensitivity"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [
+          "Pedal"
+        ],
+        "originalDesign": [
+          "Original linked envelope-driven first-order bandpass; manual Pedal is inactive in Auto mode. Missing attack uses original10ms; unitless Speed maps to original20..500ms release. Native wah tracking and response are unknown."
+        ]
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_StudioWahFilter",
+        "label": "Studio Wah Filter",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "Rack1",
+          "key": "Rack_StudioWahFilter",
+          "kind": "filter",
+          "mode": "bandpass",
+          "attack": 0.5,
+          "release": 0.51,
+          "sensitivity": 2.042453212630728,
+          "minHz": 300,
+          "maxHz": 2400,
+          "mix": 1
+        }
+      },
+      "controls": [
+        {
+          "key": "Rack_StudioWahFilter_Auto",
+          "label": "Auto-Mode",
+          "min": 0,
+          "max": 1,
+          "step": 1,
+          "choices": [
+            "OFF",
+            "ON"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Rack_StudioWahFilter_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_StudioWahFilter_Attack",
+          "label": "Attack",
+          "min": 0,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Rack_StudioWahFilter_Release",
+          "label": "Release",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Rack_StudioWahFilter_Pedal",
+          "label": "Pedal",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        }
+      ]
+    },
+    {
+      "key": "Rack_SynthFilter",
+      "label": "Synth Filter",
+      "type": "Racks",
+      "category": "Filter",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_SynthFilter",
+        "kind": "approximate",
+        "message": "Original envelope audition; native DSP differs",
+        "usedControls": [
+          "Filter Type",
+          "Attack Speed",
+          "Release Speed",
+          "Sensitivity",
+          "Mix"
+        ],
+        "invalidControls": [],
+        "unmappedControls": [],
+        "originalDesign": [
+          "Original first-order envelope filter; catalog Mix is wet/dry even where its native key ends in Res. Sensitivity scales detection 0.25..16; original cutoff ranges are 60..2200Hz bass or 100..6000Hz guitar. No native resonance or slope claim."
+        ]
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_SynthFilter",
+        "label": "Synth Filter",
+        "kind": "adaptive",
+        "processor": {
+          "slot": "Rack1",
+          "key": "Rack_SynthFilter",
+          "kind": "filter",
+          "mode": "bandpass",
+          "attack": 0.51,
+          "release": 0.51,
+          "sensitivity": 2.042453212630728,
+          "minHz": 100,
+          "maxHz": 6000,
+          "mix": 0.51
+        }
+      },
+      "controls": [
+        {
+          "key": "Rack_SynthFilter_Sens",
+          "label": "Sensitivity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "number"
+        },
+        {
+          "key": "Rack_SynthFilter_Attack",
+          "label": "Attack Speed",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Rack_SynthFilter_Release",
+          "label": "Release Speed",
+          "min": 10,
+          "max": 1000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Rack_SynthFilter_FilterType",
+          "label": "Filter Type",
+          "min": 0,
+          "max": 2,
+          "step": 1,
+          "choices": [
+            "LP",
+            "BP",
+            "HP"
+          ],
+          "unit": "enum"
+        },
+        {
+          "key": "Rack_SynthFilter_Res",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "key": "Rack_TapeEcho",
+      "label": "Tape Echo",
+      "type": "Racks",
+      "category": "Delay",
+      "inHistorical79Fixture": true,
+      "slot": "Rack1",
+      "kind": "approximate",
+      "disclosure": {
+        "slot": "Rack1",
+        "key": "Rack_TapeEcho",
+        "label": "Tape Echo",
+        "kind": "approximate",
+        "message": "Original generic delay audition; branded/native DSP differs",
+        "unmappedControls": [
+          "Hi Filter"
+        ],
+        "invalidControls": []
+      },
+      "effect": {
+        "slot": "Rack1",
+        "key": "Rack_TapeEcho",
+        "label": "Tape Echo",
+        "kind": "delay",
+        "time": 1.01,
+        "timeRight": 1.01,
+        "feedback": 0.5,
+        "mix": 0.51,
+        "filter": 4000,
+        "depth": 0,
+        "rate": 1
+      },
+      "controls": [
+        {
+          "key": "Rack_TapeEcho_Time",
+          "label": "Time",
+          "min": 20,
+          "max": 2000,
+          "step": 10,
+          "unit": "ms"
+        },
+        {
+          "key": "Rack_TapeEcho_Feedback",
+          "label": "Feedback",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_TapeEcho_Mix",
+          "label": "Mix",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_TapeEcho_Stereo",
+          "label": "Hi Filter",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "unit": "%"
+        },
+        {
+          "key": "Rack_TapeEcho_Filter",
+          "label": "Lo Filter",
+          "min": 0,
+          "max": 2,
+          "step": 1,
+          "choices": [
+            "OFF",
+            "HI",
+            "LO"
+          ],
+          "unit": "enum"
+        }
+      ]
+    }
+  ]
+}

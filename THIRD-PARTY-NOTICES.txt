@@ -1,0 +1,65 @@
+This build references existing dependencies; it does not bundle their
+binaries, upstream source, recordings, commercial assets or native presets.
+See docs/provenance-audit.md for where each part of this project comes from.
+
+Rocksmith2014.NET / DLC Builder, MIT License, Copyright (c) 2020 Tapio Malmberg
+(https://github.com/iminashi/Rocksmith2014.NET):
+  assets/tone-rack-data.json was derived from that project's gear catalog
+  (samples/DLCBuilder.Domain/Tones/tone_gear_data.json): gear and control
+  identifiers, display labels, ranges and enumerations, kept for format
+  interoperability. Those identifiers originate in Rocksmith 2014 game data.
+  Source version: commit 4296d810 (2023-04-20), as shipped in DLC Builder 3.5.0
+  (build f93c2741, 2025-07-24); local change: Marshall Guv'nor Plus bass step 0.01.
+  The MIT permission notice applies to that derived data:
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+  The DLC Builder project export writes that tool's public project file format;
+  research/probes/ValidateSources.fsx can optionally load an export with a local
+  Rocksmith2014.NET checkout. Original neutral defaults and browser DSP are
+  implemented locally; no native audio engine, retail tone presets, artwork,
+  icons, fonts or audio samples are bundled.
+
+FeedPak specification JSON Schemas, MIT License, Copyright (c) 2026 The feedpak
+authors: bundled in assets/feedpak-schemas/ with their license
+(assets/feedpak-schemas/LICENSE-CODE.txt) and source hashes (PROVENANCE.json).
+
+Python runtime dependencies: FastAPI, Uvicorn, python-multipart, PyYAML,
+jsonschema (FeedBack installs it from requirements.txt). Optional verification
+dependencies: pytest, Playwright/Chromium. These are supplied by the local
+environment and are not copied into this build.
+
+External tools, invoked and never bundled: FFmpeg; vgmstream for Wwise .wem
+audio (from a local FeedBack/Slopsmith install or PATH); the DLC Builder
+toolkit's ww2ogg/revorb; the FeedBack gp2rs/gp2rs_gpx Guitar Pro converters
+(run in an isolated subprocess, PyGuitarPro for GP3-5); optionally a local
+gp-to-feedpak checkout for import assistance. .NET SDK is an external tool.
+
+Format interoperability: R+ (Rocksmith+) song folder XML, metadata.json and tone
+references, and the R+ Workshop .rsw layout, were worked out to let this
+independent editor open and write those formats. The repository contains
+original code and format descriptions only: no decompiled code, game assets,
+charts, audio or R+ Workshop project data. One R+ keyboard tone preset
+identifier (grand piano) is included so written keyboard charts reference a
+real preset. Chord-name rankings use counts measured over locally downloaded
+charts; no chart content is included.
+
+Rocksmith, Rocksmith+ and R+ are Ubisoft product names, used only to describe
+compatibility. This is an independent authoring project; it does not claim
+affiliation with Ubisoft or an official release.

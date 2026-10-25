@@ -1,0 +1,42 @@
+{
+  "id": "open_chart_editor",
+  "name": "Open Chart Editor",
+  "version": "0.11.0",
+  "private": true,
+  "description": "A local multi-instrument chart editor with timeline, tempo, tones and build destinations.",
+  "category": "creation",
+  "nav": {
+    "label": "Chart Editor",
+    "screen": "open_chart_editor"
+  },
+  "screen": "screen.html",
+  "script": "screen.js",
+  "scriptType": "module",
+  "fullscreen": true,
+  "minHost": "0.3.1-alpha.4",
+  "styles": "assets/editor.css",
+  "routes": "routes.py",
+  "standards": [
+    "capability-pipelines.v1"
+  ],
+  "capability_api": {
+    "standard": "capability-pipelines.v1",
+    "version": 1
+  },
+  "capabilities": {
+    "playback": {
+      "roles": [
+        "requester"
+      ],
+      "commands": [
+        "start",
+        "stop"
+      ],
+      "mode": "active",
+      "ownership": "requester-only",
+      "safety": "safe",
+      "version": 1
+    }
+  },
+  "license": "AGPL-3.0-only"
+}

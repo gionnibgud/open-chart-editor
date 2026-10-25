@@ -1,0 +1,14 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {performance} from 'node:perf_hooks';import {History} from '../src/history.js';import {commitPathCandidate} from '../src/history-path-candidate.js';
+const fixture=()=>({vocals:[{id:'a',time:0,length:.3,text:'Own',opaque:{unchanged:[1,2]}},{id:'b',time:1,length:.4,text:'words'}],arrangements:[{notes:[{id:'hidden',time:2,fret:3}]}],_pack:{original:'immutable'}});
+test('subtree experiment produces ordinary reversible history that composes with later global reorder',()=>{
+ const h=new History(fixture()),original=structuredClone(h.project),opaque=h.project.vocals[0].opaque,source=h.project._pack;commitPathCandidate(h,'Own word',['vocals',0],row=>{row.text='Changed';row.pitch=0;});assert.equal(h.project.vocals[0].opaque,opaque);h.commit('Own reorder',p=>p.vocals.reverse());h.undo();h.undo();assert.deepEqual(h.project,original);assert.equal(h.project._pack,source);h.redo();h.redo();assert.equal(h.project.vocals[1].text,'Changed');assert.equal(h.project.vocals[1].pitch,0);
+});
+test('subtree exceptions roll back source fields and preserve parent history and hidden data',()=>{
+ const h=new History(fixture()),before=structuredClone(h.project);assert.throws(()=>commitPathCandidate(h,'Reject',['vocals',0],row=>{row.text='Bad';row.opaque.unchanged.push(3);throw Error('Own rejected edit');}),/rejected/);assert.deepEqual(h.project,before);assert.equal(h.stateId,0);assert.equal(h.undoStack.length,0);for(const path of [[],['missing'],['_pack'],['__proto__'],['vocals',-1],['vocals',0,'text']])assert.throws(()=>commitPathCandidate(h,'Invalid',path,()=>{}));
+});
+test('retention caps, no-op notifications, branching and checkpoints remain ordinary History behavior',()=>{
+ const h=new History(fixture(),{maxEntries:2,maxBytes:100000});let calls=0;h.listeners.add(()=>calls++);commitPathCandidate(h,'Noop',['vocals',0],()=>{});assert.equal(calls,1);assert.equal(h.stateId,0);h.setCheckpoint();for(let i=0;i<3;i++)commitPathCandidate(h,'Word '+i,['vocals',0],row=>row.text='Own '+i);assert.equal(h.undoStack.length,2);assert.equal(h.checkpointAvailable,false);h.undo();commitPathCandidate(h,'Branch',['vocals',0],row=>row.length=.2);assert.equal(h.redoStack.length,0);
+});
+test('single-row subtree capture scales with the edited row rather than100k surrounding vocals',()=>{
+ const h=new History(fixture());h.project.vocals=Array.from({length:100000},(_,i)=>({id:'own-'+i,time:i*.1,length:.08,text:'Own',opaque:{payload:[i,i+1]}}));const source=h.project.vocals[50000].opaque,start=performance.now();commitPathCandidate(h,'Own syllable',['vocals',50000],row=>row.text='Changed');const commitMs=performance.now()-start;h.undo();assert.equal(h.project.vocals[50000].text,'Own');assert.equal(h.project.vocals[50000].opaque,source);console.log(JSON.stringify({candidateOnly:true,rows:100000,commitMs,bytes:h.retainedBytes}));
+});

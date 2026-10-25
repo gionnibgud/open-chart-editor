@@ -1,0 +1,330 @@
+{
+  "target": "Complete chart authoring for FeedBack and Rocksmith 2014 authoring sources (DLC Builder projects)",
+  "completion": "in progress",
+  "publication": "Local research and builds only. No Git push or publication authorized.",
+  "evidence_policy": "Implemented behavior, tested behavior, retail observations and remaining gaps are distinguished.",
+  "features": [
+    {
+      "id": "layout",
+      "capability": "Menus, timeline, inspector, transport and error panel",
+      "status": "Implemented; contextual menus and keyboard traversal, chart commands scoped to visible Tab/Tempo views, resizing, pointer-anchored zoom, separate view preferences and bounded virtual viewport browser verified. File > Arrangement info and Ctrl+Shift+I reveal the Settings inspector even when it is hidden. This is an original counterpart to captured native menu vocabulary; identical native modal behavior is not claimed",
+      "remaining": "Exact current retail menu behavior is only partially observed."
+    },
+    {
+      "id": "fretted",
+      "capability": "Fret entry, grid movement, selection, sustain dragging and techniques",
+      "status": "Editing, matching selection, atomic transpose/string moves, slides, numeric tap, stroke direction, vibrato and force destination pitch implemented; optional per-string sustain clamp/gutter and repeated beat-tail edits pass eight browser checks",
+      "remaining": "Sustain policy is an original optional behavior with documented purpose, not established exact retail exceptions. Force destination pitch is authoring metadata for JSON/FeedBack; Stock RS2014 has no established equivalent and rejects non-Auto export."
+    },
+    {
+      "id": "chords",
+      "capability": "Chord templates, library search, fingering, cloning, strums, hand shapes and gutter",
+      "status": "Zones, fingerprints, arpeggios, hidden names, movement, split, bulk zone generation/removal, cursor bends and naming implemented; unit/browser checks pass; endpoint-only zone fitting previews explicit musical boundaries/gutter and protects existing tails, with13 unit and4 browser checks; inherited-only template finger synchronization across allDD/nativeXML, explicit overrides/source preservation and atomicUndo pass7unit/4browser checks; original4..8string live diagram/capo/thumb/Cancel/Undo passes4browser checks; anchor repair13unit/6browser checks preserve music/hiddenDD/source and bounded100-row preview",
+      "remaining": "Current retail exact presentation and all native rendering distinctions still require parity review. Native endpoint command purpose is evidenced; the new fitting policy does not claim exact propagation or internal native units. Finger inheritance is explicit original policy: missing/equal-old values follow the template; other per-note values remain overrides."
+    },
+    {
+      "id": "regions",
+      "capability": "Merge paste and region operations across notes, chords, anchors, phrases, sections, tones and lyrics",
+      "status": "All-structure regions and ordinary complete/partial chord clipboard browser workflows pass; 150,000-note clipboard regression passes Flat pitched phrase markers, IDs and unknown fields now persist through a versioned SHA-bound authoring record; stale/future metadata is withheld with warnings and preserved opaque, and explicit empty/absence intent cannot resurrect old markers.",
+      "remaining": "Exact retail region-edge semantics remain a parity review item. Flat phrase markers are retained for R+ Workshop reopen; native FeedBack phrase playback requires authored native ladders. Original marker-to-ladder boundary policy is documented and not claimed exact retail behavior."
+    },
+    {
+      "id": "tempo",
+      "capability": "Beat-map alignment, tap tempo, transient detection, tempo suggestions, ramps and meters; configurable grid/onset snapping, swing and atomic resnap",
+      "status": "Implemented; principal sync workflows and real-browser swing/onset/resnap/undo checks pass; cursor BPM preserves earlier alignment, mixed-meter follow timing and Undo browser verified",
+      "remaining": "Automatic suggestions are heuristic and require author review. Native tempoLock evidence indicates tempo-event markers in the observed conversion, not proven absolute-time protection locks."
+    },
+    {
+      "id": "audio",
+      "capability": "Independent preview pitch/speed, loops, speed ramps, count-in, metronome and guide mixer with mute/solo",
+      "status": "Fast granular default and optional bounded spectral Worker/Worklet preview implemented; real audio tests verify mixed pitches, exact transport sync, loops/ramps/seek, pending cancellation, fallback and ten-minute-source short stress; frozen0.5 source passed45-minute EQ transition soak with60samples, exactsource/clock and clean teardown; deliberate600ms stall visibly falls back while fast playback continues. Original adaptive and MIDI cue production gates pass. The0.6 integrated soak failed at sample33 because its strict comparison sampled an advancing clock at different times; original failure retained. The revised0.7 harness uses strict coherent clock snapshots and getter brackets; its actual run status is recorded separately in the checkpoint evidence. No45-minute success is claimed for0.6. Actual0.7 strict silent-browser endurance passed60samples over2714.61wall seconds/1948.112context seconds, zero fallback, exact28-module/catalog closure and155of155 retirement acknowledgements before context close. Physical playback/latency/listening fidelity remains unverified. Actual0.8 fractional preview pitch passes five real UI workflows: one-cent input, exact original engine floats, focused Save, unchanged full JSON/scratch/hiddenDD/source, invalid limits and remount/reload preferences. No audio context or hardware was initialized by this setting-only gate. The final0.8 endurance result is recorded separately in checkpoint evidence.",
+      "remaining": "Original spectral processing retains transient pre-echo and possible noise coloration; fast granular can smear or cancel mixed material. Native DSP and physical listening fidelity are unverified. Source exports keep original audio."
+    },
+    {
+      "id": "tones",
+      "capability": "Tone library, timed allocations, amp/cabinet/pedal/rack controls and native definitions",
+      "status": "Native authoring/allocation/export and original audition for 68 of the 79 audited non-Distortion/non-Pitch descriptors, including partial Eden (48 of 58 non-Filter, 20 of 21 Filter), plus all five wah Auto-ON modes. The full 100-descriptor pedal/rack catalog has 84 original approximations: those 68 plus 16 generic distortion approximations. Production every-frame OfflineAudio/Worklet comparisons, bounded12-stage graph,200 acknowledged retirements before context close and8actual UI preparation/failure/routing workflows pass. Fractional controls and named enums remain exact; volume-only edits retain graphs. Actual0.7 production12-stage static graph and five real UI workflows verify fractional1375.125Hz, asynchronous catalog bypass/registration, volume-cache reuse, exact native/source/hidden-DD retention and complete disposal. Acoustic Emulator uses an explicitly original generic shelf/mid model; Range Booster uses original bounded broadband gain. Original Swole maps compressor controls with browser automatic makeup/lookahead; partial Eden models three EQ controls while five controls remain unmapped and disclosed. Original Amp EQ maps authored 1..100 controls to -12..+12 dB about midpoint 50.5, with original enum-selected bass 80/160 Hz, mid 400/800/1600 Hz and treble 2500/5000 Hz anchors, Q=1 and 20 Hz..0.45 sample-rate bounds. These original mappings are not native frequency/gain calibration. Exact native DSP remains unverified. Actual0.8 production OfflineAudio and six actual-main UI workflows pass with no module overlays and exact served/local hashes: input-normalized compression/recovery, three-band dB responses, twelve-stage finite bounded graph, five unmapped Eden controls disclosed/inaudible, fractional source units, six Undo, hidden DD/native JSON, graph reuse and disposal.",
+      "remaining": "Sixteen of the full 100 pedal/rack descriptors remain bypassed: 11 in the audited 79-descriptor non-Distortion/non-Pitch subset and five Pitch descriptors (Bass Sub Octave, MultiPitch, OctaveUp!, Octavius and Studio Pitch). Unsupported controls stay disclosed. Models are original approximations, with no native/branded DSP fidelity claim. Unknown retirement acknowledgement degrades adaptive admission until context recreation; other effects remain usable."
+    },
+    {
+      "id": "difficulty",
+      "capability": "Editable difficulty levels, source-preserving generation and phrase maxima; copy/clear a phrase between authored levels",
+      "status": "Implemented; uncovered/overlapping source projections refuse instead of dropping or duplicating rows. Explicit marker boundary edits rebuild original next-marker/song-end intervals; label-only changes keep native timing and unknown metadata.25 backend tests/36subtests plus four actual UI export/repair/reopen workflows pass.",
+      "remaining": "Original progressive thinning is not claimed to match the native difficulty algorithm. Gapped/overlapping imported native ladders require explicit marker correction before export. Removing canonical levels while native source levels remain requires restoring levels or saving editable JSON; no automatic destructive flattening."
+    },
+    {
+      "id": "validation",
+      "capability": "Arrangement Error Finder with navigable timing, technique, reference, tone and structural issues",
+      "status": "native-schema checks plus optional documented R+ Workshop conventions implemented; vocals include native47-byte UTF-8, XML validity and timing checks with paged field navigation/correction/Undo browser verification",
+      "remaining": "Publicly documented conventions are separate from generic FeedBack/RS2014 checks; complete executable rule parity remains open."
+    },
+    {
+      "id": "extended",
+      "capability": "Guitar and bass authoring families with every string count from four through eight",
+      "status": "All ten factory layouts, custom open pitches, source/DD-preserving resize and exact stock compatibility implemented. Targeted model/backend tests pass; new host adapter integration verification pending.",
+      "remaining": "Stock RS2014 still requires six-string guitar or four-string bass. Defaults for other layouts are editor choices; supply the actual instrument tuning."
+    },
+    {
+      "id": "piano",
+      "capability": "Piano roll, pitch, hands, sustain, velocity and MIDI import/recording",
+      "status": "Full MIDI0..127, hand tools/shading, velocity0..127 and original held-note recording guide. Actual production cue7workflows, recording2 and asynchronous lifecycle21 cases preserve hiddenDD/source, pedal/channel semantics and Undo; cap refusal affects cue allocation while all65notes still record. Large-chart production capture100k notes/32noteoffs improves20.166s to5.4ms total/max2.1ms; one-time631ms preparation before playback;32separateUndo/Redo exact and lifecycle21cases rerun pass. All source edits use History; unusual unsorted/mismatched DD retains generic fallback.",
+      "remaining": "Physical MIDI hardware remains unverified. Native piano highways play backing audio; chart-note velocity synthesis is not implemented there. Their live MIDI velocity support is separate; the editor original guide honors chart velocity."
+    },
+    {
+      "id": "drums",
+      "capability": "Drum grid, canonical kit pieces, velocity, ghost/flam/choke and MIDI import/recording",
+      "status": "Original18-piece audition plus distinct imported custom-ID lanes, escaped source labels, all-level discovery and exact custom note entry/selection/undo/Feedpak roundtrip browser verified; SHA-bound authoring sidecar retains every level/group/zone; actual canonical18 native gate renders stack/bell in default fallback and own lanes, preserves user kit/source/DD/return context and refuses missing lanes before writes",
+      "remaining": "Custom IDs use a disclosed generic local cue; current native highway skips them, so visible custom-hit playtest refuses before writing. Native drum_tab plays flat highest-level hits, not private DD/group presentation. Externally changed hits withhold stale private data. Stock RS2014 drum export remains unsupported."
+    },
+    {
+      "id": "other-instruments",
+      "capability": "Other pitched instruments through the FeedBack pitch representation",
+      "status": "Pitched authoring plus16 original offline guide families, zero-based GM intent, undo and JSON/Feedpak metadata persistence; live oscillator/offline/worker agreement tested",
+      "remaining": "Families approximate timbre; no sampled GM bank or proprietary DSP. Existing native host providers do not automatically consume this guide override/rig GM. Specialized notation and game modifications need further adapters."
+    },
+    {
+      "id": "vocals",
+      "capability": "Syllable timing, optional pitches, lyrics sidecars and native vocal XML",
+      "status": "Original bounded lyric/pitch/waveform canvas, group move/tail/clipboard, paged keyboard editing, navigable UTF-8/XML/timing diagnostics and source-preserving lyric/pitch sidecars implemented; real UI, 100k stress and isolated native vocal-only Playtest functional checks pass; scoped staged field History and retained input DOM verify mouse/Tab/CtrlTab continuity, hidden source preservation and100k real UI edit335.5ms to39.7ms on this machine",
+      "remaining": "Exact retail vocal workflow and physical voice/game playback remain unverified. Native provider omits zero-duration pitches; translations are retained, not automatically retimed. Private Vocal Highway is a separate local dependency, excluded from the R+ Workshop ZIP. Frozen installed-source gate required for each checkpoint."
+    },
+    {
+      "id": "imports",
+      "capability": "Feedpak, project JSON, arrangement/vocal XML, MIDI, multipart MusicXML/MXL, Guitar Pro 3-8 and GPA sync song folders",
+      "status": "other adapters and opaque-source merge tested; numeric MusicXML dynamics(default forte90) and explicit sound tempo offsets tested; bounded original MXL archive plus extra files survives JSON/Feedpak without overriding edited charts. Timed approximate MIDI-GM adapter and durable source references are production tested separately. Plain MusicXML normalized source now also survives native Feedpak save/reopen via version2 score metadata, while compressed MXL version1 metadata stays byte exact; edited charts remain authoritative. Full backend249tests+109subtests pass with one Windows file-symlink creation privilege skip; actual directory-junction containment passes. Uniform GP6/7/8 fretted capo metadata now follows documented staff/track precedence; actual four-layout import and JSON/Feedpak/XML browser checks pass. Feedpak-owned SHA-bound role/priority metadata preserves explicit stock arrangements without using display-name inference. Tone, beat-map and arrangement imports reserve exact History/state/project/part/open intent before awaiting; stale, superseded or unmounted continuations cannot commit or replace dialogs.28 actual-handler tests and14 real UI workflows pass, including one-Undo full-project/hidden-DD preservation and latest-request ordering. Tone/tempo native inputs clear after capture so the same file can be selected again.",
+      "remaining": "Native SNG reconstruction has disclosed rounding/scoring/transcription limitations. Conflicting/nonuniform, malformed or out-of-policy GP6-8 fretted capos are explicitly rejected; nonfretted source metadata is disclosed and retained. Unsupported MusicXML navigation/ornaments and MIDI format 2/SMPTE are rejected; source documents remain preserved. PSARC packages are refused: PSARC import and authoring were removed on 2026-10-24 (no use of the PSARC key)."
+    },
+    {
+      "id": "feedpak",
+      "capability": "FeedBack Save As with native 1.19 schema and opaque data preservation",
+      "status": "Canonical manifest.yaml and complete vendored 1.19 JSON schemas validate all present known streams, references and supported versions. Strict JSON/JSONC, unknown file/field preservation, folder transport and read-only notation implemented. Published minimal/extended examples roundtrip; backend suite passes.",
+      "remaining": "Notation-only rows are retained read-only; no standard-notation editor. Changed JSONC streams may lose comment formatting. Media decoding, unsupported rig rendering and full playback semantics are outside the schema gate; no blanket conformance claim."
+    },
+    {
+      "id": "save-paths",
+      "capability": "Separate output schemas and native Save As paths",
+      "status": "Separate file/folder delivery for FeedPak, RS2014 source handoff and genuine loose songs; per-target selections, OrderedSaves, cancellation and project ownership guards. Folder trees are fully validated before writing a new child; .feedpak directories retain the required suffix. Six actual DOM/HTTP source/folder workflows pass.",
+      "remaining": "Native OS file/directory pickers are controlled test doubles in automation. Existing destinations are not overwritten by folder exports."
+    },
+    {
+      "id": "history",
+      "capability": "Undo/redo, history inspector, sparse retention and local recovery",
+      "status": "Sparse undo/redo, direct state navigation, checkpoints, eviction and recovery/remount browser checks pass; staged synchronous subtree commits preserve ordinary patch Undo/Redo, rejection purity, branch/checkpoint caps and unrelated source identity",
+      "remaining": "Recovery storage depends on the browser profile and available quota."
+    },
+    {
+      "id": "host",
+      "capability": "Separate FeedBack plugin, actual host loader and lifecycle integration",
+      "status": "Verified baseline installed locally; actual installed-byte loader passes",
+      "remaining": "Ongoing source changes require a fresh local installation. Backed-up SQLite and eight-string highway-label compatibility repairs are applied; user service not restarted."
+    },
+    {
+      "id": "playtest",
+      "capability": "Play-test from beginning/cursor and return from the FeedBack highway",
+      "status": "Mixed-instrument isolation and all seven production player cases pass; actual selected-loop UI verifies public session/loop state, media wrap, guarded commitment, exact editor return context and owned cleanup",
+      "remaining": "Physical hardware and every optional renderer remain unverified. Current source changes after the production loop gate need a fresh installed-source check."
+    },
+    {
+      "id": "retail-rsw",
+      "capability": "Retail native project inspection",
+      "status": "bounded opaque preservation implemented",
+      "remaining": "Editable retail .rsw decoding and encoding are not established; output targets remain FeedBack and RS2014."
+    },
+    {
+      "id": "scratch",
+      "capability": "Secondary scratch track, normal editing, transfer and lossless persistence outside playable manifests",
+      "status": "implemented; JSON/Feedpak browser round-trip passes",
+      "remaining": "Native retail project encoding remains unestablished."
+    },
+    {
+      "id": "transcription-fx",
+      "capability": "Per-bus pan, five-band song EQ, center cancellation, channel isolation and bypass",
+      "status": "real OfflineAudioContext DSP and UI remount tests pass",
+      "remaining": "Original listening presets approximate the purpose of the native tools; no proprietary preset/DSP equivalence claim."
+    },
+    {
+      "id": "live-input",
+      "capability": "Explicit local instrument input selection and tone monitoring with dedicated mixer channel",
+      "status": "lifecycle tests and real Chromium fake-device checks pass; explicit adaptive preparation precedes permission and cancellation is tested with synthetic streams only",
+      "remaining": "Real hardware/latency and native amp sound require interactive verification. No actual microphone was accessed."
+    },
+    {
+      "id": "capo",
+      "capability": "FeedBack relative fret model with correct physical native XML coordinates",
+      "status": "Retained; PSARC-based evidence removed with the PSARC tooling.",
+      "remaining": "Physical/capo-relative UI, notes, slides, templates and anchors are browser verified. In-game package playback remains unverified."
+    },
+    {
+      "id": "large-song",
+      "capability": "Viewport rendering and indexed guide scheduling for long arrangements",
+      "status": "30,000-event ten-minute original stress chart measured before and after; long-tail correctness tests pass",
+      "remaining": "Machine-dependent frame timings vary; results do not promise constant frame rate or physical audio output quality."
+    },
+    {
+      "id": "timeline-context",
+      "capability": "Timeline right-click actions and keyboard menu navigation",
+      "status": "Actual browser selection, copy/paste, undoable delete, Escape and outside dismissal pass",
+      "remaining": "Original interaction design; exact current retail context-menu parity is unestablished."
+    },
+    {
+      "id": "welcome-recent",
+      "capability": "Welcome and recent-project reopening",
+      "status": "Nine real-browser checks pass: exact complete JSON/audio, reload/remount identity, dirty confirmation, eviction and nonfatal storage failure",
+      "remaining": "Browser cache is bounded to12 files/128MiB total/64MiB per file and depends on browser profile/quota."
+    },
+    {
+      "id": "practice-render",
+      "capability": "Cancellable background practice audio rendering with progress and stale-project protection",
+      "status": "Ten-minute30,000-note48k stereo render, responsive editor heartbeat, cancellation, source preservation and worker teardown verified",
+      "remaining": "Original synthesized listening aids do not reproduce native instrument sounds; PCM uses about115MB for ten minutes."
+    },
+    {
+      "id": "native-techniques",
+      "capability": "Native slap/pluck sentinels, note/chord mute semantics and numeric tap",
+      "status": "Actual compiled SNG verifies independent technique masks, tap3 and every voice of a mixed-muted chord; UI/XML/Feedpak checks pass. Explicit authoring commands apply to selected notes/chord children: enabling palm mute clears fret-hand mute and its legacy mute alias; enabling fret-hand mute clears palm mute. Frets and unrelated data are retained, and imported contradictory flags remain unchanged until an explicit command edits them. The editor retains its aggregate-every selection rule (enable if any selected voice lacks the chosen technique) and local disable policy (leave the opposite mute flag unchanged; disabling fret-hand mute also clears its existing legacy alias). Target output projects PM/MT/FHM to Boolean flags: true or a positive finite legacy number enables; zero and negative values are inactive. Authored FHM/legacy MT aliases combine with OR after independent normalization. Current authored values and authoritative absence suppress cached source aliases. The editable master and original source data remain unchanged; invalid scalar or non-finite mute values are refused by existing general project validation.",
+      "remaining": "Packaging mixed-muted chords requires simultaneous-note presentation, disclosed in build warnings. Native mixed-selection ordering, current-retail open-versus-retain mute commands and all native rhythm-marker disable semantics remain unestablished. Bend intent/teaching marks have no native note attributes and produce export warnings."
+    },
+    {
+      "id": "cover-build-options",
+      "capability": "Original PNG cover and retained DLC Builder project details",
+      "status": "clear/undo and complete-JSON reopen retain native build options including explicit PCM and imported-audio reuse preferences",
+      "remaining": "Conventional audio encoding still requires Wwise or own WEM; experimental PCM remains unverified in game."
+    },
+    {
+      "id": "tuning-reference",
+      "capability": "Arrangement cent offset and custom open-string base-pitch preservation",
+      "status": "Retained; PSARC-based evidence removed with the PSARC tooling.",
+      "remaining": "Editable formats retain exact cents; source audio is unchanged."
+    },
+    {
+      "id": "signal-meters",
+      "capability": "Live stereo bus peak meters with dBFS and clipping indicators",
+      "status": "Five real-browser checks cover phase-opposed stereo, fader/mute/stop, overload above0dBFS, UI tone routing and teardown; output muted during measurement",
+      "remaining": "Guide meter is before its tone effect; master is after the effect. Physical output calibration is unverified."
+    },
+    {
+      "id": "virtual-viewport",
+      "capability": "Bounded canvas backing for full-range keys and large custom kits",
+      "status": "Eleven actual browser checks pass for128keys/1024drums atDPR2/maxstretch, first/last hit edits, lower-row marquee/tail drag, undo/hiddenDD, exact logical scroll range and remount position; large display stays below8M pixels",
+      "remaining": "Backing pixel budget can lower effective resolution on exceptionally large displays. No constant-frame-rate claim."
+    },
+    {
+      "id": "library-open",
+      "capability": "Explicit My Library action opens selected archives or bounded song-folder snapshots",
+      "status": "Selected song folders and archives remain confined to the configured library with byte/size/change/link guards. Actual browser folder selection/import and all twelve chart parts roundtrip through HTTP; physical OS pickers are not exercised.",
+      "remaining": "Host typed-loose playback adapter verification pending."
+    },
+    {
+      "id": "rs2014-source-handoff",
+      "capability": "Packaging-ready RS2014 source files and typed DLC Builder project",
+      "status": "Explicit compatible selection, authored XML, vocals, owned audio/normalized PCM, cover, tones, .rs2dlc, full editable master and identity report implemented. Actual public project/native XML loaders and source tests pass;",
+      "remaining": "No in-game proof or encoder included. Stock unsupported parts stay in the master. WEM-only projects require original editable PCM/audio; decoded copies have an explicit 128 MiB limit."
+    },
+    {
+      "id": "feedback-loose",
+      "capability": "Real flat XML/audio/art/manifest loose song folder with full typed extension",
+      "status": "Legacy flat layout plus explicit hash-bound typed performance and complete master implemented. Folder snapshot/reopen and corruption/identity boundaries pass tests.",
+      "remaining": "Full extended/piano/drum playback needs the separately reviewed local host adapter, still under integration verification. Legacy readers see compatible native XML mirrors only."
+    },
+    {
+      "id": "tone-systems-backlog",
+      "capability": "Future tone-system integrations, including Tone3000/NAM",
+      "status": "Explicitly deferred at user request. Rigs and unknown assets remain retained without fetching or executing them.",
+      "remaining": "Review tone-page architecture and Tone3000 browser later; no implementation or service research performed."
+    }
+  ],
+  "verification": {
+    "javascript": "node --test tests/*.test.mjs",
+    "python": "python -m pytest tests -q -p no:cacheprovider",
+    "browser": "node tests/browser-deep.mjs",
+    "actual_host": "python tools/verify-host.py",
+    "session_safety": "node tests/browser-session.mjs",
+    "chords": "node tests/browser-chords.mjs",
+    "browser_audio_history": "node tests/browser-audio-history.mjs",
+    "browser_merge": "node tests/browser-import.mjs",
+    "actual_highway": "python tools/verify-highway.py",
+    "browser_scratch": "node tests/browser-scratch.mjs",
+    "browser_audiofx": "node tests/browser-audiofx.mjs",
+    "browser_live_input": "node tests/browser-live-input.mjs",
+    "browser_authoring": "node tests/browser-authoring.mjs",
+    "browser_audio_fallback": "node tests/browser-audio-fallback.mjs",
+    "destination_pitch": "node tests/browser-destination-pitch.mjs",
+    "string_positions": "node tests/browser-string-move.mjs",
+    "keyboard_selection": "node tests/browser-selection.mjs",
+    "context_menu": "node tests/browser-context-menu.mjs",
+    "recent": "node tests/browser-recent.mjs",
+    "history_navigation": "node tests/browser-history.mjs",
+    "snap": "node tests/browser-snap.mjs",
+    "worker": "node tests/browser-render-worker.mjs",
+    "techniques": "node tests/browser-techniques.mjs",
+    "custom_tuning": "node tests/browser-custom-tuning.mjs",
+    "phrase_difficulty": "node tests/browser-phrase-difficulty.mjs",
+    "clipboard": "node tests/browser-clipboard.mjs",
+    "cover": "node tests/browser-cover.mjs",
+    "piano_hands": "node tests/browser-piano-hands.mjs",
+    "arrangements": "node tests/browser-arrangements.mjs",
+    "drums": "node tests/browser-drums.mjs",
+    "menubar": "node tests/browser-menubar.mjs",
+    "native_open": "node tests/browser-native-open.mjs",
+    "audio_quality": "node tests/browser-grain-quality.mjs",
+    "sustain": "node tests/browser-sustain.mjs",
+    "navigation": "node tests/browser-navigation.mjs",
+    "signal_meters": "node tests/browser-signal-meters.mjs",
+    "playtest_loop": "python tools/verify-loop-highway.py",
+    "drum_levels": "node tests/browser-drum-levels.mjs",
+    "guide_settings": "node tests/browser-guide-settings.mjs",
+    "spectral_preview": "node tests/browser-spectral-preview.mjs",
+    "spectral_stress": "node tests/browser-spectral-stress.mjs",
+    "live_guide_voices": "node tests/browser-live-guide-voice.mjs",
+    "guide_voice_worker": "node tests/browser-guide-voice.mjs",
+    "save_context": "node tests/browser-save-context.mjs",
+    "custom_drums": "node tests/browser-custom-drums.mjs",
+    "tone_preview_ui": "node tests/browser-tone-preview-ui.mjs",
+    "tone_effects": "node tests/browser-tone-preview-integrated.mjs",
+    "tone_output_ceiling": "node tests/browser-tone-output-ceiling.mjs",
+    "virtual_viewport": "node tests/browser-virtual-viewport.mjs",
+    "view_safety": "node tests/browser-view-safety.mjs",
+    "vocal_editor": "node tests/browser-vocal-editor.mjs",
+    "vocal_focus": "node tests/browser-vocal-focus.mjs",
+    "vocal_issues": "node tests/browser-vocal-issues.mjs",
+    "vocal_highway": "python tools/verify-vocal-highway.py",
+    "zone_fit": "node tests/browser-zone-fit.mjs",
+    "tempo_cursor": "node tests/browser-tempo-cursor.mjs",
+    "modal_lifecycle": "node tests/browser-modal-lifecycle-audit.mjs",
+    "tone_fields": "OCE_TONE_FOCUS_RELEASE=1 node tests/browser-tone-fields.mjs",
+    "tone_filters": "node tests/browser-tone-filters-integrated.mjs",
+    "tone_fractional": "node tests/browser-tone-fractional-native.mjs",
+    "chord_fingers": "node tests/browser-chord-fingers.mjs",
+    "vocal_pointer": "node tests/browser-vocal-pointer.mjs",
+    "anchor_fit": "OCE_ANCHOR_BROWSER_RELEASE=1 node tests/browser-anchor-fit.mjs",
+    "chord_diagram": "OCE_CHORD_DIAGRAM_RELEASE=1 node tests/browser-chord-diagram.mjs",
+    "piano_velocity": "OCE_PIANO_VELOCITY_RELEASE=1 node tests/browser-piano-velocity.mjs",
+    "midi_lifecycle": "OCE_MIDI_LIFECYCLE_RELEASE=1 node tests/browser-midi-lifecycle.mjs",
+    "midi_recording": "OCE_MIDI_RECORDING_RELEASE=1 node tests/browser-midi-recording.mjs",
+    "midi_cue": "OCE_MIDI_PRODUCTION_RELEASE=1 node tests/browser-midi-audition-production.mjs",
+    "adaptive_dsp": "OCE_ADAPTIVE_PRODUCTION_RELEASE=1 node tests/browser-tone-adaptive-production.mjs",
+    "adaptive_ui": "OCE_ADAPTIVE_UI_RELEASE=1 node tests/browser-tone-adaptive-ui.mjs",
+    "canonical18_native": "python tools/verify-drum-canonical18-highway.py --released-after-soak",
+    "multiinstrument_save": "OCE_MULTI_SAVE_RELEASE=1 OCE_MULTI_SAVE_PHASE=after-role-fix node tests/browser-multiinstrument-save.mjs",
+    "gpif_capo": "OCE_GPIF_BROWSER_RELEASE=1 node tests/browser-gpif-capo.mjs",
+    "library_intent": "OCE_LIBRARY_INTENT_RELEASE=1 node tests/browser-library-open-intent.mjs",
+    "library_host": "OCE_LIBRARY_HOST_RELEASE=1 OCE_LIBRARY_GATE_RUNTIME=1 python tools/verify-library-open.py",
+    "static_tones": "OCE_STATIC_PRODUCTION_RELEASE=1 node tests/browser-tone-static-production.mjs",
+    "integrated_audio_07": "OCE_07_SOAK_RELEASE=1 node tests/browser-audio-integrated-07-soak.mjs",
+    "import_races": "OCE_IMPORT_RACES_RELEASE=1 node tests/browser-import-file-races.mjs",
+    "phrase_coverage": "OCE_PHRASE_COVERAGE_RELEASE=1 node tests/browser-feedpak-phrase-coverage.mjs",
+    "musicxml_midi": "OCE_INTEROP_BROWSER_RELEASE=1 node tests/browser-musicxml-midi.mjs",
+    "swole_eden_production": "OCE_SWOLE_EDEN_PRODUCTION_RELEASE=1 node tests/browser-tone-swole-eden-production.mjs",
+    "swole_eden_ui": "OCE_SWOLE_EDEN_PRODUCTION_UI_RELEASE=1 node tests/browser-tone-swole-eden-production-ui.mjs",
+    "fractional_preview_pitch": "OCE_FINE_PITCH_RELEASE=1 node tests/browser-fractional-preview-pitch.mjs",
+    "integrated_audio_08": "OCE_08_SOAK_RELEASE=1 node tests/browser-audio-integrated-08-soak.mjs",
+    "amp_eq_production": "OCE_AMP_EQ_RELEASE=1 OCE_AMP_EQ_MODE=production node research/staging/amp-eq/browser-amp-eq.mjs",
+    "integrated_audio_10": "OCE_10_SOAK_RELEASE=1 node tests/browser-audio-integrated-10-soak.mjs",
+    "candidate011": {
+      "status": "Implementation/targeted checks passed; host/endurance/promotion pending",
+      "backend": "385 tests +153 subtests; one Windows file-symlink privilege skip; real junction regression passes",
+      "browser": "verification/output-targets-e750c1d1-c704-40ab-b755-c0a64fb50165/report.json",
+      "claims": "Older verification entries remain historical checkpoints; this candidate has not been installed or promoted."
+    }
+  }
+}
