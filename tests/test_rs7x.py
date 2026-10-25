@@ -132,3 +132,25 @@ class FeedBackTargetsUntouchedTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class Rs7xImportTests(unittest.TestCase):
+    """Seven-string XML in the RS7X order opens with the low B as the editor's lowest string."""
+    def test_round_trip_through_the_rs7x_export(self):
+        source = seven()
+        entries, _ = built(source, ['own-seven'])
+        reopened = p.load_project(entries['arrangements/00_rhythm.xml'], '00_rhythm.xml')
+        arr = reopened['arrangements'][0]
+        original = source['arrangements'][1]
+        self.assertEqual((arr['type'], arr['stringCount'], arr['basePitches']), ('guitar', 7, [35, 40, 45, 50, 55, 59, 64]))
+        self.assertEqual(arr['tuning'], original['tuning'])
+        self.assertEqual(sorted((n['string'], n['fret']) for n in arr['notes']), sorted((n['string'], n['fret']) for n in original['notes']))
+        self.assertEqual({(n['string'], n['fret']) for c in arr['chords'] for n in c['notes']}, {(0, 2), (1, 4)})
+        self.assertEqual(arr['chord_templates'][0]['frets'], original['chord_templates'][0]['frets'])
+        self.assertTrue(any('RS7X string order' in w for w in reopened['import_warnings']))
+
+    def test_six_string_files_are_not_reordered(self):
+        project = fixture()
+        reopened = p.load_project(p.save_xml(project, 'own-lead'), 'lead.xml')
+        self.assertEqual(reopened['arrangements'][0]['stringCount'], 6)
+        self.assertFalse(any('RS7X' in w for w in reopened.get('import_warnings', [])))

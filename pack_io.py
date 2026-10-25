@@ -1926,13 +1926,70 @@ def _xml_capo_coordinates(root, exporting=False, include_levels=True):
                 convert(anchor,'fret')
 
 
+def _xml_string_count(root):
+    """String count from the `strings` attribute Editor on Fire adds to <tuning>.
+
+    EOF writes Rocksmith 2014 XML as version 8: the same chart format DLC Builder
+    reads, with a nine-entry tuning, this count and a <fretHandMutes> list per level.
+    The file is kept as written; returns None when there is no count."""
+    tuning=root.find('tuning')
+    if tuning is None or not tuning.get('strings'):
+        return None
+    try:
+        count=int(tuning.get('strings'))
+    except ValueError:
+        raise ProjectError('The XML tuning has an invalid string count') from None
+    if not 4<=count<=8:
+        raise ProjectError(f'This chart has {count} strings; the editor supports 4 to 8')
+    return count
+
+
+def _xml_extended_strings(root):
+    """Seven or eight when a file without a `strings` count still uses string 6 or 7
+    (notes, chord notes or chord shape columns), as RS7X-order XML does."""
+    used={int(n.get('string')) for n in [*root.iter('note'),*root.iter('chordNote')] if (n.get('string') or '').isdigit()}
+    used|={int(k[4:]) for t in root.iter('chordTemplate') for k,v in t.attrib.items() if k.startswith('fret') and k[4:].isdigit() and v!='-1'}
+    return 8 if 7 in used else 7 if 6 in used else None
+
+
+def _from_rs7x_order(arr):
+    """Seven- and eight-string Rocksmith 2014 XML follows the RS7X layout of the
+    rs7string mod (docs/rs7x-export.md): strings 0-5 are the stock low E to high e,
+    6 is the low B and 7 the low F#. The editor numbers strings from the lowest, so
+    reorder notes, chord shapes and tuning in place."""
+    count=arr['stringCount'];extra=count-6
+    editor=lambda s:s+extra if s<6 else extra-1-(s-6)
+    columns=lambda values:[(list(values)+[-1]*count)[6+extra-1-i] if i<extra else (list(values)+[-1]*count)[i-extra] for i in range(count)]
+    for owner in [arr]+arr.get('difficulties',[]):
+        for note in owner.get('notes',[]):
+            note['string']=editor(note['string'])
+        for chord in owner.get('chords',[]):
+            for note in chord.get('notes',[]):
+                if 'string' in note:note['string']=editor(note['string'])
+    for template in arr.get('chord_templates',[]):
+        for key in ('frets','fingers'):
+            if key in template:template[key]=columns(template[key])
+    arr['tuning']=columns(arr['tuning'])
+    arr['basePitches']=_instrument_bases('guitar',count)
+
+
 def load_xml(data,authoring_layout=None):
     data=_xml_input(data)
     if b'<!DOCTYPE' in data.upper() or b'<!ENTITY' in data.upper():
         raise ProjectError('XML declarations with entities are unsupported')
     root = ET.fromstring(data)
-    if root.tag != 'song' or root.get('version') != '7':
-        raise ProjectError('Expected a Rocksmith 2014 song XML version 7')
+    if root.tag != 'song' or root.get('version') not in ('7','8'):
+        raise ProjectError('Expected a Rocksmith 2014 song XML (version 7, or version 8 from Editor on Fire)')
+    eof_strings=_xml_string_count(root)
+    # FeedBack's Guitar Pro converter marks its XML with <tuning stringCount>, and
+    # numbers strings from the lowest (FeedBack's own layout, not RS7X).
+    feedback_count=(root.find('tuning').get('stringCount') if root.find('tuning') is not None else None)
+    if feedback_count is not None and not authoring_layout:
+        try:eof_strings=int(feedback_count)
+        except ValueError:raise ProjectError('The XML tuning has an invalid stringCount') from None
+        if not 4<=eof_strings<=8:raise ProjectError(f'This chart has {eof_strings} strings; the editor supports 4 to 8')
+    elif eof_strings is None and not authoring_layout:
+        eof_strings=_xml_extended_strings(root)
     _xml_capo_coordinates(root)
     # Keep the original source document in _xml; parsed editable coordinates
     # above are relative, and the writer replaces those known fields explicitly.
@@ -1942,9 +1999,9 @@ def load_xml(data,authoring_layout=None):
     kind = authoring_layout.get('type') if authoring_layout else 'bass' if role=='bass' else 'guitar'
     levels = root.findall('./levels/level')
     level = max(levels, key=lambda l: int(l.get('difficulty', 0))) if levels else ET.Element('level', difficulty='0')
-    count = authoring_layout.get('stringCount',6) if authoring_layout else len(BASES[kind])
+    count = authoring_layout.get('stringCount',6) if authoring_layout else eof_strings or len(BASES[kind])
     tuning = root.find('tuning')
-    arr = {'id': 'arr0', 'name': root.findtext('arrangement', 'Lead'), 'type': kind, 'stringCount': count, 'basePitches': BASES.get(kind,[])[:], 'tuning': [int(tuning.get(f'string{i}',0)) if tuning is not None else 0 for i in range(count)], 'capo': int(root.findtext('capo','0')), 'notes': [_xml_note(n,i) for i,n in enumerate(level.findall('./notes/note'))], 'chords': [], 'chord_templates': [], 'anchors': [], 'handshapes': [], '_xml': data.decode('utf-8-sig'), '_difficulty': int(level.get('difficulty',0))}
+    arr = {'id': 'arr0', 'name': root.findtext('arrangement', 'Lead'), 'type': kind, 'stringCount': count, 'basePitches': BASES.get(kind,[])[:] if count==len(BASES.get(kind,[])) else _instrument_bases(kind,count), 'tuning': [int(tuning.get(f'string{i}',0)) if tuning is not None else 0 for i in range(count)], 'capo': int(root.findtext('capo','0')), 'notes': [_xml_note(n,i) for i,n in enumerate(level.findall('./notes/note'))], 'chords': [], 'chord_templates': [], 'anchors': [], 'handshapes': [], '_xml': data.decode('utf-8-sig'), '_difficulty': int(level.get('difficulty',0))}
     arr['centOffset']=float(root.findtext('centOffset','0'))
     for chord in level.findall('./chords/chord'):
         row = {k:_number(v) for k,v in chord.attrib.items()}
@@ -1983,10 +2040,17 @@ def load_xml(data,authoring_layout=None):
                 for note in authored['notes']+[n for chord in authored['chords'] for n in chord.get('notes',[])]:
                     note['pitch']=note['string']*24+note['fret']
     _materialize_chords(arr,native=True)
+    rs7x_order=not authoring_layout and feedback_count is None and kind=='guitar' and count>6
+    if rs7x_order:
+        _from_rs7x_order(arr)
     base = root.findtext('tonebase')
     if base or root.find('tones') is not None:
         arr['tones'] = {'base':base or 'Default','changes':[{'time':float(t.get('time',0)),'name':t.get('name','Default')} for t in root.findall('./tones/tone')], 'definitions':{}}
     project={'version':1, 'title':root.findtext('title','Untitled'), 'artist':root.findtext('artistName',''), 'album':root.findtext('albumName',''), 'year':int(root.findtext('albumYear','2026') or 2026), 'duration':float(root.findtext('songLength','0')), 'beats':[{k:_number(v) for k,v in n.attrib.items()} for n in root.findall('./ebeats/ebeat')], 'sections':[_section({k:_number(v) for k,v in n.attrib.items()}) for n in root.findall('./sections/section')], 'arrangements':[arr]}
+    if rs7x_order:
+        project.setdefault('import_warnings',[]).append(f'{count}-string guitar XML read in the RS7X string order (strings 0-5 are low E to high e, 6 is the low B{", 7 the low F#" if count==8 else ""}). If the extra string looks wrong, the source used another order; tell us which tool wrote it.')
+    elif not authoring_layout and kind=='bass' and count>4:
+        project.setdefault('import_warnings',[]).append(f'{count}-string bass XML read with string 0 as the lowest string. Check the low string; there is no published convention for extended bass in Rocksmith 2014 XML.')
     signatures={}
     for event in root.findall('./events/event'):
         # Established public EOF/RS XML convention, not a new XML field.
@@ -2139,6 +2203,8 @@ def save_xml(project, arrangement_id=None, *, rs7x=False):
     offsets = arr['_rs7xOffsets'] if rs7x else _effective_tuning(arr)[0]
     for i in range(columns):
         tuning.set(f'string{i}',str(offsets[i] if i<len(offsets) else 0))
+    if tuning.get('strings') is not None:
+        tuning.set('strings',str(count))   # Editor on Fire's count, kept in step
     def container(parent,tag,items):
         old = parent.find(tag)
         if old is not None:
