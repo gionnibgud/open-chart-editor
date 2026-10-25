@@ -1,4 +1,4 @@
-"""Actual parser/writer boundaries against the complete vendored v1.19 schemas."""
+"""Actual parser/writer boundaries against the complete vendored v1.25 schemas."""
 import base64
 import copy
 import io
@@ -144,7 +144,9 @@ def notation_fixture():
     return index(entries, doc)
 
 
-def test_notation_only_is_a_read_only_source_not_an_invented_empty_guitar():
+def test_notation_only_is_a_read_only_source_not_an_invented_empty_guitar(monkeypatch):
+    # Without FeedBack core's notes-from-notation rule the part stays read-only.
+    monkeypatch.setattr(p, 'core_notation', lambda: None)
     entries = notation_fixture();imported = p.load_feedpak(archive(entries));row = imported['arrangements'][0]
     assert row['_notationOnly'] is True and row['readOnly'] is True and row['type'] == 'notation'
     assert 'notes' not in row and 'tuning' not in row and 'basePitches' not in row
@@ -155,6 +157,22 @@ def test_notation_only_is_a_read_only_source_not_an_invented_empty_guitar():
     row['notes'] = [{'id':'not-allowed','time':0,'fret':3}]
     with pytest.raises(p.ProjectError, match='cannot accept editable'):
         p.save_feedpak(imported)
+
+
+@pytest.mark.skipif(p.core_notation() is None, reason='FeedBack core notation module not available')
+def test_notation_only_keys_part_becomes_editable_with_core_rule():
+    entries = notation_fixture();imported = p.load_feedpak(archive(entries));row = imported['arrangements'][0]
+    assert row['type'] == 'keys' and not row.get('readOnly') and row['instrument'] == 'piano'
+    assert [(n['time'], n['pitch'], n.get('hand')) for n in row['notes']] == [(0.0, 64, 'rh')]
+    assert any('editable notes from its notation' in warning for warning in imported['import_warnings'])
+    # Saved unedited, it stays exactly the notation-only part it was.
+    exported = members(p.save_feedpak(copy.deepcopy(imported)))
+    assert exported['source/score.jsonc'] == entries['source/score.jsonc']
+    assert manifest(exported)['arrangements'] == manifest(entries)['arrangements']
+    # Edited, it becomes a playable chart; the authored type is kept.
+    row['notes'][0]['pitch'] = 65;row['notes'][0]['fret'] = 65 % 24
+    entry = manifest(members(p.save_feedpak(imported)))['arrangements'][0]
+    assert entry['type'] == 'piano' and entry.get('file') and 'notation' not in entry
 
 
 def test_notation_schema_and_staff_semantics_are_checked():
@@ -182,7 +200,8 @@ def test_unknown_unindexed_bytes_are_not_parsed_and_missing_streams_not_invented
     assert 'keys' not in manifest(output) and 'harmony' not in manifest(output)
 
 
-def test_retained_notation_grid_edits_are_disclosed_without_false_detach_claim():
+def test_retained_notation_grid_edits_are_disclosed_without_false_detach_claim(monkeypatch):
+    monkeypatch.setattr(p, 'core_notation', lambda: None)   # read-only fallback without FeedBack core
     imported = p.load_feedpak(archive(notation_fixture()))
     imported['beats'].append({'time':4,'measure':2})
     warnings = p.notation_export_warnings(imported)

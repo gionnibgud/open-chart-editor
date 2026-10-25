@@ -86,7 +86,7 @@
       "id": "vocals",
       "capability": "Syllable timing, optional pitches, lyrics sidecars and native vocal XML",
       "status": "Original bounded lyric/pitch/waveform canvas, group move/tail/clipboard, paged keyboard editing, navigable UTF-8/XML/timing diagnostics and source-preserving lyric/pitch sidecars implemented; real UI, 100k stress and isolated native vocal-only Playtest functional checks pass; scoped staged field History and retained input DOM verify mouse/Tab/CtrlTab continuity, hidden source preservation and100k real UI edit335.5ms to39.7ms on this machine",
-      "remaining": "Exact retail vocal workflow and physical voice/game playback remain unverified. Native provider omits zero-duration pitches; translations are retained, not automatically retimed. Private Vocal Highway is a separate local dependency, excluded from the R+ Workshop ZIP. Frozen installed-source gate required for each checkpoint."
+      "remaining": "Exact retail vocal workflow and physical voice/game playback remain unverified. Native provider omits zero-duration pitches; translations are retained, not automatically retimed. Private Vocal Highway is a separate local dependency, excluded from the OCE ZIP. Frozen installed-source gate required for each checkpoint."
     },
     {
       "id": "imports",
@@ -96,8 +96,8 @@
     },
     {
       "id": "feedpak",
-      "capability": "FeedBack Save As with native 1.19 schema and opaque data preservation",
-      "status": "Canonical manifest.yaml and complete vendored 1.19 JSON schemas validate all present known streams, references and supported versions. Strict JSON/JSONC, unknown file/field preservation, folder transport and read-only notation implemented. Published minimal/extended examples roundtrip; backend suite passes.",
+      "capability": "FeedBack Save As with native 1.25 schema and opaque data preservation",
+      "status": "Canonical manifest.yaml and complete vendored 1.25 JSON schemas validate all present known streams, references and supported versions. Strict JSON/JSONC, unknown file/field preservation, folder transport and read-only notation implemented. Published minimal/extended examples roundtrip; backend suite passes.",
       "remaining": "Notation-only rows are retained read-only; no standard-notation editor. Changed JSONC streams may lose comment formatting. Media decoding, unsupported rig rendering and full playback semantics are outside the schema gate; no blanket conformance claim."
     },
     {

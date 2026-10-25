@@ -40,13 +40,29 @@ class NotationStateTests(unittest.TestCase):
         a['notes'][0]['pitch']=127
         self.assertFalse(ns.notation_reference_decision(p,a)['retain'])
 
-    def test_complete_grid_tempo_meter_and_duration_changes_invalidate(self):
+    def test_grid_changes_with_notes_kept_in_place_retain_the_notation(self):
+        # The notation's times are seconds; notes that did not move still match it.
         edits=[lambda p:p['beats'][1].update(time=.51),lambda p:p['beats'][0].update(measure=2),
                lambda p:p['tempos'][0].update(bpm=121),lambda p:p['time_signatures'][0].update(denominator=8),
                lambda p:p['beats'][0].update(futureMeterGrouping=[2,2]),lambda p:p.update(duration=9)]
         for edit in edits:
             p,a=self.stamped();edit(p);decision=ns.notation_reference_decision(p,a)
-            self.assertEqual(decision['reason'],'grid-changed');self.assertFalse(decision['retain'])
+            self.assertEqual(decision['reason'],'grid-changed-notes-kept');self.assertTrue(decision['retain']);self.assertNotIn('retime',decision)
+
+    def test_notes_moved_with_the_beat_map_retime_the_notation(self):
+        p,a=self.stamped()
+        p['beats'][1]['time']=1.0                      # half tempo: every beat position twice as late
+        note=a['notes'][0];note.update(time=2.0,sustain=1.4)
+        decision=ns.notation_reference_decision(p,a)
+        self.assertEqual(decision['reason'],'grid-changed-notes-moved');self.assertTrue(decision['retain'])
+        warp=ns.beat_warp(decision['retime']['from'],decision['retime']['to'])
+        doc={'measures':[{'idx':1,'t':0.5,'tempo':120,'staves':{'rh':{'voices':[{'beats':[{'t':1.0,'dur':4}]}]}}},{'idx':2,'t':2.5}]}
+        ns.retime_notation(doc,warp)
+        self.assertEqual([m['t'] for m in doc['measures']],[1.0,5.0])
+        self.assertEqual(doc['measures'][0]['staves']['rh']['voices'][0]['beats'][0]['t'],2.0)
+        self.assertEqual(doc['measures'][0]['tempo'],60,'written tempo halves with the beats')
+        note['time']=2.1                                # a real edit on top of the move
+        self.assertEqual(ns.notation_reference_decision(p,a)['reason'],'chart-changed')
 
     def test_ids_metadata_guitar_only_techniques_and_order_do_not_invalidate(self):
         p,a=self.stamped();a['notes'].append(copy.deepcopy(a['notes'][0]));ns.stamp_notation_baselines(p)

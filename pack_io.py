@@ -228,6 +228,59 @@ def notation_export_warnings(project):
     return warnings
 
 
+def _lesson_references(document):
+    """Arrangement ids a lesson judges in this pack (chart_ref objects without a feedpak path)."""
+    found=set()
+    def walk(value):
+        if isinstance(value,dict):
+            if isinstance(value.get('arrangement'),str) and 'bars' in value and not value.get('feedpak'):found.add(value['arrangement'])
+            for item in value.values():walk(item)
+        elif isinstance(value,list):
+            for item in value:walk(item)
+    walk(document)
+    return found
+
+
+def stamp_lesson_baseline(project):
+    """Remember the beat map and arrangement names a pack's lessons were written against."""
+    if ((project.get('_pack') or {}).get('manifest') or {}).get('lessons'):
+        project['_lessonBaseline']={'grid':_notation_state.grid_fingerprint(project),
+                                    'names':{a['id']:a.get('name',a['id']) for a in project.get('arrangements',[]) if isinstance(a,dict) and a.get('id')}}
+    return project
+
+
+def save_notices(project):
+    """Plain-language notices for changes a FeedPak save makes that FeedBack will notice:
+    parts losing their notation link, and lessons whose arrangement or bars changed."""
+    notices=[]
+    detached=set()
+    for row in _notation_call(_notation_state.notation_export_warnings,project):
+        arr=next((a for a in project.get('arrangements',[]) if a.get('id')==row.get('arrangement')),{})
+        if arr.get('_notationOnly') or arr.get('hidden'):continue
+        detached.add(row['arrangement']);name=arr.get('name',row['arrangement'])
+        why='its notes were edited' if row.get('reason')=='chart-changed' else 'its notation could not be checked against the chart'
+        notices.append(f'{name}: {why}, so it loses its link to the written notation. Keys 3D, Staff View and notation-based lessons will use the edited chart instead. The notation file stays in the pack.')
+    pack=project.get('_pack') or {};lessons=(pack.get('manifest') or {}).get('lessons') or []
+    baseline=project.get('_lessonBaseline') or {}
+    kept={a['id']:a for a in project.get('arrangements',[]) if not a.get('editorOnly') and not a.get('hidden')}
+    grid_changed=bool(baseline.get('grid')) and baseline['grid']!=_notation_state.grid_fingerprint(project)
+    for lesson in lessons:
+        member=lesson.get('file') if isinstance(lesson,dict) else None
+        try:document=_decode_json(base64.b64decode(pack['entries'][member]),member)
+        except (KeyError,TypeError,ValueError,UnicodeError):continue
+        title=lesson.get('title') or (document.get('title') if isinstance(document,dict) else None) or lesson.get('id','lesson')
+        for ref in sorted(_lesson_references(document)):
+            arr=kept.get(ref)
+            if arr is None:
+                notices.append(f'Lesson "{title}" uses arrangement {ref}, which this save leaves out (deleted or hidden); the lesson will not find it.');continue
+            name=arr.get('name',ref)
+            if ref in detached:notices.append(f'Lesson "{title}" judges {name}, which loses its notation link in this save.')
+            if grid_changed:notices.append(f'Lesson "{title}" points at bars of {name}, and the beat map has changed; check the lesson\'s bars still cover the same music.')
+            old=(baseline.get('names') or {}).get(ref)
+            if old is not None and old!=name:notices.append(f'Lesson "{title}" was written for "{old}", now named "{name}".')
+    return notices
+
+
 def stock_export_warnings(project,arrangement_id=None):
     warnings=[]
     for arr in project.get('arrangements',[]):
@@ -1342,12 +1395,21 @@ def load_feedpak(data):
     contract = validate_feedpak_entries(manifest, entries)
     def read(name):
         return _decode_json(entries[_path(name)],name)
-    project = {'version': 1, **{k: copy.deepcopy(manifest.get(k, default)) for k,default in [('title','Untitled'),('artist',''),('album',''),('year',2026),('duration',0)]}, 'arrangements': [], 'beats': [], 'sections': []}
+    project = {'version': 1, **{k: copy.deepcopy(manifest.get(k, default)) for k,default in [('title','Untitled'),('artist',''),('duration',0)]}, 'arrangements': [], 'beats': [], 'sections': []}
+    # Year and album are optional in the manifest; a pack without them stays without them.
+    for key in ('album','year'):
+        if key in manifest:project[key]=copy.deepcopy(manifest[key])
     for index, entry in enumerate(manifest.get('arrangements', [])):
         filename = entry.get('drum_tab') or entry.get('file')
         if not filename:
             # A source notation row is retained, not converted to a blank guitar.
             if entry.get('notation'):
+                try:converted=_notation_only_arrangement(entry,read(entry['notation']),index)
+                except (ValueError,KeyError,TypeError):converted=None
+                if converted is not None:
+                    project['arrangements'].append(converted)
+                    project.setdefault('import_warnings',[]).append(f"{entry.get('name',entry['id'])}: built {len(converted['notes'])} editable notes from its notation with FeedBack's own rule. Saved unedited, the part stays notation-only.")
+                    continue
                 project['arrangements'].append({'id':entry['id'],'name':entry.get('name',entry['id']),
                     'type':'notation','instrument':entry.get('type','notation'),
                     '_notationOnly':True,'readOnly':True,'_entry':copy.deepcopy(entry)})
@@ -1356,6 +1418,13 @@ def load_feedpak(data):
             continue
         raw = read(filename)
         arr = _arrangement(raw, entry, index, bool(entry.get('drum_tab')))
+        if arr.get('type')=='keys' and entry.get('notation'):
+            try:notation=read(entry['notation'])
+            except (ValueError,KeyError,TypeError):notation=None
+            if isinstance(notation,dict):
+                _fill_hands_from_notation(arr,notation)
+                signature=_notation_key_signature(notation)
+                if signature:arr['keySignature']=signature
         project['arrangements'].append(arr)
         if not project['beats']:
             project['beats'] = copy.deepcopy(raw.get('beats', []))
@@ -1431,6 +1500,7 @@ def load_feedpak(data):
     _mxl_restore(project,entries)
     _midi_call(_midi_programs.restore,project,entries,_midi_stream)
     validate_project(project)
+    stamp_lesson_baseline(project)
     return _notation_call(_notation_state.stamp_notation_baselines,project)
 
 
@@ -1605,7 +1675,11 @@ def save_feedpak(project,*,vocal_only=False):
         entries[LYRIC_SHEET_PATH]=_json({'format':LYRIC_SHEET_FORMAT,'untimed':untimed})
     if any(arr.get('_entry',{}).get('_songLevel') for arr in scratch):
         manifest.pop('drum_tab',None)
-    manifest.update({k: project.get(k, default) for k,default in [('title','Untitled'),('artist',''),('album',''),('year',2026),('duration',0)]})
+    manifest.update({k: project.get(k, default) for k,default in [('title','Untitled'),('artist',''),('duration',0)]})
+    for key in ('album','year'):
+        value=project.get(key)
+        if value in (None,''):manifest.pop(key,None)
+        else:manifest[key]=value
     # Codec is a FeedPak codec name that overrides the extension: older projects stored the
     # extension itself ("wav", "ogg", "m4a"), which a Reader would not recognise.
     for stem in manifest.get('stems') or []:
@@ -1665,9 +1739,20 @@ def save_feedpak(project,*,vocal_only=False):
         notation_decision=_notation_call(_notation_state.notation_reference_decision,project,original_arr,arr)
         if not notation_decision['retain']:
             entry.pop('notation',None)
+        elif original_arr.get('_fromNotation') and notation_decision['reason']=='unchanged':
+            arrangement_entries.append(copy.deepcopy(original_arr['_entry']))
+            continue
+        if notation_decision.get('retime') and entry.get('notation') in entries:
+            member=entry['notation']
+            document=_decode_json(entries[member],member)
+            warp=_notation_call(_notation_state.beat_warp,notation_decision['retime']['from'],notation_decision['retime']['to'])
+            entries[member]=_json(_notation_call(_notation_state.retime_notation,document,warp))
+        authored_type=str((original_arr.get('_entry') or {}).get('type','')).strip()
         song_level = bool(entry.get('_songLevel'))
         primary_alias = bool(entry.pop('_primaryDrumAlias',False))
-        entry.update(id=arr['id'], name=arr.get('name', arr['id']), type='vocals' if vocal_only else arr.get('type','guitar'))
+        # A keys part keeps the instrument type it was authored with (piano, organ, ...).
+        kind='vocals' if vocal_only else authored_type if arr.get('type')=='keys' and authored_type.lower() in KEYS_FAMILY_TYPES else arr.get('type','guitar')
+        entry.update(id=arr['id'], name=arr.get('name', arr['id']), type=kind)
         raw = copy.deepcopy(arr.get('_wire', {}))
         if 'guideVoice' in arr:
             raw['oceGuideVoice']=copy.deepcopy(arr['guideVoice'])
@@ -1706,6 +1791,10 @@ def save_feedpak(project,*,vocal_only=False):
                     raw['oceStringLayout']=_layout_record(arr,public)
                 else:
                     raw.pop('oceStringLayout',None)
+            elif arr.get('type')=='keys':
+                # Keys pitch is s x 24 + f (spec 6.2.3): string layout fields mean nothing here.
+                for field in ('tuning','capo'):entry.pop(field,None)
+                for field in ('tuning','capo','stringCount','basePitches'):raw.pop(field,None)
             if arr.get('instrument'):
                 raw['instrument']=arr['instrument']
             # Native phrases contain difficulty ladders. Preserve unchanged
@@ -2867,6 +2956,9 @@ def _load_musicxml(data,filename='Untitled.musicxml'):
             count=int(lines)
         arr=_import_arrangement(f'mxml-{part_index}',name,kind,count)
         arr['sourceInstrument']=name
+        fifths=part.findtext('.//attributes/key/fifths')
+        if fifths is not None and fifths.strip().lstrip('-').isdigit() and -7<=int(fifths)<=7:
+            arr['keySignature']={'fifths':int(fifths),'minor':(part.findtext('.//attributes/key/mode') or '').strip().lower()=='minor'}
         if kind=='keys':
             arr['instrument']=next((instrument for instrument in ('piano','flute','violin','viola','cello','organ','saxophone','trumpet','clarinet','harp','synth') if instrument in name.lower()),'keys')
         arrangements.append(arr)
@@ -3522,6 +3614,109 @@ def load_guitarpro(data,filename='Untitled.gp5'):
     project['import_warnings']=warnings
     validate_project(project)
     return _notation_call(_notation_state.stamp_notation_baselines,project)
+
+
+# --- Keys parts and notation (§7.6) ---------------------------------------------------
+
+_CORE_NOTATION=None
+
+
+def core_notation():
+    """FeedBack core's notation module (lib/notation.py), or None. Its notation_to_notes
+    is the rule FeedBack plays notation-only parts with (lesson-format §3.2.2)."""
+    global _CORE_NOTATION
+    if _CORE_NOTATION is None:
+        _CORE_NOTATION=False
+        core=feedback_core()
+        candidate=(Path(core)/'notation.py') if core else None
+        if candidate and candidate.is_file():
+            try:
+                spec=importlib.util.spec_from_file_location('feedback_core_notation',candidate)
+                module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+                if callable(getattr(module,'notation_to_notes',None)):_CORE_NOTATION=module
+            except Exception:
+                _CORE_NOTATION=False
+    return _CORE_NOTATION or None
+
+
+KEYS_FAMILY_TYPES=('keys','piano','keyboard','organ','synth','electric piano')
+MAJOR_FIFTHS={'Cb':-7,'Gb':-6,'Db':-5,'Ab':-4,'Eb':-3,'Bb':-2,'F':-1,'C':0,'G':1,'D':2,'A':3,'E':4,'B':5,'F#':6,'C#':7,'G#':8,'D#':9,'A#':10}
+MAJOR_BY_FIFTHS={value:name for name,value in MAJOR_FIFTHS.items() if -7<=value<=7}
+MINOR_BY_FIFTHS={-7:'Abm',-6:'Ebm',-5:'Bbm',-4:'Fm',-3:'Cm',-2:'Gm',-1:'Dm',0:'Am',1:'Em',2:'Bm',3:'F#m',4:'C#m',5:'G#m',6:'D#m',7:'A#m'}
+
+
+def key_signature_from_name(name):
+    """'F', 'Bbm', 'F#m' (R+ Key: events) to {'fifths', 'minor'}, or None."""
+    if not isinstance(name,str):return None
+    name=name.strip();minor=name.endswith('m')
+    tonic=name[:-1] if minor else name
+    if tonic not in MAJOR_FIFTHS:return None
+    fifths=MAJOR_FIFTHS[tonic]-(3 if minor else 0)
+    return {'fifths':fifths,'minor':minor} if -7<=fifths<=7 else None
+
+
+def key_signature_name(signature):
+    """{'fifths', 'minor'} to the R+ key name, or None."""
+    if not isinstance(signature,dict) or type(signature.get('fifths')) is not int:return None
+    return (MINOR_BY_FIFTHS if signature.get('minor') else MAJOR_BY_FIFTHS).get(signature['fifths'])
+
+
+def _notation_key_signature(notation):
+    for measure in (notation.get('measures') or []) if isinstance(notation,dict) else []:
+        if isinstance(measure,dict) and type(measure.get('ks')) is int and -7<=measure['ks']<=7:
+            return {'fifths':measure['ks'],'minor':False}
+    return None
+
+
+def _fill_hands_from_notation(arr,notation):
+    """Fill missing keys `hand` values from the notation's rh/lh staves (spec §7.6). An
+    authored hand is never overwritten. Returns how many notes were filled."""
+    def staves_map():
+        hands={}
+        for measure in (notation.get('measures') or []) if isinstance(notation,dict) else []:
+            staves=measure.get('staves') if isinstance(measure,dict) else None
+            for hand,staff in (staves.items() if isinstance(staves,dict) else []):
+                if hand not in ('lh','rh') or not isinstance(staff,dict):continue
+                for voice in staff.get('voices') or []:
+                    for beat in (voice.get('beats') or []) if isinstance(voice,dict) else []:
+                        if not isinstance(beat,dict) or beat.get('rest') or not isinstance(beat.get('t'),(int,float)):continue
+                        for note in beat.get('notes') or []:
+                            if isinstance(note,dict) and type(note.get('midi')) is int:hands.setdefault((round(beat['t'],3),note['midi']),deque()).append(hand)
+        return hands
+    filled=0
+    for owner in [arr]+list(arr.get('difficulties') or []):
+        hands=staves_map()
+        for note in list(owner.get('notes') or [])+[n for chord in owner.get('chords') or [] for n in chord.get('notes') or []]:
+            if note.get('hand') in ('lh','rh'):continue
+            time=note.get('time',note.get('t'))
+            queue=hands.get((round(time,3),note.get('pitch'))) if isinstance(time,(int,float)) else None
+            if queue:
+                note['hand']=queue.popleft()
+                if owner is arr:filled+=1
+    return filled
+
+
+def _notation_only_arrangement(entry,notation,index):
+    """An editable keys arrangement built from a notation-only manifest entry with core's
+    notation_to_notes, so its notes are the ones FeedBack plays. None when the part is
+    not a keys part or core's rule is unavailable."""
+    kind=str(entry.get('type','')).strip().lower()
+    if kind not in KEYS_FAMILY_TYPES:return None
+    core=core_notation()
+    if core is None:return None
+    rows=core.notation_to_notes(notation)
+    notes=[]
+    for i,row in enumerate(rows):
+        midi=row.get('midi');time=row.get('t')
+        if type(midi) is not int or not 0<=midi<=127 or not isinstance(time,(int,float)):continue
+        wire={'t':float(time),'s':midi//24,'f':midi%24,'m':midi,'sus':max(0.0,float(row.get('sus') or 0))}
+        if row.get('hand') in ('lh','rh'):wire['hand']=row['hand']
+        notes.append(_note(wire,i,keys=True))
+    arr=_import_arrangement(entry['id'],entry.get('name',entry['id']),'keys')
+    arr.update(notes=notes,instrument=str(entry.get('type') or 'keys'),_entry=copy.deepcopy(entry),_fromNotation=True)
+    signature=_notation_key_signature(notation)
+    if signature:arr['keySignature']=signature
+    return arr
 
 
 def _audio_warp(audio_map):

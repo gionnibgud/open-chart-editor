@@ -37,7 +37,7 @@ import {findChartIssues} from './validation.js';
 import {findOceIssues} from './oce-checks.js';
 import {IssueFinder,issueTarget} from './issue-finder.js';
 import {suggestChordNames} from './chord-names.js';
-import {staveLayout,guessKey,spell,pitchAtStep,fretFor,drumStepPiece,drumPieceAt,layoutNotes,staveMetrics,drawStave,clefColumn,hitNote} from './stave-view.js';
+import {staveLayout,guessKey,keyFromSignature,spell,pitchAtStep,fretFor,drumStepPiece,drumPieceAt,layoutNotes,staveMetrics,drawStave,clefColumn,hitNote} from './stave-view.js';
 import {readPreferences,writePreferences} from './preferences.js';
 import {rollAxes,rollArrow,uprightRollContext} from './roll-geometry.js';
 import {generateDifficultyLadder,snapshotDifficulty,switchDifficulty,addDifficulty,removeDifficulty,copyPhraseDifficulty,clearPhraseDifficulty} from './difficulty.js';
@@ -536,6 +536,10 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
    if(format==='rs2014_sources')change('Set DLC Builder project details',p=>p.sourceExportOptions=clone(exportOptions));
    if(format==='rs2014_sources')change('Set source export selection',p=>p.sourceExportOptions={arrangement_ids:[...exportOptions.arrangement_ids],include_vocals:exportOptions.include_vocals,author:exportOptions.author});
   }
+  if(['feedpak','feedback_loose'].includes(format)){
+   const check=await fetch(`${API}/save-check`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:project(),format})}).then(r=>r.ok?r.json():{notices:[]}).catch(()=>({notices:[]}));
+   if(check.notices?.length&&!await dialog('Before saving',`<p>This save changes some parts in ways FeedBack will notice:</p><ul>${check.notices.map(n=>`<li>${esc(n)}</li>`).join('')}</ul><p class="ws-muted">Cancel to keep editing, or save anyway.</p>`,'Save anyway'))return;
+  }
   const name=((direct?project().title:$('export-name')?.value)||project().title||'OCE').replace(/[<>:"/\\|?*]/g,'_');
   const extension={json:'.json',feedpak:'.feedpak',xml:'.xml',vocal_xml:'.xml',rs2014_sources:'-dlc-builder.zip',feedback_loose:'-feedback-loose.zip',rplus_folder:'-rplus-charts.zip'}[format];
   let handle=direct?(saveDestinations[format]?.handle||(format==='json'?saveHandle:null)):null;
@@ -805,7 +809,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  // and selection stay in step; edits go through change() like any roll edit.
  function staveKey(a){
   const state=history.stateId;if(staveKeyCache?.a===a&&staveKeyCache.state===state)return staveKeyCache.key;
-  const key=a.type==='drums'?{name:'',fifths:0}:guessKey(editableNotes().map(n=>notePitch(a,n)));
+  const key=a.type==='drums'?{name:'',fifths:0}:keyFromSignature(a.keySignature)||guessKey(editableNotes().map(n=>notePitch(a,n)));
   staveKeyCache={a,state,key};return key;
  }
  function staveTimeMap(canvasEl,left){

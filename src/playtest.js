@@ -28,12 +28,10 @@ export const getPreviews=()=>[...previews.values()].filter(record=>!record.remov
 // Unreferenced embedded assets remain available to the writer; authored data is
 // never mutated and no source archive member is deleted here.
 export function playtestProject(project,arrangement) {
- // Retained imported notation may describe an older edit and selects Keys3D.
- // This audition follows the current editable wire chart; source notation and
- // ordinary full-pack export remain intact in the authored project.
+ // Notation stays linked: the FeedPak writer keeps it for an unedited part (so Keys 3D
+ // and Staff View can be tried) and detaches it only when the chart no longer matches.
  const authoredLevels=!!arrangement.difficulties?.length||!!arrangement._wire?.phrases?.length;
  const selected=arrangement._entry?.notation||authoredLevels?{...arrangement,...(arrangement._entry?{_entry:{...arrangement._entry}}:{})}:arrangement;
- if(selected._entry?.notation)delete selected._entry.notation;
  if(authoredLevels){
   // Audition exactly the visible working chart. Ordinary Save As keeps every
   // authored level and native playback defaults to its highest level. This

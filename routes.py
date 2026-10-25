@@ -206,7 +206,7 @@ def setup(app, context=None):
             headers={'Content-Disposition':"attachment; filename*=UTF-8''"+quote(name)}
             warnings=[baseline] if baseline else []
             if payload.get('format','feedpak')=='feedpak':
-                warnings+=[item['warning'] for item in pack_io.notation_export_warnings(project)]+pack_io.drum_export_warnings(project)+pack_io.vocal_export_warnings(project)+pack_io.flat_phrase_export_warnings(project)
+                warnings+=[item['warning'] for item in pack_io.notation_export_warnings(project)]+[note for note in pack_io.save_notices(project) if note.startswith('Lesson')]+pack_io.drum_export_warnings(project)+pack_io.vocal_export_warnings(project)+pack_io.flat_phrase_export_warnings(project)
             elif payload.get('format')=='xml':
                 identifier=payload.get('arrangement_id') or project['arrangements'][0]['id']
                 warnings=pack_io.stock_export_warnings(project,identifier)
@@ -221,6 +221,17 @@ def setup(app, context=None):
                 return Response(json.dumps(tree.transport()),media_type='application/json',headers=headers)
             return Response(data,media_type=media_type,headers=headers)
         except (pack_io.ProjectError,ValueError,TypeError,KeyError,ET.ParseError) as exc:
+            raise HTTPException(400,str(exc)) from exc
+
+    @app.post(PREFIX+'/save-check')
+    async def save_check(payload: dict):
+        """Notices to confirm before a FeedPak or loose-folder save (nothing is written)."""
+        try:
+            project=payload.get('project')
+            if not isinstance(project,dict):
+                raise pack_io.ProjectError('Request requires a project object')
+            return {'notices':await asyncio.to_thread(pack_io.save_notices,project)}
+        except (pack_io.ProjectError,ValueError,TypeError,KeyError) as exc:
             raise HTTPException(400,str(exc)) from exc
 
     @app.post(PREFIX+'/export-sources')

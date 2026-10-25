@@ -71,7 +71,10 @@ class ImportAlignmentTests(unittest.TestCase):
     def test_read_only_score_merge_is_refused_without_mutating_either_project(self):
         from test_feedpak_contract import notation_fixture
         from test_pack_io import archive
-        source=p.load_feedpak(archive(notation_fixture()));target=changing_backing();before=copy.deepcopy(target);original=copy.deepcopy(source)
+        from unittest import mock
+        with mock.patch.object(p,'core_notation',lambda:None):   # read-only fallback without FeedBack core
+            source=p.load_feedpak(archive(notation_fixture()))
+        target=changing_backing();before=copy.deepcopy(target);original=copy.deepcopy(source)
         with self.assertRaisesRegex(p.ProjectError,'notation-only'):p.merge_projects(target,source,align='beats',offset=1)
         self.assertEqual(source,original);self.assertEqual(target,before)
 

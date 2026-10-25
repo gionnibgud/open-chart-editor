@@ -100,11 +100,13 @@ test('bundled Drum Highway 3D consumes native drum previews while notation-only 
  const blocked=mocks(),factory=()=>({});factory.contextType='webgl2';
  await assert.rejects(buildAndPlaytest(source,{arrangementId:'native-kit',rendererFactories:{feedBackViz_drum_highway_3d:factory,document:{createElement:()=>({getContext:()=>null})}},...blocked}),/WebGL2/);assert.equal(blocked.calls.length,0);
 });
-test('audition prunes imported notation pointers so edited wire charts do not auto-route to stale Keys3D notation',async()=>{
+// The notation link is passed through; the FeedPak writer keeps it only for an unedited
+// part (tested in test_notation_state.py), so Keys 3D and Staff View can be tried.
+test('audition keeps the notation link for the writer to decide',async()=>{
  const source=project(),m=mocks();source.arrangements.push({id:'edited-keys',name:'Piano',type:'keys',notes:[{id:'n',pitch:127,time:1}],_entry:{id:'edited-keys',file:'keys.json',notation:'original-score.json',future:'preserved'}});
  source._pack={manifest:{arrangements:[source.arrangements.at(-1)._entry],stems:[]},entries:{'original-score.json':'opaque-original-notation'}};const before=structuredClone(source);
  const preview=await buildAndPlaytest(source,{arrangementId:'edited-keys',rendererFactories:{feedBackViz_piano:()=>({})},...m});
- const written=JSON.parse(m.calls[0].options.body).project;assert.equal('notation'in written.arrangements[0]._entry,false);assert.equal(written.arrangements[0]._entry.future,'preserved');assert.equal(written._pack.entries['original-score.json'],'opaque-original-notation');assert.deepEqual(source,before);
+ const written=JSON.parse(m.calls[0].options.body).project;assert.equal(written.arrangements[0]._entry.notation,'original-score.json');assert.equal(written.arrangements[0]._entry.future,'preserved');assert.equal(written._pack.entries['original-score.json'],'opaque-original-notation');assert.deepEqual(source,before);
  await endPlaytest(preview,m);await removePreview(preview,m);
 });
 

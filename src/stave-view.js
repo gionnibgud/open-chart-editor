@@ -42,6 +42,12 @@ export function staveLayout(a) {
  return {staves: [{clef: 'treble'}], transpose: 12, kind: 'guitar'};
 }
 
+/** A known key signature ({fifths, minor}) as {name, fifths}, or null. */
+export function keyFromSignature(signature) {
+ if (!signature || !Number.isInteger(signature.fifths) || Math.abs(signature.fifths) > 7) return null;
+ return {name: (signature.minor ? MINOR_BY_FIFTHS : MAJOR_BY_FIFTHS)[signature.fifths], fifths: signature.fifths};
+}
+
 /** Key signature for a set of pitches: {name, fifths}. */
 export function guessKey(pitches) {
  const counts = Array(12).fill(0);

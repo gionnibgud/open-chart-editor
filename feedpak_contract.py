@@ -34,7 +34,7 @@ def status():
         if not (numbers >= (4, 18) and numbers[0] < 5):
             raise ValueError('installed jsonschema version ' + installed)
         if not all((SCHEMA_ROOT / (kind + '.schema.json')).is_file()
-                   for kind in {'manifest', 'arrangement', 'notation'} | set(SIDE_SCHEMAS.values())):
+                   for kind in {'manifest', 'arrangement', 'notation', 'lesson'} | set(SIDE_SCHEMAS.values())):
             raise ValueError('bundled FeedPak schemas are incomplete')
         return {'available': True, 'schemaVersion': '1.25.0', 'engine': 'jsonschema Draft202012Validator',
                 'engineVersion': installed, 'requiredVersion': '>=4.18,<5',
@@ -214,6 +214,12 @@ def validate(manifest, entries, decode_json, safe_path, check_tree):
                                 raise ContractError(manifest['rigs'] + ': local realization asset SHA-256 does not match')
                         elif len(urlsplit(ref).scheme) == 1 or '\\' in ref:
                             raise ContractError('rig realization.ref: drive/UNC paths are not package assets or URIs')
+    for index, lesson in enumerate(manifest.get('lessons', [])):
+        # A lesson that does not match the schema is kept unchanged; FeedBack judges it, not OCE.
+        try:
+            structured(lesson['file'], 'lesson', f'lessons[{index}].file')
+        except ContractError as exc:
+            warnings.append(f"Lesson {lesson.get('id', index)} does not match the lesson schema ({exc}); the file is kept unchanged.")
     rig_ids = {rig['id'] for rig in documents.get(manifest.get('rigs'), {}).get('rigs', [])}
     bindings = [entry['tones'] for entry in manifest['arrangements'] if 'tones' in entry]
     if 'drum_tones' in manifest:

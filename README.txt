@@ -40,7 +40,8 @@ FeedBack integration
 
 Output targets in 0.11
   Save As offers three main handoffs, each with ZIP/file or folder delivery:
-  - DLC Builder project: selected six-string guitar/four-string bass XML and
+  - DLC Builder project: selected six-string guitar/four-string bass XML (seven-string
+    guitar in the RS7X layout; see docs/rs7x-export.md) and
     vocals, backing audio, cover, tone definitions, a DLC Builder .rs2dlc
     project with the song details prefilled, and a complete editable master.
     It opens directly in DLC Builder (Rocksmith2014.NET), which does the
@@ -51,7 +52,7 @@ Output targets in 0.11
     hash-bound OCE typed performance extension preserving all layouts,
     piano, drums and authored data. Legacy readers see compatible XML only;
     full typed playback requires the separately reviewed local host adapter.
-  - FeedPak: canonical manifest.yaml and validated 1.19 streams. Folder form
+  - FeedPak: canonical manifest.yaml and validated 1.25 streams. Folder form
     uses a .feedpak directory; packaged form is the same tree inside a ZIP.
     Unknown fields/files are retained. Notation-only parts are explicitly
     read-only; this build does not offer a standard-notation editor or render
@@ -311,7 +312,7 @@ Start authoring
 Save As destinations
   Editable JSON: complete authoring project, including embedded source audio
     when available. Local recovery drafts are stored in this browser profile.
-  FeedBack .feedpak: native 1.19 manifest, chart data and original audio.
+  FeedBack .feedpak: native 1.25 manifest, chart data and original audio.
     Supports extended guitar/bass, keys, drums and other pitched instruments.
   RS2014 XML: selected stock-compatible guitar/bass arrangement.
   Vocal XML: syllable timing/text for native vocal arrangements.

@@ -194,6 +194,9 @@ def load_rplus_folder(entries):
                          'toneIds': [t.get('toneId') for t in root.findall('./toneIterations/toneIteration')]}
         if extras is not None:
             arr['_rplus'].update(noteExtras=extras, events=events)
+            signature = next((pack_io.key_signature_from_name(e['code'][4:]) for e in events if e.get('code', '').startswith('Key:')), None)
+            if signature:
+                arr['keySignature'] = signature
         arr['_rplus']['fingerprint'] = _fingerprint(arr)
         project['arrangements'].append(arr)
         charts_info.append(name)
@@ -325,7 +328,7 @@ def save_keyboard_xml(project, arrangement_id, *, template=None, song_id=None, a
     extras = arr.get('_rplus', {}).get('noteExtras', {})
     pitches = [_pitch(n) for n in notes]
     events = arr.get('_rplus', {}).get('events') or []
-    key = next((e['code'][4:] for e in events if e['code'].startswith('Key:')), None) or guess_key(pitches)
+    key = next((e['code'][4:] for e in events if e['code'].startswith('Key:')), None) or pack_io.key_signature_name(arr.get('keySignature')) or guess_key(pitches)
     spelling = _key_spelling(key)
     keys = [p - 20 for p in pitches]
     lower, upper = max(1, min(keys)), min(88, max(keys))
