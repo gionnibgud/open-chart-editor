@@ -77,5 +77,7 @@ export class VocalTimeline {
   if(operation){event.preventDefault();event.stopPropagation();this.guard(()=>this.onEdit(operation,payload));return;}
   if(key==='escape'){event.preventDefault();event.stopPropagation();this.drag=null;this.setSelection([]);}
  }
+ /** Keep `time` in view during playback. */
+ follow(time){if(this.disposed||!Number.isFinite(time))return;const x=this.xAt(time),width=this.scroll.clientWidth;if(x<42||x>width-80)this.scroll.scrollLeft=Math.max(0,time*this.zoom()-120);}
  dispose(){if(this.disposed)return;this.disposed=true;this.abort.abort();this.resize.disconnect();if(this.frame!==null)cancelAnimationFrame(this.frame);this.frame=null;this.drag=null;this.cache=null;this.scroll.remove();}
 }

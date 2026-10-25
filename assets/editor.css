@@ -14,3 +14,7 @@
 
 .ws-chord-edit-layout{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}.ws-chord-edit-layout table{flex:1;min-width:260px}.ws-chord-edit-layout td,.ws-chord-edit-layout th{padding:3px;text-align:center}.ws-chord-diagram{display:block;max-width:100%;height:auto;max-height:340px;color:#c6cbd8}.ws-chord-edit-layout #ws-chord-diagram-preview{flex:0 1 250px;min-width:180px}.ws-app dialog{max-height:90vh;overflow:auto}
 .ws-drum-lane{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin:0 0 6px;padding:4px 10px}.ws-drum-lane legend{font-size:.85em;color:var(--ws-muted,#9ba2b4)}
+.ws-lyric-modes{display:flex;gap:14px;align-items:center;margin:0 0 8px}.ws-lyric-karaoke{min-height:64px;padding:10px 14px;margin:0 0 10px;border:1px solid var(--ws-edge);background:#15161b;border-radius:3px;outline:none}.ws-lyric-karaoke:focus-visible{outline:1px solid #54b0ec}
+.ws-lyric-now{font-size:22px;line-height:1.4;color:var(--ws-dim)}.ws-lyric-now .ws-lyric-sung{color:var(--ws-text)}.ws-lyric-now .ws-lyric-active{color:#ffd166}.ws-lyric-next{font-size:14px;color:var(--ws-dim);margin-top:4px}
+.ws-lyric-grid{display:grid;grid-template-columns:minmax(260px,3fr) minmax(220px,2fr);gap:14px;margin:8px 0}.ws-lyric-grid textarea{width:100%;box-sizing:border-box;font:13px/1.5 'Segoe UI',Arial,sans-serif;background:#15161b;color:var(--ws-text);border:1px solid var(--ws-edge);margin:4px 0}.ws-lyric-grid label{margin-right:10px}.ws-lyric-grid input[type=number]{width:70px;margin-left:4px}
+@media (max-width:900px){.ws-lyric-grid{grid-template-columns:1fr}}

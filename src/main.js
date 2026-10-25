@@ -3,6 +3,7 @@ import {planAnchorCoverage,applyAnchorCoverage} from './anchor-fit.js';
 import {chordDiagram} from './chord-diagram.js';
 import {planZoneFit,applyZoneFit} from './zone-fit.js';
 import {VocalTimeline} from './vocal-timeline.js';
+import {sheetText,suggestSheet,syllables,reconcileSheet,TapSession,commitTaps,karaoke,lineOf,snapStarts,longLines,LINE_CHARACTERS} from './lyric-sync.js';
 import {MAX_VOCAL_EVENTS,createVocalIndex,planVocalMove,planVocalResize,copyVocalSelection,pasteVocalSelection,createVocalPhrase} from './vocal-tools.js';
 import {deriveDrumLayout,drumGuideCue} from './drum-layout.js';
 import {parseGpaSync,gpaBeatMap,notesOnGrid} from './gpa-sync.js';
@@ -109,6 +110,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  let click=false,guide=true,loop=false,ramp={enabled:false,startSpeed:0.75,endSpeed:1,duration:30},onsets=[],gridSuggestion=null,selectedTone=null,tonePreview=null,previewToneName=null,previewToneDefinition=null,previewToneArrangement=null,auditionSelectedTone=true,selectionRange=null,midiConnection=null,midiRecorder=null,midiRecording=false,midiAuditioning=false,midiConnectionGeneration=0,markerSelection=null,pianoLow=21,pianoHigh=108,invertStrings=false,preview=null;
  const midiCue=new MidiAudition({getState:()=>({enabled:guide&&audio.enabled.guide,pitchShift:audio.pitch,rigLibrary:project().rigLibrary,chartTime:audio.currentTime})});audio.disposers.add(()=>midiCue.dispose());
  const toneEffectOwners=new WeakMap();let previewAdaptiveState=null,toneDisclosurePending=false;
+ let lyricMode='check',lyricSession=null,lyricPreview=null,lyricSuggestion=null,lyricOptions={scope:'rest',leadIn:2,latency:0};
  let vocalController=null,vocalUI={selection:[],scrollLeft:0},vocalClipboard=null,vocalPage=0,pendingVocalSelection=null,vocalSelectionRange=null;
  const liveInput=new LiveInput({audio,prepareEffect:prepareLocalToneEffects,createEffect:context=>{const effect=new TonePreview(context,{onStatus:tonePreviewStatus}),{a,tone}=localToneSelection();try{if(tone?.GearList)effect.setTone(tone);else effect.clearTone();toneEffectOwners.set(effect,{tone,arrangementId:a.id});return effect;}catch(error){effect.dispose();throw error;}},onState:()=>{if(root.isConnected&&root.dataset.mounted&&bottom==='mixer')renderBottom();}});
  const canvas=$('canvas'),scroll=$('timeline-scroll'),ctx=uprightRollContext(canvas.getContext('2d'),()=>bottomRoll());
@@ -348,7 +350,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  }
  function switchProject(p){
   const normalized=normalizeProject(p);if(normalized.vocals)createVocalIndex(normalized.vocals);for(const a of normalized.arrangements)if(a.type==='drums')deriveDrumLayout(a);
-  disposeVocalTimeline();vocalUI={selection:[],scrollLeft:0};vocalPage=0;pendingVocalSelection=null;vocalSelectionRange=null;
+  disposeVocalTimeline();lyricSession=null;lyricPreview=null;vocalUI={selection:[],scrollLeft:0};vocalPage=0;pendingVocalSelection=null;vocalSelectionRange=null;
   actions['render-guide']?.cancel?.();
   currentRecentId=null;projectGeneration++;audioGeneration++;activeAudioUrl=null;saveDestinations={};selectedZoneIndex=null;horizontalSelectionAnchor=null;verticalSelectionAnchor=null;
   countIn.cancel();stopMidi();history=new History(normalized);arrangementId=normalized.arrangements[0].id;selection.clear();selectionRange=null;markerSelection=null;cursor=0;lane=normalized.arrangements[0].type==='keys'?60:0;dirty=false;saveHandle=null;onsets=[];gridSuggestion=null;fitPianoRange();
@@ -562,7 +564,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  function draw(){
   if(abort.signal.aborted||!root.isConnected)return;
   if(arrangement().readOnly)return;
-  if(view==='vocals'){vocalController?.schedule();return;}if(view==='tones')return;
+  if(view==='vocals'){vocalController?.schedule();updateLyricFollow();return;}if(view==='tones')return;
   if(draw.history!==history){draw.off?.();const listener=()=>{draw.cache=null;};history.listeners.add(listener);const observed=history;draw.off=()=>observed.listeners.delete(listener);draw.history=history;draw.cache=null;}
   if(!draw.cleanupRegistered){audio.disposers.add(()=>draw.off?.());draw.cleanupRegistered=true;}
   const active=arrangement();if(draw.cache?.arrangement!==active)draw.cache=new ArrangementViewIndex(active);const index=draw.cache;
@@ -953,9 +955,87 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  function renderVocals(){
   disposeVocalTimeline();if(pendingVocalSelection!==null){vocalUI.selection=[...pendingVocalSelection];pendingVocalSelection=null;}
   const rows=project().vocals||[],pages=Math.max(1,Math.ceil(rows.length/100));vocalPage=Math.max(0,Math.min(pages-1,vocalPage));const pageRows=rows.slice(vocalPage*100,(vocalPage+1)*100);
-  $('vocal-view').innerHTML=`<h2>Vocals / lyrics</h2><p class="ws-muted">Drag syllables to move them; drag a right edge to resize. Double-click empty space to add, or a syllable to edit its text. Alt+arrows nudge; Ctrl+A/C/X/V and Delete work when the vocal canvas is focused. Optional MIDI pitch appears below the lyric lane.</p><button data-action="vocal-add">Add syllable at cursor</button> <button data-action="vocal-phrase">Enter lyric phrase...</button> ${['selectall','copy','cut','paste','delete'].map(name=>`<button data-vocal-action="${name}">${({selectall:'Select all',copy:'Copy',cut:'Cut',paste:'Paste',delete:'Delete'})[name]}</button>`).join(' ')}<div id="ws-vocal-timeline" style="margin-top:12px"></div><p class="ws-muted">Moves keep selected syllables together within the song duration. The waveform follows the original backing; authoring leaves its audio unchanged.</p><div><button data-vocal-page="${vocalPage-1}" ${vocalPage===0?'disabled':''}>Previous</button> <span>Page ${vocalPage+1} of ${pages} / ${rows.length} syllables</span> <button data-vocal-page="${vocalPage+1}" ${vocalPage===pages-1?'disabled':''}>Next</button></div><table class="ws-vocal-table"><thead><tr><th>Time (s)</th><th>Length (s)</th><th>Pitch (MIDI)</th><th>Syllable</th><th></th></tr></thead><tbody>${pageRows.map(v=>`<tr data-vocal-row="${esc(v.id)}"><td><input type="number" data-vocal-id="${esc(v.id)}" data-vocal-field="time" min="0" step="0.001" value="${v.time}"></td><td><input type="number" data-vocal-id="${esc(v.id)}" data-vocal-field="length" min="0" step="0.001" value="${v.length}"></td><td><input type="number" data-vocal-id="${esc(v.id)}" data-vocal-field="pitch" min="0" max="127" value="${v.pitch??''}" placeholder="optional"></td><td><input type="text" data-vocal-id="${esc(v.id)}" data-vocal-field="text" value="${esc(v.text)}"></td><td><button data-vocal-time="${v.time}" data-vocal-reveal="${esc(v.id)}">Go</button><button data-vocal-delete="${esc(v.id)}" aria-label="Delete syllable">Delete</button></td></tr>`).join('')}</tbody></table>${!rows.length?'<p class="ws-muted">No vocal events. Add an original lyric phrase or import a vocal XML.</p>':''}`;
-  vocalController=new VocalTimeline($('vocal-timeline'),{read:()=>({events:project().vocals||rows,beats:project().beats,duration:project().duration,cursor:audio.isPlaying?audio.currentTime:cursor,playing:audio.isPlaying,zoom,revision:history.stateId,waveform,audioDuration:audio.audioDuration||project().duration}),quantize,onCursor:time=>setCursor(Math.max(0,Math.min(project().duration,time))),onEdit:vocalEdit,onSelection:updateVocalSelection,onText:focusVocalText,onError:error=>{errorRevision++;status(error.message,true);},initial:vocalUI});
+  const wires=lyricWires(),counts=lyricCounts();
+  $('vocal-view').innerHTML=`<h2>Lyrics</h2><div class="ws-lyric-modes" role="radiogroup" aria-label="Space bar"><label><input type="radio" name="ws-lyric-mode" value="check" ${lyricMode==='check'?'checked':''}> Playback check</label> <label><input type="radio" name="ws-lyric-mode" value="tap" ${lyricMode==='tap'?'checked':''}> Tap timing</label> <span class="ws-muted">${lyricMode==='tap'?'Space starts tapping, then hold Space while each syllable is sung.':'Space plays and pauses; the lyric line below follows the audio.'}</span></div><div id="ws-lyric-karaoke" class="ws-lyric-karaoke" tabindex="0" aria-label="Current lyric line"></div><details id="ws-lyric-sync" ${vocalUI.syncClosed?'':'open'}><summary>Lyric sheet and tap timing</summary><div class="ws-lyric-grid"><div><label for="ws-lyric-sheet">Lyric sheet: one line per sung line, words separated by spaces, hyphens between syllables (morn-ing). Any language or script.</label><textarea id="ws-lyric-sheet" rows="8" spellcheck="false">${esc(sheetText(wires))}</textarea><div><button data-lyric="apply">Apply text</button> <button data-lyric="suggest">Suggest syllables (English)</button></div><div id="ws-lyric-suggestion"></div></div><div><p id="ws-lyric-count">${counts}</p><label>Tap<select id="ws-lyric-scope"><option value="rest" ${lyricOptions.scope==='rest'?'selected':''}>to the end</option><option value="line" ${lyricOptions.scope==='line'?'selected':''}>one line</option></select></label> <label>Lead-in (s)<input id="ws-lyric-leadin" type="number" min="0" max="10" step="0.5" value="${lyricOptions.leadIn}"></label> <label>Tap latency (ms)<input id="ws-lyric-latency" type="number" min="0" max="500" step="5" value="${Math.round(lyricOptions.latency*1000)}"></label><div><button data-lyric="start" ${lyricSession?'disabled':''}>Start tapping</button> <button data-lyric="stop" ${lyricSession?'':'disabled'}>Stop</button> <button data-lyric="select-line">Select line</button> <button data-lyric="snap">Snap starts to onsets</button></div><p class="ws-muted">Tapping starts at the selected syllable, or the first untimed one. Backspace undoes the last tap and rewinds 2 s; Enter or Escape stops. Taps are saved as one undo step when you stop. Tap latency is subtracted from every tap.</p></div></div></details><h3>Syllables</h3><p class="ws-muted">Drag syllables to move them; drag a right edge to resize. Double-click empty space to add, or a syllable to edit its text. Alt+arrows nudge; Ctrl+A/C/X/V and Delete work when the vocal canvas is focused. Optional MIDI pitch appears below the lyric lane.</p><button data-action="vocal-add">Add syllable at cursor</button> <button data-action="vocal-phrase">Enter lyric phrase...</button> ${['selectall','copy','cut','paste','delete'].map(name=>`<button data-vocal-action="${name}">${({selectall:'Select all',copy:'Copy',cut:'Cut',paste:'Paste',delete:'Delete'})[name]}</button>`).join(' ')}<div id="ws-vocal-timeline" style="margin-top:12px"></div><p class="ws-muted">Moves keep selected syllables together within the song duration. The waveform follows the original backing; authoring leaves its audio unchanged.</p><div><button data-vocal-page="${vocalPage-1}" ${vocalPage===0?'disabled':''}>Previous</button> <span>Page ${vocalPage+1} of ${pages} / ${rows.length} syllables</span> <button data-vocal-page="${vocalPage+1}" ${vocalPage===pages-1?'disabled':''}>Next</button></div><table class="ws-vocal-table"><thead><tr><th>Time (s)</th><th>Length (s)</th><th>Pitch (MIDI)</th><th>Syllable</th><th></th></tr></thead><tbody>${pageRows.map(v=>`<tr data-vocal-row="${esc(v.id)}"><td><input type="number" data-vocal-id="${esc(v.id)}" data-vocal-field="time" min="0" step="0.001" value="${v.time}"></td><td><input type="number" data-vocal-id="${esc(v.id)}" data-vocal-field="length" min="0" step="0.001" value="${v.length}"></td><td><input type="number" data-vocal-id="${esc(v.id)}" data-vocal-field="pitch" min="0" max="127" value="${v.pitch??''}" placeholder="optional"></td><td><input type="text" data-vocal-id="${esc(v.id)}" data-vocal-field="text" value="${esc(v.text)}"></td><td><button data-vocal-time="${v.time}" data-vocal-reveal="${esc(v.id)}">Go</button><button data-vocal-delete="${esc(v.id)}" aria-label="Delete syllable">Delete</button></td></tr>`).join('')}</tbody></table>${!rows.length?'<p class="ws-muted">No vocal events. Add an original lyric phrase or import a vocal XML.</p>':''}`;
+  vocalController=new VocalTimeline($('vocal-timeline'),{read:()=>({events:lyricPreview?.vocals||project().vocals||rows,beats:project().beats,duration:project().duration,cursor:audio.isPlaying?audio.currentTime:cursor,playing:audio.isPlaying,zoom,revision:history.stateId,waveform,audioDuration:audio.audioDuration||project().duration}),quantize,onCursor:time=>setCursor(Math.max(0,Math.min(project().duration,time))),onEdit:vocalEdit,onSelection:updateVocalSelection,onText:focusVocalText,onError:error=>{errorRevision++;status(error.message,true);},initial:vocalUI});
   updateVocalSelection(vocalController.selectedIds());
+  wireLyrics();updateLyricFollow();
+ }
+ // Lyrics tab: lyric sheet, syllable suggestion and tap timing (src/lyric-sync.js).
+ function lyricWires(p=project()){return syllables(p.vocals||[],p.lyricSheet?.untimed||[]).map(s=>s.text);}
+ function lyricCounts(){const p=project(),timed=(p.vocals||[]).length,untimed=p.lyricSheet?.untimed?.length||0,list=syllables(p.vocals||[],p.lyricSheet?.untimed||[]),next=lyricSession?list[lyricSession.next]:list[timed];const long=longLines(list.map(s=>s.text)).length;return `Timed ${timed} of ${timed+untimed} syllables.${next?` Next to tap: <b>${esc(next.text.replace(/[-+]$/,''))}</b>.`:''}${long?` ${long} line${long===1?' is':'s are'} longer than ${LINE_CHARACTERS} characters.`:''}`;}
+ function lyricStartIndex(){const list=syllables(project().vocals||[],project().lyricSheet?.untimed||[]),selected=new Set(vocalController?.selectedIds()||[]),picked=list.findIndex(s=>s.timed&&selected.has(s.id));if(picked>=0)return picked;const timed=list.filter(s=>s.timed).length;if(timed<list.length)return timed;const after=list.findIndex(s=>s.time>=cursor);return after>=0?after:0;}
+ async function startLyricTapping(){
+  if(lyricSession)return;if(!audio.buffer)throw Error('Import the song audio before tap timing');
+  const list=syllables(project().vocals||[],project().lyricSheet?.untimed||[]);if(!list.length)throw Error('Type or paste the lyric sheet and Apply text first');
+  const start=lyricStartIndex(),wires=list.map(s=>s.text),end=lyricOptions.scope==='line'?lineOf(wires,start).end:list.length-1;
+  const before=list[start-1],anchor=list[start].timed?list[start].time:before?before.time+before.length:cursor;
+  lyricSession=new TapSession({start,end,latency:lyricOptions.latency});lyricSession.ignoreUp=true;lyricPreview=null;
+  document.activeElement?.blur?.();$('lyric-karaoke')?.focus({preventScroll:true});
+  setCursor(Math.max(0,anchor-lyricOptions.leadIn));if(!audio.isPlaying)await actions.play();
+  status(`Tap timing from syllable ${start+1}: hold Space while each syllable is sung`);refreshLyricPanel();
+ }
+ function lyricPreviewUpdate(){const p=project();try{lyricPreview=commitTaps(p.vocals||[],p.lyricSheet?.untimed||[],lyricSession.result(),{uid,duration:p.duration});}catch{lyricPreview=null;}vocalController?.schedule();updateLyricFollow();refreshLyricPanel();}
+ function stopLyricTapping(){
+  const session=lyricSession;if(!session)return;lyricSession=null;lyricPreview=null;if(audio.isPlaying){cursor=audio.currentTime;audio.pause();}
+  const taps=session.result();if(!taps.length){status('Tap timing stopped; nothing tapped');render();return;}
+  const p=project();let result;try{result=commitTaps(p.vocals||[],p.lyricSheet?.untimed||[],taps,{uid,duration:p.duration});}catch(error){render();throw error;}
+  change(`Tap lyric timing (${taps.length} syllable${taps.length===1?'':'s'})`,q=>{q.vocals=result.vocals;if(result.untimed.length)q.lyricSheet={...q.lyricSheet,untimed:result.untimed};else delete q.lyricSheet;});
+  status(`Timed ${taps.length} syllable${taps.length===1?'':'s'}${result.nudged?`; ${result.nudged} later syllable${result.nudged===1?' was':'s were'} moved after them to keep the lyric order`:''}`);
+ }
+ // Space in Tap timing mode: the first press starts, then each hold marks a syllable.
+ function lyricKey(e){
+  if(view!=='vocals'||lyricMode!=='tap'||$('dialog').open)return false;
+  if(!lyricSession){if(e.type==='keydown'&&e.key===' '&&!e.repeat&&!e.target.matches('input,textarea,select,button')){e.preventDefault();startLyricTapping().catch(error=>status(error.message,true));return true;}return false;}
+  if(e.key===' '){e.preventDefault();if(e.repeat)return true;const t=audio.currentTime;if(e.type==='keydown'){lyricSession.ignoreUp=false;if(!lyricSession.down(t)&&!lyricSession.done)status('Too early: wait until after the last tapped syllable');}else if(!lyricSession.ignoreUp&&lyricSession.up(t)){lyricPreviewUpdate();if(lyricSession.done)stopLyricTapping();}return true;}
+  if(e.type!=='keydown')return true;
+  if(e.key==='Backspace'){e.preventDefault();const rewind=lyricSession.undo();if(rewind!==null){setCursor(rewind);lyricPreviewUpdate();}return true;}
+  if(e.key==='Escape'||e.key==='Enter'){e.preventDefault();stopLyricTapping();return true;}
+  return false;
+ }
+ function refreshLyricPanel(){const count=$('lyric-count');if(count)count.innerHTML=lyricCounts();const start=root.querySelector('[data-lyric="start"]'),stop=root.querySelector('[data-lyric="stop"]');if(start)start.disabled=!!lyricSession;if(stop)stop.disabled=!lyricSession;}
+ function updateLyricFollow(){
+  const el=$('lyric-karaoke');if(!el)return;const time=audio.isPlaying?audio.currentTime:cursor,line=karaoke(lyricPreview?.vocals||project().vocals||[],time);
+  el.innerHTML=line?`<div class="ws-lyric-now">${line.words.map((w,i)=>`<span class="${w.active?'ws-lyric-active':w.sung?'ws-lyric-sung':''}">${esc(w.text)}</span>${w.join||i===line.words.length-1?'':' '}`).join('')}</div><div class="ws-lyric-next">${esc(line.next)}</div>`:'<div class="ws-lyric-next">No timed lyrics yet. Paste the lyric sheet below, Apply text, then tap the timing.</div>';
+  if(audio.isPlaying)vocalController?.follow(time);
+ }
+ function wireLyrics(){
+  for(const radio of root.querySelectorAll('[name="ws-lyric-mode"]'))on(radio,'change',()=>{if(lyricSession)stopLyricTapping();lyricMode=radio.value;persistPreferences();renderVocals();});
+  on($('lyric-sync'),'toggle',e=>{vocalUI.syncClosed=!e.target.open;});
+  on($('lyric-scope'),'change',e=>{lyricOptions.scope=e.target.value;persistPreferences();});
+  on($('lyric-leadin'),'change',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=0&&v<=10){lyricOptions.leadIn=v;persistPreferences();}});
+  on($('lyric-latency'),'change',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=0&&v<=500){lyricOptions.latency=v/1000;persistPreferences();}});
+  for(const button of root.querySelectorAll('[data-lyric]'))on(button,'click',safe(async()=>{await lyricAction(button.dataset.lyric);}));
+ }
+ async function lyricAction(name){
+  const p=project();
+  if(name==='start')return startLyricTapping();
+  if(name==='stop')return stopLyricTapping();
+  if(name==='apply'){
+   const plan=reconcileSheet(p.vocals||[],$('lyric-sheet').value);
+   if(plan.removed.length&&!await dialog('Apply lyric sheet',`<p>The sheet has ${plan.removed.length} fewer syllable${plan.removed.length===1?'':'s'} than are already timed. The last ${plan.removed.length} timed syllable${plan.removed.length===1?'':'s'} will be removed.</p>`,'Apply and remove'))return;
+   const removed=new Set(plan.removed),renames=new Map(plan.renames.map(r=>[r.id,r.text]));
+   change('Apply lyric sheet',q=>{q.vocals=(q.vocals||[]).filter(v=>!removed.has(v.id)).map(v=>renames.has(v.id)?{...v,text:renames.get(v.id)}:v);if(plan.untimed.length)q.lyricSheet={...q.lyricSheet,untimed:plan.untimed};else delete q.lyricSheet;});
+   status(`Lyric sheet applied: ${plan.renames.length} timed syllable${plan.renames.length===1?'':'s'} renamed, ${plan.untimed.length} waiting to be tapped`);return;
+  }
+  if(name==='suggest'){
+   lyricSuggestion=suggestSheet($('lyric-sheet').value);const box=$('lyric-suggestion');
+   if(!lyricSuggestion.changes.length){box.innerHTML='<p class="ws-muted">No suggestions: every plain English word is one syllable or already split. Words in other languages and scripts are never changed.</p>';return;}
+   box.innerHTML=`<p>${lyricSuggestion.changes.length} word${lyricSuggestion.changes.length===1?'':'s'} could be split: ${lyricSuggestion.changes.slice(0,40).map(c=>`${esc(c.from)} → <b>${esc(c.to)}</b>`).join(', ')}${lyricSuggestion.changes.length>40?', …':''}</p><p class="ws-muted">A rule-based suggestion for English. Accept puts it in the sheet for you to check and edit before Apply text. Your own hyphens and words in other languages and scripts are left as they are.</p><button data-lyric-suggestion="accept">Accept suggestion</button> <button data-lyric-suggestion="dismiss">Dismiss</button>`;
+   for(const button of box.querySelectorAll('[data-lyric-suggestion]'))on(button,'click',()=>{if(button.dataset.lyricSuggestion==='accept'&&lyricSuggestion)$('lyric-sheet').value=lyricSuggestion.text;lyricSuggestion=null;box.innerHTML='';});
+   return;
+  }
+  if(name==='select-line'){
+   const list=syllables(p.vocals||[]),ids=new Set(vocalController?.selectedIds()||[]),index=list.findIndex(s=>ids.has(s.id)),at=index>=0?index:Math.max(0,list.findIndex(s=>s.time+s.length>=cursor));
+   const line=lineOf(list.map(s=>s.text),at);if(!line)throw Error('There are no timed lyrics yet');vocalController.setSelection(list.slice(line.start,line.end+1).map(s=>s.id));status('Line selected: Alt+arrows nudge it, drag to move it');return;
+  }
+  if(name==='snap'){
+   const ids=new Set(vocalController?.selectedIds()||[]);if(!ids.size)throw Error('Select the syllables to snap first');
+   if(!audio.buffer)throw Error('Import the song audio first');if(!onsetReady()){onsets=detectOnsets(audio.buffer);onsetSourceGeneration=audio.decodeGeneration;}
+   const updates=new Map(snapStarts((p.vocals||[]).filter(v=>ids.has(v.id)),onsets).map(u=>[u.id,u]));
+   if(!updates.size){status('No onset close enough to move any selected syllable start');return;}
+   change('Snap syllable starts to onsets',q=>{q.vocals=q.vocals.map(v=>updates.has(v.id)?{...v,time:updates.get(v.id).time,length:updates.get(v.id).length}:v);});status(`${updates.size} syllable start${updates.size===1?'':'s'} snapped to the nearest onset`);
+  }
  }
  async function setupTonePreview(){const owner=history,generation=projectGeneration;await audio.init();if(abort.signal.aborted||!root.isConnected){await audio.dispose();return false;}const context=audio.context;await prepareLocalToneEffects(context);if(abort.signal.aborted||!root.isConnected){await audio.dispose();return false;}if(history!==owner||projectGeneration!==generation||audio.context!==context)return false;if(!tonePreview){tonePreview=new TonePreview(context,{onStatus:tonePreviewStatus});audio.getBusOutput('guide').disconnect(audio.buses.master);audio.getBusOutput('guide').connect(tonePreview.input);tonePreview.connect(audio.buses.master);}updateTonePreview(true);refreshToneDisclosures();return true;}
  function auditionMidi(event){
@@ -1035,13 +1115,13 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  function localToneSelection(){const a=arrangement(),time=audio.isPlaying?audio.currentTime:cursor,allocated=(a.tones.changes||[]).findLast(t=>t.time<=time)?.name||a.tones.base,name=view==='tones'&&auditionSelectedTone&&Object.hasOwn(a.tones.definitions||{},selectedTone)?selectedTone:allocated;return{a,name,tone:a.tones.definitions?.[name]};}
  function updateTonePreview(force=false){if(!tonePreview&&!liveInput.effect)return;const{a,name,tone}=localToneSelection(),adaptiveState=toneEnvelopeStatus(audio.context).state;if(force||name!==previewToneName||tone!==previewToneDefinition||a.id!==previewToneArrangement||adaptiveState!==previewAdaptiveState){try{for(const effect of [tonePreview,liveInput.effect]){if(!effect)continue;if(tone?.GearList)effect.setTone(tone);else effect.clearTone();toneEffectOwners.set(effect,{tone,arrangementId:a.id});}}catch(error){tonePreview?.clearTone();liveInput.effect?.clearTone();status('Local tone preview bypassed: '+error.message,true);}previewToneName=name;previewToneDefinition=tone;previewToneArrangement=a.id;previewAdaptiveState=adaptiveState;refreshToneDisclosures();}}
  function render(){
-  if(view!=='vocals')disposeVocalTimeline();
+  if(view!=='vocals'){if(lyricSession)queueMicrotask(()=>stopLyricTapping());disposeVocalTimeline();}
   if(['tab','tempo'].includes(view)&&view!==timelineView){const old=zoom,wasBottom=timelineView==='tab'&&rollOrientations[arrangement().type]==='bottom',pan=wasBottom?scroll.scrollTop:scroll.scrollLeft;viewZoom[timelineView]=zoom;zoom=viewZoom[view]??zoom;timelineView=view;$('zoom').value=zoom;scroll.scrollLeft=0;scroll.scrollTop=0;setTimeScroll(pan*zoom/old);}
   applyLayout();
   const a=arrangement();$('title').textContent=`${project().artist} — ${project().title}`;$('dirty').textContent=dirty?'●':'';
   $('arrangement').innerHTML=project().arrangements.map(x=>`<option value="${esc(x.id)}" ${x.id===a.id?'selected':''}>${esc(x.name)} · ${esc(x.type)}${x.editorOnly?' · editor only':''}</option>`).join('');
   $('difficulty').innerHTML=(a.difficulties?.length?a.difficulties:[{difficulty:0,notes:a.notes}]).map(l=>`<option value="${l.difficulty}" ${l.difficulty===(a.activeDifficulty??0)?'selected':''}>Level ${l.difficulty} · ${l.notes?.length||0} notes</option>`).join('');
-  for(const mode of ['tab','tempo','tones'])$(`${mode}-button`).classList.toggle('active',view===mode);
+  for(const mode of ['tab','tempo','tones','vocals'])$(`${mode}-button`)?.classList.toggle('active',view===mode);
   $('tempo-tools').hidden=view!=='tempo';canvas.hidden=['tones','vocals'].includes(view);$('tone-view').hidden=view!=='tones';$('vocal-view').hidden=view!=='vocals';spacer.hidden=['tones','vocals'].includes(view);
   $('tool').textContent=tool==='pointer'?'Select':tool==='pencil'?'Pencil':'Eraser';$('loop').classList.toggle('active',loop);$('click').classList.toggle('active',click);$('guide').classList.toggle('active',guide);
   $('record-midi').classList.toggle('active',midiRecording||recordStartPending);updateMidiControls();
@@ -1373,7 +1453,9 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   draw();
  }));
  on(canvas,'pointercancel',()=>{drag=null;draw();});
+ on(root,'keyup',safe(async e=>{lyricKey(e);}));
  on(root,'keydown',safe(async e=>{
+  if(lyricKey(e))return;
   if(view==='tones'&&e.target.matches('input[data-knob-step],input[data-tone-volume-step]')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&['ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const input=e.target,step=Number(input.dataset.knobStep??input.dataset.toneVolumeStep),value=input.value.trim()?Number(input.value):Number(input.min);input.value=String(Math.max(Number(input.min),Math.min(Number(input.max),value+(e.key==='ArrowUp'?step:-step))));input.dispatchEvent(new Event('change',{bubbles:true}));return;}
   if(e.key==='Tab'&&!e.ctrlKey&&!e.metaKey&&e.target.dataset.vocalField&&await tabVocalField(e))return;
   if((e.ctrlKey||e.metaKey)&&(['s','o'].includes(e.key.toLowerCase())||(e.shiftKey&&e.key.toLowerCase()==='i'))){
@@ -1450,10 +1532,10 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  audio.disposers.add(()=>{clearInterval(meterTimer);signalMeters.dispose();});
  audio.onTime=()=>{if(!root.isConnected)return;updateClock();updateTonePreview();if(audio.isPlaying){const x=xOf(audio.currentTime);if(bottomRoll())setTimeScroll(Math.max(0,audio.currentTime*zoom-48));else if(x>geometry().width-60)setTimeScroll(Math.max(0,audio.currentTime*zoom-200));draw();}};
  audio.onEnded=()=>{stopMidi();cursor=audio.currentTime;updateClock();};audio.setEnabled('metronome',false);audio.setGain('guide',0.7);audio.setGain('master',Number($('master').value)/100);audio.setProject(project(),arrangement());
- const preferences=readPreferences();staveTheme=preferences.staveTheme==='light'?'light':'dark';inspectorVisible=preferences.inspectorVisible??inspectorVisible;inspectorWidth=preferences.inspectorWidth??inspectorWidth;bottomHeight=preferences.bottomHeight??bottomHeight;zoom=preferences.zoom??zoom;viewZoom={tab:zoom,tempo:zoom,...preferences.viewZoom};laneScales={...laneScales,...preferences.laneScales};rollOrientations={...rollOrientations,...preferences.rollOrientations};zoom=viewZoom.tab;snap=preferences.snap??snap;fretConvention=preferences.fretConvention??fretConvention;invertStrings=preferences.invertStrings??invertStrings;validationProfile=preferences.validationProfile??validationProfile;countInOptions={...countInOptions,...preferences.countIn};
+ const preferences=readPreferences();staveTheme=preferences.staveTheme==='light'?'light':'dark';if(preferences.lyric){lyricMode=preferences.lyric.mode==='tap'?'tap':'check';for(const key of ['scope','leadIn','latency'])if(preferences.lyric[key]!==undefined)lyricOptions[key]=preferences.lyric[key];}inspectorVisible=preferences.inspectorVisible??inspectorVisible;inspectorWidth=preferences.inspectorWidth??inspectorWidth;bottomHeight=preferences.bottomHeight??bottomHeight;zoom=preferences.zoom??zoom;viewZoom={tab:zoom,tempo:zoom,...preferences.viewZoom};laneScales={...laneScales,...preferences.laneScales};rollOrientations={...rollOrientations,...preferences.rollOrientations};zoom=viewZoom.tab;snap=preferences.snap??snap;fretConvention=preferences.fretConvention??fretConvention;invertStrings=preferences.invertStrings??invertStrings;validationProfile=preferences.validationProfile??validationProfile;countInOptions={...countInOptions,...preferences.countIn};
  if(preferences.mixer){try{audio.restoreMixerState(preferences.mixer);}catch{}}if(preferences.speed)audio.setSpeed(preferences.speed);if(preferences.pitch!==undefined)audio.setPitch(preferences.pitch);click=audio.enabled.metronome;guide=audio.enabled.guide;$('zoom').value=zoom;$('snap').value=snap;$('speed').value=audio.speed*100;$('speed-value').textContent=`${Math.round(audio.speed*100)}%`;$('pitch').value=audio.pitch;$('master').value=audio.gains.master*100;
  shadeHands=preferences.shadeHands??shadeHands;audio.quality=preferences.quality??'fast';qualityMessage=audio.quality==='spectral'?'Spectral preview selected; preparation starts on Play':'Fast granular preview';sustainOptions={...sustainOptions,...preferences.sustain};
- function persistPreferences(){writePreferences({inspectorVisible,inspectorWidth,bottomHeight,zoom,viewZoom:{...viewZoom},laneScales:{...laneScales},rollOrientations:{...rollOrientations},snap,fretConvention,invertStrings,validationProfile,shadeHands,sustain:{...sustainOptions},quality:audio.quality,speed:audio.speed,pitch:audio.pitch,mixer:audio.getMixerState(),countIn:{...countInOptions},staveTheme});}
+ function persistPreferences(){writePreferences({inspectorVisible,inspectorWidth,bottomHeight,zoom,viewZoom:{...viewZoom},laneScales:{...laneScales},rollOrientations:{...rollOrientations},snap,fretConvention,invertStrings,validationProfile,shadeHands,sustain:{...sustainOptions},quality:audio.quality,speed:audio.speed,pitch:audio.pitch,mixer:audio.getMixerState(),countIn:{...countInOptions},staveTheme,lyric:{mode:lyricMode,...lyricOptions}});}
  on(root.querySelector('.ws-menu'),'pointerdown',refreshActionAvailability);
  root.addEventListener('keydown',e=>{if(e.key==='F10'||e.target.closest('.ws-menu'))refreshActionAvailability();},{capture:true,signal:abort.signal});
  on(root,'click',e=>{if(e.target.closest('button[data-action]'))refreshActionAvailability();});

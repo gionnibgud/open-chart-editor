@@ -1149,6 +1149,9 @@ def flat_phrase_export_warnings(project):
 
 
 SCRATCH_PATH = 'editor/oce-scratch.json'
+# Lyric sheet syllables not yet tapped to a time (Lyrics tab). Timed ones are the vocals.
+LYRIC_SHEET_PATH = 'editor/oce-lyric-sheet.json'
+LYRIC_SHEET_FORMAT = 'open-chart-editor-lyric-sheet-v1'
 DRUM_AUTHORING_PATH = 'editor/oce-drums.json'
 DRUM_AUTHORING_FORMAT = 'open-chart-editor-drums-v1'
 MAX_DRUM_AUTHORING = 16 * 1024 * 1024
@@ -1381,6 +1384,14 @@ def load_feedpak(data):
         if any(v.get('_pitchOnly') for v in project['vocals']):
             project.setdefault('import_warnings',[]).append('A vocal pitch event had no matching lyric syllable; retained as a pitch-only editor event without inventing a source lyric')
         project['_vocalsOriginal']=[{key:vocal.get(key) for key in ('time','length','text','pitch')} for vocal in project['vocals']]
+    if LYRIC_SHEET_PATH in entries:
+        try:
+            sheet=read(LYRIC_SHEET_PATH)
+        except (ValueError,UnicodeError):
+            sheet=None
+        untimed=sheet.get('untimed') if isinstance(sheet,dict) and sheet.get('format')==LYRIC_SHEET_FORMAT else None
+        if isinstance(untimed,list) and untimed and all(isinstance(text,str) for text in untimed):
+            project['lyricSheet']={'untimed':untimed}
     if SCRATCH_PATH in entries:
         try:
             scratch=read(SCRATCH_PATH)
@@ -1567,6 +1578,20 @@ def save_feedpak(project,*,vocal_only=False):
             raise ProjectError('Reserved scratch sidecar path already contains unrelated source content; preserve it under a different path before exporting scratch tracks')
     if scratch:
         entries[SCRATCH_PATH]=_json({'format':SCRATCH_FORMAT,'arrangements':scratch})
+    untimed=(project.get('lyricSheet') or {}).get('untimed') or []
+    if not isinstance(untimed,list) or any(not isinstance(text,str) for text in untimed):
+        raise ProjectError('Lyric sheet untimed syllables must be a list of text')
+    if LYRIC_SHEET_PATH in entries:
+        try:
+            existing=_decode_json(entries[LYRIC_SHEET_PATH])
+        except (ValueError,UnicodeError):
+            existing=None
+        if isinstance(existing,dict) and existing.get('format')==LYRIC_SHEET_FORMAT:
+            del entries[LYRIC_SHEET_PATH]
+        elif untimed:
+            raise ProjectError('Reserved lyric sheet path already contains unrelated source content')
+    if untimed:
+        entries[LYRIC_SHEET_PATH]=_json({'format':LYRIC_SHEET_FORMAT,'untimed':untimed})
     if any(arr.get('_entry',{}).get('_songLevel') for arr in scratch):
         manifest.pop('drum_tab',None)
     manifest.update({k: project.get(k, default) for k,default in [('title','Untitled'),('artist',''),('album',''),('year',2026),('duration',0)]})
