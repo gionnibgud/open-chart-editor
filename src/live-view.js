@@ -125,7 +125,7 @@ export function drawLiveView(ctx, view) {
  function noteX(fret) {return fret > 0 ? fret - 0.5 : null;}
  // `span` is the chord box's fret range for a chord's open strings; a lone open string spans the
  // fret-hand position, as in the game.
- function drawNote(n, inChord, span = null) {
+ function drawNote(n, inChord, span = null, label = undefined) {
   const z = zOf(n.time), s = n.string, h = y(s), color = view.stringColor(s), past = n.time < time;
   ctx.globalAlpha = past ? Math.max(0.15, 1 + (n.time - time) / PAST_SECONDS) : 1;
   const sustainEnd = Math.min(zFar, zOf(n.time + (n.sustain || 0))), t = n.techniques || {};
@@ -148,7 +148,8 @@ export function drawLiveView(ctx, view) {
    const p = drawn && project(x, h, z);
    if (p && p.scale > 45) {
     ctx.fillStyle = t.mute || t.fret_hand_mute ? '#e6e8ee' : '#0b0d12'; ctx.font = `bold ${Math.round(Math.max(9, Math.min(18, p.scale * 0.24)))}px system-ui, sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t.mute || t.fret_hand_mute ? 'X' : String(view.shownFret(n.fret)), p.x, p.y + 1);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const text = t.mute || t.fret_hand_mute ? 'X' : label !== undefined ? label : String(view.shownFret(n.fret));
+    if (text) ctx.fillText(text, p.x, p.y + 1);
     const tags = view.techniqueTags(n).filter(tag => tag !== 'FM');
     if (tags.length && p.scale > 80) {ctx.font = '10px system-ui, sans-serif'; ctx.fillStyle = '#ffe2a8'; ctx.fillText(tags.join(' '), p.x, p.y - p.scale * GEM_HALF_H - 8);}
    }
@@ -165,7 +166,9 @@ export function drawLiveView(ctx, view) {
   poly([[lo, bottom, z], [hi, bottom, z], [hi, top, z], [lo, top, z]], repeat ? 'rgba(120,200,160,0.10)' : 'rgba(120,200,160,0.06)', '#8bd3ad', repeat ? 2.5 : 1.5);
   ctx.globalAlpha = 1;
   if (!repeat) {
-   for (const n of members.slice().sort((p, q) => y(q.string) - y(p.string))) drawNote({...n, time: chord.time}, true, [lo, hi]);
+   // Chord notes show their fingering, as in the game (T for the thumb); single notes show frets.
+   const finger = n => {const f = Number.isInteger(template?.fingers?.[n.string]) && template.fingers[n.string] >= 0 ? template.fingers[n.string] : n.techniques?.left_hand; return Number.isInteger(f) && f >= 0 ? (f === 0 ? 'T' : String(f)) : '';};
+   for (const n of members.slice().sort((p, q) => y(q.string) - y(p.string))) drawNote({...n, time: chord.time}, true, [lo, hi], finger(n));
    const name = template ? view.chordLabel(template, members) : '';
    const p = project((lo + hi) / 2, top, z);
    if (name && p && p.scale > 40 && !String(template?.displayName || '').endsWith('-nop')) {
