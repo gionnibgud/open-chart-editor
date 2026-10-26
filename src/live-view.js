@@ -131,9 +131,11 @@ export function drawLiveView(ctx, view) {
   const sustainEnd = Math.min(zFar, zOf(n.time + (n.sustain || 0))), t = n.techniques || {};
   if (n.fret === 0) {
    // Open string: a slim bar in the string's colour.
-   const anchor = view.anchorAt(n.time) || {fret: 1, width: 4}, [x0, x1] = span ? [span[0] + 0.15, span[1] - 0.15] : [anchor.fret - 1 + 0.15, anchor.fret - 1 + (anchor.width || 4) - 0.15], half = GEM_HALF_H * 0.45;
-   if (n.sustain > 0) poly([[x0, h, z], [x1, h, z], [x1, h, sustainEnd], [x0, h, sustainEnd]], hexAlpha(color, 0.1));
-   poly([[x0, h - half, z], [x1, h - half, z], [x1, h + half, z], [x0, h + half, z]], color, past ? '#ffffff' : null, 1);
+   const anchor = view.anchorAt(n.time) || {fret: 1, width: 4}, [x0, x1] = span ? [span[0] + 0.15, span[1] - 0.15] : [anchor.fret - 1 + 0.15, anchor.fret - 1 + (anchor.width || 4) - 0.15];
+   if (n.sustain > 0) poly([[x0, h, z], [x1, h, z], [x1, h, sustainEnd], [x0, h, sustainEnd]], hexAlpha(color, 0.08));
+   // A glowing line rather than a box: soft halo first, then a bright core.
+   ctx.save(); ctx.shadowColor = color; ctx.shadowBlur = 14; ctx.lineCap = 'round';
+   line([x0, h, z], [x1, h, z], hexAlpha(color, 0.9), 4); ctx.shadowBlur = 0; line([x0, h, z], [x1, h, z], '#ffffff', 1.2); ctx.restore();
   } else {
    const x = noteX(n.fret), slide = t.slide_to >= 0 ? t.slide_to : t.slide_unpitch_to >= 0 ? t.slide_unpitch_to : null, xEnd = slide !== null && slide > 0 ? slide - 0.5 : x;
    if (n.sustain > 0) {
