@@ -223,6 +223,17 @@ def setup(app, context=None):
         except (pack_io.ProjectError,ValueError,TypeError,KeyError,ET.ParseError) as exc:
             raise HTTPException(400,str(exc)) from exc
 
+    @app.post(PREFIX+'/live-bundle')
+    async def live_bundle(payload: dict):
+        """The current part in FeedBack's highway shapes, for the live view's FeedBack renderers."""
+        try:
+            arrangement=payload.get('arrangement')
+            if not isinstance(arrangement,dict):
+                raise pack_io.ProjectError('Request requires an arrangement object')
+            return await asyncio.to_thread(pack_io.live_bundle,arrangement,payload.get('beats') or [],payload.get('sections') or [],payload.get('info') or {})
+        except (pack_io.ProjectError,ValueError,TypeError,KeyError) as exc:
+            raise HTTPException(400,str(exc)) from exc
+
     @app.post(PREFIX+'/save-check')
     async def save_check(payload: dict):
         """Notices to confirm before a FeedPak or loose-folder save (nothing is written)."""

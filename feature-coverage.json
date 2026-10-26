@@ -237,6 +237,12 @@
       "capability": "Keyboard profiles and mouse models",
       "status": "Implemented: OCE, R+ Workshop, EOF and Charter keyboard profiles with per-command rebinding, an 'each note on its own' technique-toggle option, and an EOF mouse model (right-click adds or removes a note, wheel sets sustain, Ctrl+wheel the fret, middle-click edits, left-click only selects).",
       "remaining": "FOLLOW-UP: Charter's mouse behaviour (clicks, drags and wheel in its editor) is not yet confirmed, so there is no Charter mouse model; a short session in Charter noting each mouse action would settle it."
+    },
+    {
+      "id": "live-view",
+      "capability": "Live view (highway) in the lower panel",
+      "status": "Implemented: OCE's own highway renderer for guitar and bass (4-8 strings, chords with fingering, glowing open strings, anchor lanes, left-handed, low string top/bottom, speed); optional FeedBack highway plugins as renderers when OCE runs inside FeedBack.",
+      "remaining": "FOLLOW-UP: check how FeedBack's visualisation plugins preview non-guitar parts (flute and other pitched parts, drums, piano, kazoo) in the live view; OCE's own renderer shows guitar and bass only."
     }
   ],
   "verification": {

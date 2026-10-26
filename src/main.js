@@ -113,7 +113,10 @@ function mount(root){
  let keyProfile='oce',keyOverrides={},techniqueToggleEach=false,insertHeld=false,insertUsed=false,keymapCache=null;
  const keymap=()=>{const overrides=keyOverrides[keyProfile]||{},key=keyProfile+JSON.stringify(overrides);if(keymapCache?.key!==key)keymapCache={key,...buildKeymap(keyProfile,overrides)};return keymapCache;};
  const keysFor=id=>keymap().byCommand.get(id)||[];
- let liveOptions={...DEFAULT_LIVE_OPTIONS};
+ let liveOptions={...DEFAULT_LIVE_OPTIONS,renderer:'oce'};
+ // A FeedBack highway plugin drawing the live view (only inside FeedBack): its factory key,
+ // the renderer, its canvas, the chart data it draws and the frame loop.
+ let liveViz=null;
  let staveTheme='dark',showRests=true,staveMode='select',staveLength=1,staveHits=[],staveMetricsCache=null,staveKeyCache=null;
 let history=new History(demoProject()),arrangementId=history.project.arrangements[0].id,view='tab',inspector='settings',bottom='errors',selection=new Set(),cursor=0,lane=0,lastFret=3,zoom=110,snap=4,tool='pointer',clipboard=[],drag=null,dirty=false,saveHandle=null,lastSaveFormat='json',exportOptions={},lastDestination='',tapTimes=[],waveform=null,loadedAudio=null,draftTimer=null;
  let toneImportGeneration=0,tempoImportGeneration=0,chartImportGeneration=0;
@@ -1121,7 +1124,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  // Live view: the current part as a Rocksmith-style highway, in step with the cursor and playback.
  const chordMembers=new WeakMap();
  function drawLivePanel(){
-  const el=$('live');if(!el||!el.isConnected)return;
+  const el=$('live');if(!el||!el.isConnected||liveViz)return;
   const a=arrangement(),width=Math.max(300,el.parentElement.clientWidth),height=Math.max(160,Math.floor($('bottom').getBoundingClientRect().bottom-el.getBoundingClientRect().top-6)),dpr=Math.min(window.devicePixelRatio||1,2);
   if(el.width!==Math.floor(width*dpr)||el.height!==Math.floor(height*dpr)){el.width=Math.floor(width*dpr);el.height=Math.floor(height*dpr);el.style.width=width+'px';el.style.height=height+'px';}
   const pen=el.getContext('2d');pen.setTransform(dpr,0,0,dpr,0,0);
@@ -1133,6 +1136,61 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
    anchorAt:t=>index.anchorAt(t),anchors:[...a.anchors].sort((x,y)=>x.time-y.time),templates:a.chord_templates,beats:project().beats,isRepeat:c=>index.compactChords.has(c),
    phraseAt:t=>last(a.phrases,t)?.name||'',sectionAt:t=>last(project().sections,t,'start_time')?.name||'',
    stringColor:s=>stringColor(a,s),chordLabel:(template,notes)=>chordLabel(a,template,notes),techniqueTags,shownFret});
+ }
+ // FeedBack's visualisation plugins register a renderer factory as window.feedBackViz_<id>.
+ // Only those made for the part's instrument are offered: drums, keys/piano, vocals, else guitar and bass.
+ const feedbackRenderers=(a=arrangement())=>Object.keys(window).filter(key=>/^feedBackViz_/.test(key)&&typeof window[key]==='function').filter(key=>{
+  const id=key.replace(/^feedBackViz_/,'').toLowerCase(),kind=/drum/.test(id)?'drums':/keys|piano/.test(id)?'keys':/vocal|lyric/.test(id)?'vocals':'fretted';
+  return kind===(a.type==='drums'?'drums':a.type==='keys'?'keys':'fretted');
+ }).sort();
+ const rendererLabel=key=>'FeedBack '+key.replace(/^feedBackViz_/,'').replaceAll('_',' ');
+ function stopLiveViz(){
+  if(!liveViz)return;cancelAnimationFrame(liveViz.frame);clearTimeout(liveViz.fetchTimer);
+  try{liveViz.renderer?.destroy?.();}catch(error){console.warn('FeedBack renderer destroy failed',error);}
+  liveViz=null;
+ }
+ // The chart for the FeedBack renderer, fetched again shortly after each edit.
+ function liveVizData(){
+  const a=arrangement(),key=`${history.stateId}|${a.id}`;
+  if(liveViz.dataKey===key||liveViz.fetching===key)return;
+  clearTimeout(liveViz.fetchTimer);
+  liveViz.fetchTimer=setTimeout(async()=>{
+   const viz=liveViz;if(!viz)return;viz.fetching=key;
+   const slim={...a,difficulties:undefined,_rplus:undefined};
+   try{
+    const response=await fetch(`${API}/live-bundle`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({arrangement:slim,beats:project().beats,sections:project().sections,info:{title:project().title,artist:project().artist,duration:project().duration}})});
+    if(!response.ok)throw Error(await response.text());
+    const data=await response.json();if(liveViz!==viz)return;
+    viz.data=data;viz.dataKey=key;viz.fetching=null;
+   }catch(error){if(liveViz===viz)viz.fetching=null;status(`Live view: ${error.message}`,true);}
+  },liveViz.data?300:0);
+ }
+ // FeedBack renderer frame: OCE's clock and view options on top of the fetched chart.
+ function liveVizFrame(){
+  const viz=liveViz;if(!viz)return;
+  viz.frame=requestAnimationFrame(liveVizFrame);
+  if(bottom!=='live'||!viz.canvas.isConnected){stopLiveViz();return;}
+  liveVizData();if(!viz.data)return;
+  const host=viz.canvas.parentElement,width=Math.max(300,host.clientWidth),height=Math.max(160,Math.floor($('bottom').getBoundingClientRect().bottom-host.getBoundingClientRect().top-6));
+  if(viz.width!==width||viz.height!==height){viz.width=width;viz.height=height;host.style.height=height+'px';viz.canvas.style.width=width+'px';viz.canvas.style.height=height+'px';viz.canvas.width=width;viz.canvas.height=height;try{viz.renderer?.resize?.(width,height);}catch{}}
+  const d=viz.data,b=viz.bundle??={};
+  Object.assign(b,{currentTime:audio.isPlaying?audio.currentTime:cursor,isPlaying:audio.isPlaying,isReady:true,songInfo:d.songInfo,notes:d.notes,chords:d.chords,anchors:d.anchors,
+   beats:d.beats,sections:d.sections,chordTemplates:d.chordTemplates,handShapes:d.handShapes,stringCount:d.stringCount,tuning:d.songInfo.tuning,capo:d.songInfo.capo,centOffset:d.songInfo.centOffset,
+   lyrics:[],lyricsSource:null,toneChanges:[],toneBase:'',toneBaseRig:null,rigs:null,drumTab:null,mastery:1,hasPhraseData:false,
+   inverted:!liveOptions.lowStringTop,lefty:liveOptions.leftHanded,renderScale:1,lyricsVisible:false,teachingMarksVisible:false,fingerHintsVisible:true,
+   lowerBoundT:lowerBound('t'),lowerBoundTime:lowerBound('time'),getNoteState:()=>null,getNoteStateProvider:()=>null});
+  try{
+   if(!viz.started){viz.started=true;viz.renderer.init(viz.canvas,b);}
+   viz.renderer.draw(b);
+  }catch(error){console.error('FeedBack renderer failed',error);status(`${rendererLabel(viz.key)} could not draw this part (${error.message}); back to the OCE highway`,true);liveOptions={...liveOptions,renderer:'oce'};stopLiveViz();renderBottom();}
+ }
+ const lowerBound=key=>(list,t)=>{let lo=0,hi=list?.length||0;while(lo<hi){const mid=(lo+hi)>>1;if(list[mid][key]<t)lo=mid+1;else hi=mid;}return lo;};
+ function startLiveViz(key,canvas){
+  stopLiveViz();
+  let renderer=null;
+  try{renderer=window[key]();}catch(error){status(`${rendererLabel(key)} could not start: ${error.message}`,true);return false;}
+  liveViz={key,renderer,canvas,data:null,dataKey:null,fetching:null,started:false,frame:0,fetchTimer:0};
+  liveVizFrame();return true;
  }
  function drawStavePanel(){
   const el=$('stave');if(!el||!el.isConnected)return;
@@ -1202,7 +1260,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  }
  function renderBottom(){
   if(bottom!=='stave')delete $('bottom-content').dataset.stave;
-  if(bottom!=='live')delete $('bottom-content').dataset.live;
+  if(bottom!=='live'){delete $('bottom-content').dataset.live;stopLiveViz();}
   issueFinder.bind(history);const analysis=issueFinder.get(validationProfile);$('errors-label').textContent=`Errors (${analysis.errors.length}) / Warnings (${analysis.warnings.length})`;
   const el=$('bottom-content');if(bottom==='errors'){
    const page=issueFinder.page({profile:validationProfile,filter:issueFilter,page:issuePage});issuePage=page.page;
@@ -1222,19 +1280,23 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
    if(other){const notes=[...other.notes,...other.chords.flatMap(c=>c.notes||[])],layout=other.type==='drums'?drumLayout(other):null,lanes=other.type==='keys'?128:layout?layout.ids.length:other.stringCount;for(const note of notes){const lane=other.type==='keys'?notePitch(other,note):layout?layout.indexOf(note):note.string,x=note.time/project().duration*width,y=90-lane/Math.max(1,lanes-1)*80;pen.fillStyle=other.type==='keys'?COLORS[(notePitch(other,note)%12)%COLORS.length]:stringColor(other,note.string||0);pen.fillRect(x,y,Math.max(3,(note.sustain||0)/project().duration*width),5);}on(secondary,'click',e=>{countIn.cancel();stopMidi();arrangementId=other.id;selection.clear();selectionRange=null;markerSelection=null;fitPianoRange();audio.setProject(project(),arrangement());setCursor(e.offsetX/width*project().duration);render();});}
   }
   else if(bottom==='live'){
-   const a=arrangement(),signature=[a.id,a.name,a.type,a.stringCount,JSON.stringify(liveOptions)].join('|');
+   const renderers=feedbackRenderers();if(liveOptions.renderer!=='oce'&&!renderers.includes(liveOptions.renderer))liveOptions={...liveOptions,renderer:'oce'};
+   const a=arrangement(),signature=[a.id,a.name,a.type,a.stringCount,JSON.stringify(liveOptions),renderers.join(',')].join('|');
    if(el.dataset.live===signature&&$('live')){drawLivePanel();return;}
-   el.dataset.live=signature;
-   const fretted=['guitar','bass'].includes(a.type);
+   el.dataset.live=signature;stopLiveViz();
+   const fretted=['guitar','bass'].includes(a.type),useViz=liveOptions.renderer!=='oce';
    el.innerHTML=`<h3 class="ws-stave-bar">Live view <span class="ws-muted">· ${esc(a.name)}${fretted?` · ${a.stringCount} strings`:''} · follows the cursor and playback</span>`
-    +(fretted?` <button data-live-invert title="Which string runs along the top of the highway">${liveOptions.lowStringTop?'Low string on top':'Low string at the bottom'}</button>`
+    +(renderers.length?` <select data-live-renderer aria-label="Live view renderer" title="Draw with the editor's own highway, or a FeedBack highway plugin"><option value="oce">OCE highway</option>${renderers.map(key=>`<option value="${esc(key)}" ${liveOptions.renderer===key?'selected':''}>${esc(rendererLabel(key))}</option>`).join('')}</select>`:'')
+    +(fretted||useViz?` <button data-live-invert title="Which string runs along the top of the highway">${liveOptions.lowStringTop?'Low string on top':'Low string at the bottom'}</button>`
     +`<button data-live-lefty class="${liveOptions.leftHanded?'active':''}" aria-pressed="${liveOptions.leftHanded}" title="Mirror the neck for a left-handed player">Left-handed</button>`
-    +` <button data-live-speed="-1" title="Slower highway: notes closer together">Slower</button><span class="ws-muted"> ${liveOptions.speed.toFixed(2)}× </span><button data-live-speed="1" title="Faster highway: notes further apart">Faster</button>`:'')
-    +`</h3><canvas id="ws-live" aria-label="Live highway view of ${esc(a.name)}" style="display:block"></canvas>`;
+    +(useViz?'':` <button data-live-speed="-1" title="Slower highway: notes closer together">Slower</button><span class="ws-muted"> ${liveOptions.speed.toFixed(2)}× </span><button data-live-speed="1" title="Faster highway: notes further apart">Faster</button>`):'')
+    +`</h3>`+(useViz?`<div id="ws-live-host" style="position:relative;overflow:hidden"><canvas id="ws-live-viz" aria-label="${esc(rendererLabel(liveOptions.renderer))} view of ${esc(a.name)}" style="display:block"></canvas></div>`:`<canvas id="ws-live" aria-label="Live highway view of ${esc(a.name)}" style="display:block"></canvas>`);
    const update=next=>{liveOptions={...liveOptions,...next};persistPreferences();renderBottom();};
    on(el.querySelector('[data-live-invert]'),'click',()=>update({lowStringTop:!liveOptions.lowStringTop}));
    on(el.querySelector('[data-live-lefty]'),'click',()=>update({leftHanded:!liveOptions.leftHanded}));
    el.querySelectorAll('[data-live-speed]').forEach(button=>on(button,'click',()=>update({speed:Math.max(.5,Math.min(2,Math.round((liveOptions.speed+.25*Number(button.dataset.liveSpeed))*100)/100))})));
+   on(el.querySelector('[data-live-renderer]'),'change',e=>update({renderer:e.target.value}));
+   if(useViz&&!startLiveViz(liveOptions.renderer,$('live-viz'))){liveOptions={...liveOptions,renderer:'oce'};delete el.dataset.live;renderBottom();return;}
    drawLivePanel();
   }
   else if(bottom==='stave'){
@@ -1985,7 +2047,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  audio.disposers.add(()=>{clearInterval(meterTimer);signalMeters.dispose();});
  audio.onTime=()=>{if(!root.isConnected)return;updateClock();updateTonePreview();if(audio.isPlaying){const x=xOf(audio.currentTime);if(bottomRoll())setTimeScroll(Math.max(0,audio.currentTime*zoom-48));else if(x>geometry().width-60)setTimeScroll(Math.max(0,audio.currentTime*zoom-200));draw();}};
  audio.onEnded=()=>{stopMidi();cursor=audio.currentTime;updateClock();};audio.setEnabled('metronome',false);audio.setGain('guide',0.7);audio.setGain('master',Number($('master').value)/100);audio.setProject(project(),arrangement());
- const preferences=readPreferences();staveTheme=preferences.staveTheme==='light'?'light':'dark';showRests=preferences.showRests!==false;if(preferences.lyric){lyricMode=preferences.lyric.mode==='tap'?'tap':'check';for(const key of ['scope','leadIn','latency'])if(preferences.lyric[key]!==undefined)lyricOptions[key]=preferences.lyric[key];}inspectorVisible=preferences.inspectorVisible??inspectorVisible;inspectorWidth=preferences.inspectorWidth??inspectorWidth;bottomHeight=preferences.bottomHeight??bottomHeight;bottomVisible=preferences.bottomVisible??bottomVisible;if(preferences.liveView&&typeof preferences.liveView==='object')liveOptions={lowStringTop:preferences.liveView.lowStringTop!==false,leftHanded:preferences.liveView.leftHanded===true,speed:Number.isFinite(preferences.liveView.speed)?Math.max(.5,Math.min(2,preferences.liveView.speed)):1};if(preferences.keyboard&&typeof preferences.keyboard==='object'){keyProfile=PROFILE_IDS.includes(preferences.keyboard.profile)?preferences.keyboard.profile:'oce';keyOverrides=preferences.keyboard.overrides&&typeof preferences.keyboard.overrides==='object'?preferences.keyboard.overrides:{};techniqueToggleEach=preferences.keyboard.each===true;mouseModel=preferences.keyboard.mouse==='eof'?'eof':'standard';}refreshMenuKeys();if(preferences.chordStrip&&typeof preferences.chordStrip==='object')chordStrip={visible:preferences.chordStrip.visible!==false,open:preferences.chordStrip.open!==false,position:preferences.chordStrip.position==='above'?'above':'below',upright:preferences.chordStrip.upright===true};zoom=preferences.zoom??zoom;viewZoom={tab:zoom,tempo:zoom,...preferences.viewZoom};laneScales={...laneScales,...preferences.laneScales};rollOrientations={...rollOrientations,...preferences.rollOrientations};zoom=viewZoom.tab;snap=preferences.snap??snap;fretConvention=preferences.fretConvention??fretConvention;invertStrings=preferences.invertStrings??invertStrings;validationProfile=preferences.validationProfile??validationProfile;countInOptions={...countInOptions,...preferences.countIn};
+ const preferences=readPreferences();staveTheme=preferences.staveTheme==='light'?'light':'dark';showRests=preferences.showRests!==false;if(preferences.lyric){lyricMode=preferences.lyric.mode==='tap'?'tap':'check';for(const key of ['scope','leadIn','latency'])if(preferences.lyric[key]!==undefined)lyricOptions[key]=preferences.lyric[key];}inspectorVisible=preferences.inspectorVisible??inspectorVisible;inspectorWidth=preferences.inspectorWidth??inspectorWidth;bottomHeight=preferences.bottomHeight??bottomHeight;bottomVisible=preferences.bottomVisible??bottomVisible;if(preferences.liveView&&typeof preferences.liveView==='object')liveOptions={lowStringTop:preferences.liveView.lowStringTop!==false,leftHanded:preferences.liveView.leftHanded===true,speed:Number.isFinite(preferences.liveView.speed)?Math.max(.5,Math.min(2,preferences.liveView.speed)):1,renderer:typeof preferences.liveView.renderer==='string'?preferences.liveView.renderer:'oce'};if(preferences.keyboard&&typeof preferences.keyboard==='object'){keyProfile=PROFILE_IDS.includes(preferences.keyboard.profile)?preferences.keyboard.profile:'oce';keyOverrides=preferences.keyboard.overrides&&typeof preferences.keyboard.overrides==='object'?preferences.keyboard.overrides:{};techniqueToggleEach=preferences.keyboard.each===true;mouseModel=preferences.keyboard.mouse==='eof'?'eof':'standard';}refreshMenuKeys();if(preferences.chordStrip&&typeof preferences.chordStrip==='object')chordStrip={visible:preferences.chordStrip.visible!==false,open:preferences.chordStrip.open!==false,position:preferences.chordStrip.position==='above'?'above':'below',upright:preferences.chordStrip.upright===true};zoom=preferences.zoom??zoom;viewZoom={tab:zoom,tempo:zoom,...preferences.viewZoom};laneScales={...laneScales,...preferences.laneScales};rollOrientations={...rollOrientations,...preferences.rollOrientations};zoom=viewZoom.tab;snap=preferences.snap??snap;fretConvention=preferences.fretConvention??fretConvention;invertStrings=preferences.invertStrings??invertStrings;validationProfile=preferences.validationProfile??validationProfile;countInOptions={...countInOptions,...preferences.countIn};
  if(preferences.mixer){try{audio.restoreMixerState(preferences.mixer);}catch{}}if(preferences.speed)audio.setSpeed(preferences.speed);if(preferences.pitch!==undefined)audio.setPitch(preferences.pitch);click=audio.enabled.metronome;guide=audio.enabled.guide;$('zoom').value=zoom;$('snap').value=snap;$('speed').value=audio.speed*100;$('speed-value').textContent=`${Math.round(audio.speed*100)}%`;$('pitch').value=audio.pitch;$('master').value=audio.gains.master*100;
  shadeHands=preferences.shadeHands??shadeHands;audio.quality=preferences.quality??'fast';qualityMessage=audio.quality==='spectral'?'Spectral preview selected; preparation starts on Play':'Fast granular preview';sustainOptions={...sustainOptions,...preferences.sustain};
  function persistPreferences(){writePreferences({liveView:{...liveOptions},keyboard:{profile:keyProfile,overrides:keyOverrides,each:techniqueToggleEach,mouse:mouseModel},inspectorVisible,inspectorWidth,bottomHeight,bottomVisible,chordStrip:{...chordStrip},zoom,viewZoom:{...viewZoom},laneScales:{...laneScales},rollOrientations:{...rollOrientations},snap,fretConvention,invertStrings,validationProfile,shadeHands,sustain:{...sustainOptions},quality:audio.quality,speed:audio.speed,pitch:audio.pitch,mixer:audio.getMixerState(),countIn:{...countInOptions},staveTheme,showRests,lyric:{mode:lyricMode,...lyricOptions}});}

@@ -692,6 +692,35 @@ def _wire_chord(chord,keys=False):
     return out
 
 
+def live_bundle(arrangement, beats, sections=(), info=None):
+    """One part in the shapes FeedBack's highway renderers draw (its chart WebSocket's wire
+    format), for the editor's live view. Uses the FeedPak writers, so it needs no FeedBack."""
+    arr=copy.deepcopy(arrangement); kind=arr.get('type','guitar'); keys=kind=='keys'; info=info or {}
+    arp=lambda template:str(template.get('displayName','')).endswith('-arp')
+    def label(template):
+        # R+ fills displayName with its fret/finger code (Am_X02210_XX231X, XX9X12X_XX1X4X); show the name.
+        shown=str(template.get('displayName') or template.get('name') or '')
+        coded=re.fullmatch(r'(?:(.+?)_)?[X\d]+_[X\d]+(?:-arp|-nop)?',shown)
+        return (template.get('name') or (coded.group(1) if coded and coded.group(1) else '')) if coded else shown
+    templates=[{'name':t.get('name',''),'displayName':label(t),'arp':arp(t),
+                'fingers':list(t.get('fingers',[])),'frets':list(t.get('frets',[]))} for t in arr.get('chord_templates',[])]
+    handshapes=[{'chord_id':h.get('chord_id',0),'start_time':h.get('start_time',0),'end_time':h.get('end_time',0),
+                 'arp':arp(templates[h['chord_id']]) if isinstance(h.get('chord_id'),int) and 0<=h['chord_id']<len(templates) else False}
+                for h in sorted(arr.get('handshapes',[]),key=lambda h:h.get('start_time',0))]
+    count=arr.get('stringCount') or len(arr.get('tuning') or [])
+    return {
+        'songInfo':{'title':info.get('title',''),'artist':info.get('artist',''),'duration':info.get('duration',0),'arrangement':arr.get('name',''),
+                    'tuning':list(arr.get('tuning',[])) if kind in ('guitar','bass') else [],'stringCount':count,'capo':arr.get('capo',0),
+                    'centOffset':arr.get('centOffset',0),'offset':0},
+        'notes':[_wire_note(n,keys=keys) for n in sorted(arr.get('notes',[]),key=lambda n:n.get('time',0))],
+        'chords':[_wire_chord(c,keys=keys) for c in sorted(arr.get('chords',[]),key=lambda c:c.get('time',0))],
+        'anchors':[{'time':a.get('time',0),'fret':a.get('fret',1),'width':a.get('width',4)} for a in sorted(arr.get('anchors',[]),key=lambda a:a.get('time',0))],
+        'handShapes':handshapes,'chordTemplates':templates,'stringCount':count,
+        'beats':[{'time':b.get('time',0),'measure':b.get('measure',-1)} for b in beats],
+        'sections':[{'name':x.get('name',''),'time':x.get('start_time',x.get('time',0))} for x in sections],
+    }
+
+
 def _chord(chord,index,keys=False):
     out = {k:copy.deepcopy(v) for k,v in chord.items() if k not in ('t','id','notes')}
     out.update(time=chord.get('t',0),chord_id=chord.get('id'),_wire=copy.deepcopy(chord))
