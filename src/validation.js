@@ -172,7 +172,8 @@ export function findChartIssues(project, options = {}) {
           if (destination === undefined || destination === -1 || destination === null) continue;
           if (!Number.isInteger(destination) || destination < 0 || destination > maxFret) emit('slide.destination', `Invalid ${label} slide destination fret.`, {item: note, path: location, time});
           if (destination === fret) emit('slide.stationary', 'Slide destination equals the starting fret.', {item: note, path: location, time, severity: 'warning'});
-          if (!(sustain > epsilon)) emit('slide.noSustain', 'Slide needs a non-zero duration.', {item: note, path: location, time, severity: 'warning'});
+          // Rocksmith 2014 cannot show a slide with no length, so its export treats it as an error.
+          if (!(sustain > epsilon)) emit('slide.noSustain', 'Slide needs a non-zero duration.', {item: note, path: location, time, severity: target === 'cdlc' ? 'error' : 'warning'});
         }
         const destinationPitch = getTechnique(note, 'force_destination_pitch', 'forceDestPitch');
         if (destinationPitch !== undefined && ![0,1,2].includes(destinationPitch)) emit('destinationPitch.invalid', 'Force destination pitch must be Auto (0), On (1) or Off (2).', {item: note, path: location, time});

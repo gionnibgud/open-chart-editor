@@ -90,6 +90,12 @@ test('anchor ordering never changes chart and phrase start requires a colocated 
   assert.deepEqual(issuesWith(p,'phrase.anchor').map(x=>x.note),['C']);assert.deepEqual(p,before);
 });
 
+test('a slide with no length is an error for Rocksmith 2014 and a warning for FeedBack',()=>{
+  const p=chart(),a=p.arrangements[0];a.anchors=[{time:0,fret:1,width:4}];a.notes=[note('s',1,0,3,0,{slide_to:5})];
+  const find=target=>findChartIssues(p,{target}).filter(i=>i.code==='slide.noSustain').map(i=>i.severity);
+  assert.deepEqual(find('cdlc'),['error']);assert.deepEqual(find('feedpak'),['warning']);
+});
+
 test('link-next tolerates millisecond rounding from chart XML',()=>{
   const p=chart(),a=p.arrangements[0];
   a.notes=[note('a',1,0,5,0.106,{link_next:true}),note('b',1.107,0,7,0.2),note('c',2,1,5,0.1,{link_next:true}),note('d',2.11,1,7)];

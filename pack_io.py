@@ -2969,7 +2969,7 @@ def _load_musicxml(data,filename='Untitled.musicxml'):
         arrangements.append(arr)
         dynamics=_musicxml_dynamics.NumericDynamics(pid,kind,event_limit=_musicxml_dynamics.MAX_EVENTS)
         dynamics_contexts.append(dynamics)
-        divisions=Fraction(1); measure_start=Fraction(0); meter=(4,4); transpose=0; pending_ties={}
+        divisions=Fraction(1); measure_start=Fraction(0); meter=(4,4); transpose=0; pending_ties={}; pending_slides={}
         for measure_index,measure in enumerate(part.findall('measure')):
             cursor=measure_start; maximum=measure_start; previous_start=None
             for child in measure:
@@ -3084,6 +3084,19 @@ def _load_musicxml(data,filename='Untitled.musicxml'):
                             record.update(string=count-int(technical.findtext('string')),fret=int(technical.findtext('fret')),pitch=pitch)
                         else:
                             record.update(string=pitch//24,fret=pitch%24,pitch=pitch)
+                    # A <slide> or <glissando> from one tab note to the next on the same string is a
+                    # pitched slide to that note's fret. Stops are read before starts: a note can do both.
+                    if tab:
+                        marks=child.findall('./notations/slide')+child.findall('./notations/glissando')
+                        for mark in sorted(marks,key=lambda m:m.get('type')!='stop'):
+                            slot=(staff,voice,mark.get('number','1'))
+                            if mark.get('type')=='stop':
+                                origin=pending_slides.pop(slot,None)
+                                if origin is None:continue
+                                if origin['string']==record['string'] and origin['fret']!=record['fret']:origin['techniques']['slide_to']=record['fret']
+                                else:warnings.add(f'{name}: a slide that changes string (or keeps its fret) was left as plain notes')
+                            elif mark.get('type')=='start':
+                                pending_slides[slot]=record
                     ties={t.get('type') for t in child.findall('tie')+child.findall('./notations/tied')}
                     key=(staff,voice,record['pitch'])
                     if 'stop' in ties:
@@ -3106,6 +3119,8 @@ def _load_musicxml(data,filename='Untitled.musicxml'):
             end_quarter=max(end_quarter,measure_start)
         if pending_ties:
             raise ProjectError(f'MusicXML part {name} contains unfinished ties')
+        if pending_slides:
+            warnings.add(f'{name}: {len(pending_slides)} slide{"s" if len(pending_slides)>1 else ""} with no end note left as plain notes')
     _musicxml_dynamics.validate_collection(dynamics_contexts)
     # First attacks survive tie merging. Resolve after all events are known, so
     # backup/forward and chord serialization order never become playback order.

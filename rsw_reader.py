@@ -55,12 +55,17 @@ VERSIONS = (21, 22, 23)
 MAX_BYTES = 64 * 1024 * 1024
 MAX_ITEMS = 1_000_000
 CRC_SEED = 0xFFFFFFFB
-# Note flag bits, matched against the charts the projects were made from.
-# Note flag bits, as RS2014 XML attributes.
+# Note flag bits, as RS2014 XML attributes (slap and pop are 'slap' and 'pluck' there).
 FLAGS = {2: 'linkNext', 3: 'accent', 4: 'ignore', 5: 'palmMute', 6: 'mute', 8: 'harmonic', 9: 'harmonicPinch',
-         10: 'hammerOn', 11: 'pullOff', 12: 'tap', 19: 'tremolo', 22: 'vibrato'}
-# Bit 12 (tap) is inferred, not documented: in the projects seen, every note with it also has a
-# right-hand finger, in rising runs high on the neck.
+         10: 'hammerOn', 11: 'pullOff', 12: 'tap', 16: 'slap', 17: 'pluck', 19: 'tremolo', 22: 'vibrato'}
+# Checked across 50 user projects (2026-10-26). Bit 12 (tap): only in phrases named "Tap Part"
+# and in tap-pull-hammer runs. Bit 8 (natural harmonic): a bass G-string 5th-fret harmonic.
+# Bit 4 (ignore): fast trills, effect slides and muted runs. The right-hand finger (only ever
+# 1) marks notes the right hand plays: taps, and hammer-ons after a tap. Hide-name (checked
+# against 126 server hand shapes): the server chart leaves chordName empty and drops the name
+# from the refId, as the -nop copy does here. A labelled test project, one technique per note,
+# confirms every note bit above, including slap (16) and pop (17); a tap also sets the
+# right-hand finger to 1.
 CHORD_MEMBER = 0      # the note is one of a chord's notes (its own sustain, techniques and fingers)
 CONTINUES = 1         # continues the previous note's sustain (that note has linkNext)
 UNPITCHED_SLIDE = 18

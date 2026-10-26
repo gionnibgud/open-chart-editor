@@ -123,7 +123,7 @@ class ReaderTests(unittest.TestCase):
         self.assertAlmostEqual(rr._beats(late['song'], late['arrangements'][0])[0]['time'], 0.468, places=5)
 
     def test_note_flags(self):
-        flags = {'accent': 1 << 3, 'mute': 1 << 6, 'harmonic': 1 << 8, 'harmonicPinch': 1 << 9, 'tremolo': 1 << 19}
+        flags = {'accent': 1 << 3, 'mute': 1 << 6, 'harmonic': 1 << 8, 'harmonicPinch': 1 << 9, 'slap': 1 << 16, 'pluck': 1 << 17, 'tremolo': 1 << 19}
         notes = [(1.0 + i, 0.0, 3, 0, -1, -1, [], 100, bit) for i, bit in enumerate(flags.values())]
         notes.append((9.0, 0.0, 3, 0, -1, -1, [], 100, (1 << 8) | (1 << 9)))     # both: harmonic wins
         rsw = rr.parse_rsw(build(primary=level(notes)))
