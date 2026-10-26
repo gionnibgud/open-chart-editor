@@ -21,3 +21,4 @@
 .ws-combine{border-collapse:collapse;margin:6px 0;width:100%}.ws-combine th,.ws-combine td{padding:3px 6px;border-bottom:1px solid var(--ws-edge);text-align:left}.ws-app dialog .ws-combine input[type=number]{width:52px}.ws-app dialog .ws-combine input:not([type=number]):not([type=checkbox]),.ws-app dialog .ws-combine select{width:170px}.ws-combine-overlaps{max-height:38vh;overflow:auto}.ws-error{color:#ff8a80}
 .ws-toolbar #ws-hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
 .ws-split-list{display:flex;flex-direction:column;gap:4px;margin:8px 0}.ws-split-list label{display:flex;gap:6px;align-items:center}
+.ws-key-table{max-height:52vh;overflow:auto;margin:8px 0;border:1px solid var(--ws-edge)}.ws-key-table table{border-collapse:collapse;width:100%}.ws-key-table th{text-align:left;padding:6px 8px 2px;color:var(--ws-dim)}.ws-key-table td{padding:2px 8px;border-top:1px solid var(--ws-edge)}.ws-key-table kbd{white-space:nowrap}

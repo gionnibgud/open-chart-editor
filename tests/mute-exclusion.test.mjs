@@ -12,7 +12,7 @@ function handler(text,ids,initial=muteFixture()){
  const lines=text.split(/\r?\n/),extract=prefix=>{const found=lines.filter(line=>line.trim().startsWith(prefix));assert.equal(found.length,1,prefix);return found[0];};
  const selected=[extract('const editableNotes='),extract('const selected='),extract('const change='),extract('function editSelection('),extract('function toggleTechnique(')].join('\n');
  return new Function('initial','ids','History','snapshotDifficulty','synchronizeChordVoicings','techniqueEnabled','setTechniqueFlag',`
-  let history=new History(initial),selection=new Set(ids),dirty=false;
+  let history=new History(initial),selection=new Set(ids),dirty=false,techniqueToggleEach=false;
   const project=()=>history.project,arrangement=()=>project().arrangements[0],countIn={cancel(){}},audio={setProject(){}},syncProjectAudio=()=>{},render=()=>{},queueDraft=()=>{};
   ${selected}
   return {toggle:toggleTechnique,project,history,selected,select(ids){selection=new Set(ids);}};

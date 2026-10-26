@@ -50,6 +50,7 @@ import {buildAndPlaytest,endPlaytest,removePreview} from './playtest.js';
 import {insertChordZone,resizeChordZone,setChordZoneEnd,splitChordInstances,toggleChordStrum,deleteChordTemplate,chordZoneContents,moveChordZone,chordZoneStyle,setChordZoneStyle,applyDefaultChordName,chordStrumPresentation} from './chord-tools.js';
 import {applySustainEdits,steppedSustain} from './sustain-policy.js';
 import {adjustBendAtCursor} from './bend-tools.js';
+import {ACTIONS,PROFILES,PROFILE_IDS,GLOBAL_COMMANDS,baseCommand,comboFromEvent,displayCombo,buildKeymap,isStructural,BROWSER_RESERVED} from './keymaps.js';
 import {generateFingerprintZones,removeFingerprintZones} from './fingerprint-zones.js';
 import {SLOT_CATALOG,GEAR_CATALOG,gearsForSlot,loadGearCatalog,createTone,setGear,setKnob,importTone,exportTone,copyTone,allocateTone,removeTone,TonePreview,toneAuditionPlan} from './tone-rack.js';
 
@@ -104,6 +105,10 @@ function mount(root){
  let chordDrag=null,suppressChordClickUntil=0;
  let viewZoom={tab:110,tempo:110},timelineView='tab',laneScales={guitar:1,bass:1,keys:1,drums:1},rollOrientations={keys:'left',drums:'left'};
  let sustainOptions={clampNext:false,gutterEnabled:false,gutterBeats:.125},sustainProvenance=new WeakMap();
+ // Keyboard profile, the user's per-profile changes and the 'each note on its own' option.
+ let keyProfile='oce',keyOverrides={},techniqueToggleEach=false,insertHeld=false,insertUsed=false,keymapCache=null;
+ const keymap=()=>{const overrides=keyOverrides[keyProfile]||{},key=keyProfile+JSON.stringify(overrides);if(keymapCache?.key!==key)keymapCache={key,...buildKeymap(keyProfile,overrides)};return keymapCache;};
+ const keysFor=id=>keymap().byCommand.get(id)||[];
  let staveTheme='dark',showRests=true,staveMode='select',staveLength=1,staveHits=[],staveMetricsCache=null,staveKeyCache=null;
 let history=new History(demoProject()),arrangementId=history.project.arrangements[0].id,view='tab',inspector='settings',bottom='errors',selection=new Set(),cursor=0,lane=0,lastFret=3,zoom=110,snap=4,tool='pointer',clipboard=[],drag=null,dirty=false,saveHandle=null,lastSaveFormat='json',exportOptions={},lastDestination='',tapTimes=[],waveform=null,loadedAudio=null,draftTimer=null;
  let toneImportGeneration=0,tempoImportGeneration=0,chartImportGeneration=0;
@@ -722,25 +727,125 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   const gutterBeats=Number($('sustain-gap').value);if(!Number.isFinite(gutterBeats)||gutterBeats<0||gutterBeats>16)throw Error('Choose a gutter between 0 and 16 beats');
   sustainOptions={clampNext:$('sustain-clamp').checked,gutterEnabled:$('sustain-gutter').checked,gutterBeats};sustainProvenance=new WeakMap();persistPreferences();status('Sustain editing preferences updated');
  }
- function toggleTechnique(key){const enabled=!selected().every(n=>techniqueEnabled(n,key));editSelection(key.replaceAll('_',' '),n=>{if(key==='vibrato')n.techniques[key]=enabled?80:0;else setTechniqueFlag(n,key,enabled);if(enabled&&key==='palm_mute')setTechniqueFlag(n,'fret_hand_mute',false);if(enabled&&key==='fret_hand_mute')setTechniqueFlag(n,'palm_mute',false);});}
- // Shift+S: no slide -> slide to the next note on the string -> unpitched slide -> no slide.
- // With no later note on that string a pitched slide goes up 2 frets and an unpitched one 5
- // (down when there is room). A note with no length gets one: up to that next note, or a beat.
- function cycleSlide(){
-  const a=arrangement();if(!['guitar','bass'].includes(a.type))throw Error('Slides are for guitar and bass parts');
-  const notes=selected();if(!notes.length)throw Error('Select one or more notes first');
-  const on=(n,key)=>(n.techniques[key]??-1)>=0,state=notes.every(n=>on(n,'slide_to'))?'pitched':notes.every(n=>on(n,'slide_unpitch_to'))?'unpitched':'none';
-  const next=state==='none'?'pitched':state==='pitched'?'unpitched':'none',all=editableNotes(),top=24-(a.capo||0),beats=project().beats,plan=new Map();
+ function toggleTechnique(key){const all=!selected().every(n=>techniqueEnabled(n,key));editSelection(key.replaceAll('_',' '),n=>{const enabled=techniqueToggleEach?!techniqueEnabled(n,key):all;if(key==='vibrato')n.techniques[key]=enabled?80:0;else setTechniqueFlag(n,key,enabled);if(enabled&&key==='palm_mute')setTechniqueFlag(n,'fret_hand_mute',false);if(enabled&&key==='fret_hand_mute')setTechniqueFlag(n,'palm_mute',false);});}
+ // Slides go to the next note on the string. With no later note there, a pitched slide goes up 2
+ // frets and an unpitched one 5 (down when there is room). A note with no length gets one: up to
+ // that next note, or a beat.
+ function slideNotes(){const a=arrangement();if(!['guitar','bass'].includes(a.type))throw Error('Slides are for guitar and bass parts');const notes=selected();if(!notes.length)throw Error('Select one or more notes first');return notes;}
+ function slideLength(n,after){const beats=project().beats;return n.sustain>0?n.sustain:after?after.time-n.time:timeAt(beats,beatAt(beats,n.time)+1)-n.time;}
+ function applySlide(kind,notes=slideNotes()){
+  const a=arrangement(),all=editableNotes(),top=24-(a.capo||0),plan=new Map();
   for(const n of notes){
    const after=all.filter(o=>o!==n&&o.string===n.string&&o.time>n.time+1e-4).sort((x,y)=>x.time-y.time)[0];
-   const target=after&&after.fret!==n.fret?after.fret:next==='pitched'?(n.fret+2<=top?n.fret+2:n.fret-2):(n.fret>5?n.fret-5:Math.min(top,n.fret+5));
-   plan.set(n.id,{target:Math.max(0,Math.min(top,target)),sustain:n.sustain>0?n.sustain:after?after.time-n.time:timeAt(beats,beatAt(beats,n.time)+1)-n.time});
+   const target=after&&after.fret!==n.fret?after.fret:kind==='pitched'?(n.fret+2<=top?n.fret+2:n.fret-2):(n.fret>5?n.fret-5:Math.min(top,n.fret+5));
+   plan.set(n.id,{target:Math.max(0,Math.min(top,target)),sustain:slideLength(n,after)});
   }
-  editSelection(next==='none'?'Remove slide':next==='pitched'?'Slide to next note':'Unpitched slide',n=>{
+  editSelection(kind==='none'?'Remove slide':kind==='pitched'?'Slide to next note':'Unpitched slide',n=>{
    const {target,sustain}=plan.get(n.id);n.techniques.slide_to=-1;n.techniques.slide_unpitch_to=-1;
-   if(next!=='none'){n.techniques[next==='pitched'?'slide_to':'slide_unpitch_to']=target;n.sustain=sustain;}
+   if(kind!=='none'){n.techniques[kind==='pitched'?'slide_to':'slide_unpitch_to']=target;n.sustain=sustain;}
   });
-  status(next==='none'?'Slide removed':`${next==='pitched'?'Slide':'Unpitched slide'} on ${notes.length} note${notes.length>1?'s':''} · Shift+S again for ${next==='pitched'?'unpitched':'none'}`);
+ }
+ // Cycle: no slide -> slide to the next note -> unpitched slide -> no slide.
+ function cycleSlide(){
+  const notes=slideNotes(),on=(n,key)=>(n.techniques[key]??-1)>=0,state=notes.every(n=>on(n,'slide_to'))?'pitched':notes.every(n=>on(n,'slide_unpitch_to'))?'unpitched':'none';
+  const next=state==='none'?'pitched':state==='pitched'?'unpitched':'none';applySlide(next,notes);
+  const again=keysFor('slide-cycle')[0];
+  status(next==='none'?'Slide removed':`${next==='pitched'?'Slide':'Unpitched slide'} on ${notes.length} note${notes.length>1?'s':''}${again?` · ${displayCombo(again)} again for ${next==='pitched'?'unpitched':'none'}`:''}`);
+ }
+ function toggleSlide(kind){const notes=slideNotes(),key=kind==='pitched'?'slide_to':'slide_unpitch_to';applySlide(notes.every(n=>(n.techniques[key]??-1)>=0)?'none':kind,notes);}
+ // EOF: move the pitched slide target a fret up or down; back on the note's own fret removes it.
+ function nudgeSlide(delta){
+  const notes=slideNotes(),top=24-(arrangement().capo||0),all=editableNotes();
+  editSelection('Move slide target',n=>{
+   const current=(n.techniques.slide_to??-1)>=0?n.techniques.slide_to:n.fret,next=Math.max(0,Math.min(top,current+delta));
+   n.techniques.slide_unpitch_to=-1;n.techniques.slide_to=next===n.fret?-1:next;
+   if(n.techniques.slide_to>=0&&!(n.sustain>0))n.sustain=slideLength(n,all.filter(o=>o!==n&&o.string===n.string&&o.time>n.time+1e-4).sort((x,y)=>x.time-y.time)[0]);
+  });
+  if(notes.length)status(`Slide target ${notes.every(n=>(n.techniques.slide_to??-1)<0)?'removed':'moved'}`);
+ }
+ // Every keyboard command (ids from keymaps.js). Commands that are also menu items keep the
+ // menu's action name.
+ const MENU_COMMANDS=['save','saveas','open','new','import-chart','tempo-import','arrangement-info','undo','redo','copy','paste','selectall','select-like','selectphrase',
+  'tab','tempo','vocals','split-view','mixer','scratch','errors','toggle-bottom','help','play','loop','metronome','guide','playtest-cursor','playtest-start','snap-options','resnap',
+  'anchor','phrase','phrase-remove','section','tone','meter','beat-add','chord','strum','chord-zone','chord-zone-cycle','chord-zone-hide','chord-split','slide-cycle','bend',
+  'sustain-toggle','sustain-less','sustain-more','sustain-gutter','shift-left','shift-right','transpose-up','transpose-down','string-up','string-down','position-up','position-down'];
+ let commandTable=null;
+ function commands(){
+  if(commandTable)return commandTable;
+  const toggle=key=>()=>toggleTechnique(key);
+  return commandTable={
+   ...Object.fromEntries(MENU_COMMANDS.map(id=>[id,()=>actions[id]()])),
+   cut:async()=>{await actions.copy();await actions.delete();},
+   'select-next-note':()=>selectNeighbourNote(1),'select-prev-note':()=>selectNeighbourNote(-1),
+   'arrangement-next':()=>stepArrangement(1),'arrangement-prev':()=>stepArrangement(-1),
+   'inspector-properties':()=>showInspector('properties'),'inspector-chords':()=>showInspector('chords'),'inspector-settings':()=>showInspector('settings'),
+   'zoom-in':()=>nudgeInput('zoom',1.25,true),'zoom-out':()=>nudgeInput('zoom',0.8,true),
+   'speed-down':()=>nudgeInput('speed',-5),'speed-up':()=>nudgeInput('speed',5),'volume-down':()=>nudgeInput('master',-5),'volume-up':()=>nudgeInput('master',5),
+   'play-from-start':async()=>{setCursor(0);await actions.play();},
+   ...Object.fromEntries(['grid','beat','measure','note','anchor'].flatMap(kind=>[[`cursor-next-${kind}`,()=>moveCursor(kind,1)],[`cursor-prev-${kind}`,()=>moveCursor(kind,-1)]])),
+   'cursor-first-note':()=>moveCursor('first'),'cursor-last-note':()=>moveCursor('last'),
+   ...Object.fromEntries(Array.from({length:8},(_,i)=>[`lane-${i+1}`,()=>pickString(i+1)])),
+   'snap-finer':()=>stepSnap(1),'snap-coarser':()=>stepSnap(-1),
+   ...Object.fromEntries([0,1,2,3,4].map(f=>[`finger-${f}`,()=>setFinger(f)])),
+   'tech-palm-mute':toggle('palm_mute'),'tech-fret-hand-mute':toggle('fret_hand_mute'),'tech-mute-cycle':()=>cycleTechnique(['palm_mute','fret_hand_mute']),
+   'tech-hopo-cycle':()=>cycleTechnique(['hammer_on','pull_off']),'tech-hammer-on':toggle('hammer_on'),'tech-pull-off':toggle('pull_off'),
+   'tech-harmonic-cycle':()=>cycleTechnique(['harmonic','harmonic_pinch']),'tech-harmonic':toggle('harmonic'),'tech-pinch-harmonic':toggle('harmonic_pinch'),
+   'tech-slap-pop-cycle':()=>cycleTechnique(lane<arrangement().stringCount/2?['slap','pluck']:['pluck','slap']),'tech-slap':toggle('slap'),'tech-pop':toggle('pluck'),
+   'tech-tap':toggle('tap'),'tech-accent':toggle('accent'),'tech-vibrato':toggle('vibrato'),'tech-tremolo':toggle('tremolo'),'tech-ignore':toggle('ignore'),'tech-link-next':toggle('link_next'),
+   'tech-slide':()=>toggleSlide('pitched'),'tech-unpitched-slide':()=>toggleSlide('unpitched'),'tech-slide-up':()=>nudgeSlide(1),'tech-slide-down':()=>nudgeSlide(-1),
+   'bend-lower':()=>change('Lower bend at cursor',()=>adjustBendAtCursor(arrangement(),selection,cursor,-.5)),
+   'transpose-octave-up':()=>change('Transpose up an octave',()=>transposeSelection(arrangement(),selection,12)),
+   'transpose-octave-down':()=>change('Transpose down an octave',()=>transposeSelection(arrangement(),selection,-12)),
+   ...Object.fromEntries(Array.from({length:23},(_,f)=>[`fret-${f}`,()=>insertDisplayedFret(f)])),
+  };
+ }
+ // Run a keyboard command. A ':each' command is a technique toggle that sets each selected note on
+ // its own. Viewing and playback commands also work while the part cannot be edited.
+ async function runCommand(id){
+  const base=baseCommand(id),run=commands()[base];
+  if(!run)throw Error(`No keyboard command ${base}`);
+  if(!chartEditing()&&!GLOBAL_COMMANDS.has(base)){status(arrangement().locked?`${arrangement().name} is locked; Arrangement > Lock / unlock to edit it`:'This part cannot be edited here',true);return;}
+  if(id===base)return run();
+  const saved=techniqueToggleEach;techniqueToggleEach=true;try{await run();}finally{techniqueToggleEach=saved;}
+ }
+ function showInspector(next){inspectorVisible=inspector!==next||!inspectorVisible;inspector=next;applyLayout();renderInspector();draw();}
+ function nudgeInput(id,amount,scale=false){const el=$(id),min=Number(el.min),max=Number(el.max),value=scale?Number(el.value)*amount:Number(el.value)+amount;el.value=String(Math.max(min,Math.min(max,Math.round(value))));el.dispatchEvent(new Event('input',{bubbles:true}));}
+ function stepSnap(direction){const values=[0,1,2,3,4,6,8],index=Math.max(0,values.indexOf(snap));snap=values[Math.max(0,Math.min(values.length-1,index+direction))];$('snap').value=snap;draw();}
+ function moveCursor(kind,direction=1){
+  const beats=project().beats,after=t=>t>cursor+.001,before=t=>t<cursor-.001,pick=times=>direction>0?times.find(after):times.findLast(before);
+  let target;
+  if(kind==='grid')target=timeAt(beats,beatAt(beats,cursor)+direction/(snap||4));
+  else if(kind==='beat'){const b=beatAt(beats,cursor);target=timeAt(beats,direction>0?Math.floor(b+1e-6)+1:Math.ceil(b-1e-6)-1);}
+  else if(kind==='measure')target=pick(beats.filter(b=>b.measure>=0).map(b=>b.time));
+  else if(kind==='anchor')target=pick(arrangement().anchors.map(x=>x.time).sort((x,y)=>x-y));
+  else{const times=[...new Set(editableNotes().map(n=>n.time))].sort((x,y)=>x-y);target=kind==='first'?times[0]:kind==='last'?times.at(-1):pick(times);}
+  if(!Number.isFinite(target))return;
+  setCursor(Math.max(0,Math.min(project().duration,target)));
+  const x=xOf(cursor),g=geometry();if(x<g.left||x>g.width-40)setTimeScroll(Math.max(0,cursor*zoom-100));
+ }
+ function selectNeighbourNote(direction){
+  const notes=editableNotes().slice().sort((x,y)=>x.time-y.time||x.string-y.string),chosen=selected(),ref=chosen.length?(direction>0?Math.max(...chosen.map(n=>n.time)):Math.min(...chosen.map(n=>n.time))):cursor;
+  const next=direction>0?notes.find(n=>n.time>ref+1e-4||(!chosen.length&&n.time>=ref)):notes.findLast(n=>n.time<ref-1e-4);
+  if(!next)return;selection=new Set([next.id]);selectionRange=null;markerSelection=null;cursor=next.time;inspector='properties';render();
+ }
+ function stepArrangement(direction){const el=$('arrangement'),count=el.options.length;if(count<2)return;el.selectedIndex=(el.selectedIndex+direction+count)%count;el.dispatchEvent(new Event('change',{bubbles:true}));}
+ // Charter numbers strings from the highest, as tab does.
+ function pickString(number){const a=arrangement();if(!['guitar','bass'].includes(a.type)||number>a.stringCount)return;lane=a.stringCount-number;draw();}
+ function setFinger(finger){if(!['guitar','bass'].includes(arrangement().type))return;editSelection('Set left finger',n=>n.techniques.left_hand=finger);}
+ // Menu items show the keys of the current profile.
+ function refreshMenuKeys(){
+  const known=new Set(ACTIONS.map(x=>x.id));
+  for(const button of root.querySelectorAll('.ws-menu button[data-action]')){
+   if(!known.has(button.dataset.action))continue;
+   const keys=keysFor(button.dataset.action);let kbd=button.querySelector('kbd');
+   if(!keys.length){kbd?.remove();continue;}
+   if(!kbd){kbd=document.createElement('kbd');button.append(' ',kbd);}
+   kbd.textContent=displayCombo(keys[0]).replaceAll('+',' ');
+  }
+ }
+ function keyboardHelp(){
+  const map=keymap(),groups=[...new Set(ACTIONS.map(x=>x.group))].filter(group=>group!=='Frets'||map.byCommand.has('fret-0'));
+  return `<h3>Keys · ${esc(PROFILES[keyProfile].label)} profile</h3><p class="ws-muted">Change the profile or any key under Edit &gt; Keyboard shortcuts. The workflow notes below name the Open Chart Editor keys.</p><dl class="ws-help">${groups.map(group=>{const rows=ACTIONS.filter(x=>x.group===group&&map.byCommand.has(x.id)).map(x=>`${esc(x.label)}: ${map.byCommand.get(x.id).map(displayCombo).join(' or ')}`);return rows.length?`<dt>${esc(group)}</dt><dd>${rows.join(' · ')}</dd>`:'';}).join('')}</dl>`;
  }
  function cycleTechnique(keys){editSelection('Cycle technique',n=>{const active=keys.findIndex(k=>techniqueEnabled(n,k));keys.forEach(k=>setTechniqueFlag(n,k,false));if(active+1<keys.length)setTechniqueFlag(n,keys[active+1],true);});}
  function moveSelected(delta){const notes=selected(),minimum=Math.min(...notes.map(n=>n.time));delta=Math.max(delta,-minimum);const chords=arrangement().chords.filter(c=>(c.notes||[]).some(n=>selection.has(n.id)));change('Move notes',()=>{for(const n of notes)if(!chords.some(c=>c.notes.includes(n)))n.time+=delta;for(const c of chords){c.time+=delta;for(const n of c.notes)n.time+=delta;}});}
@@ -1389,6 +1494,27 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   'chord-strip-rotate':()=>{chordStrip={...chordStrip,visible:true,open:true,upright:!chordStrip.upright};persistPreferences();draw();status(`Chord diagrams ${chordStrip.upright?'upright':'tab-style'}`);},
   'chord-strip-show':()=>{chordStrip={...chordStrip,visible:!chordStrip.visible};persistPreferences();draw();},
   'slide-cycle':()=>cycleSlide(),
+  'keyboard-settings':async()=>{
+   let profile=keyProfile;const draft=clone(keyOverrides),label=id=>ACTIONS.find(x=>x.id===id)?.label||id;
+   const rows=()=>{const map=buildKeymap(profile,draft[profile]||{}),changes=draft[profile]||{};return [...new Set(ACTIONS.map(x=>x.group))].map(group=>`<tr><th colspan="3">${esc(group)}</th></tr>`+ACTIONS.filter(x=>x.group===group).map(x=>{const keys=map.byCommand.get(x.id)||[],changed=Object.hasOwn(changes,x.id),reserved=keys.some(k=>BROWSER_RESERVED.has(k));return `<tr><td>${esc(x.label)}</td><td>${keys.length?keys.map(k=>`<kbd>${esc(displayCombo(k))}</kbd>`).join(' '):'<span class="ws-muted">none</span>'}${changed?' <span class="ws-muted">(changed)</span>':''}${reserved?' <span title="A browser tab may keep this key for itself; it works in the FeedBack desktop app">⚠</span>':''}</td><td><button type="button" data-key-set="${x.id}">Set…</button>${changed?` <button type="button" data-key-reset="${x.id}">Reset</button>`:''}</td></tr>`;}).join('')).join('');};
+   const pending=dialog('Keyboard shortcuts',`<label>Keyboard profile<select id="ws-key-profile">${PROFILE_IDS.map(id=>`<option value="${id}" ${id===profile?'selected':''}>${esc(PROFILES[id].label)}</option>`).join('')}</select></label><p class="ws-muted" id="ws-key-note"></p><label><input type="checkbox" id="ws-key-each" ${techniqueToggleEach?'checked':''}> Technique keys set each selected note on its own, instead of making them all the same</label><p class="ws-muted">Set… waits for the next key you press: Escape cancels, Backspace removes the command's keys. A key given to one command is taken from any other. ⚠ marks keys a browser tab may keep for itself.</p><div class="ws-key-table"><table><tbody id="ws-key-rows"></tbody></table></div><button type="button" id="ws-key-reset-all">Reset all changes for this profile</button>`,'Apply',{allowStateChanges:true});
+   const paint=(note=PROFILES[profile].note)=>{$('key-rows').innerHTML=rows();$('key-note').textContent=note;};paint();
+   on($('key-profile'),'change',e=>{profile=e.target.value;paint();});
+   on($('key-reset-all'),'click',()=>{delete draft[profile];paint('All keys back to the profile');});
+   on($('key-rows'),'click',e=>{
+    const reset=e.target.closest('[data-key-reset]');if(reset){delete draft[profile]?.[reset.dataset.keyReset];paint();return;}
+    const set=e.target.closest('[data-key-set]');if(!set)return;set.textContent='Press a key…';
+    const capture=ev=>{const combo=comboFromEvent(ev);if(!combo)return;ev.preventDefault();ev.stopPropagation();window.removeEventListener('keydown',capture,true);const id=set.dataset.keySet;
+     if(combo==='Escape'){paint();return;}draft[profile]??={};
+     if(combo==='Backspace'||combo==='Delete'){draft[profile][id]=[];paint(`${label(id)}: no key`);return;}
+     const previous=buildKeymap(profile,draft[profile]).byCombo.get(combo);draft[profile][id]=[combo];
+     paint(previous&&previous!==id?`${displayCombo(combo)} moved from “${label(previous)}” to “${label(id)}”`:`${label(id)}: ${displayCombo(combo)}`);};
+    window.addEventListener('keydown',capture,true);
+   });
+   if(!await pending)return;
+   keyProfile=profile;techniqueToggleEach=$('key-each').checked;keyOverrides=draft;keymapCache=null;persistPreferences();refreshMenuKeys();
+   status(`Keyboard: ${PROFILES[profile].label}${Object.keys(draft[profile]||{}).length?' with your changes':''}`);
+  },
   'toggle-bottom':()=>{bottomVisible=!bottomVisible;applyLayout();persistPreferences();if(bottomVisible)renderBottom();draw();},'reset-layout':()=>{inspectorVisible=true;inspectorWidth=280;bottomHeight=155;bottomVisible=true;applyLayout();renderBottom();draw();},scratch:()=>{ensureScratch();bottom='scratch';revealBottom();renderBottom();},'scratch-focus':()=>{countIn.cancel();stopMidi();const next=arrangement().editorOnly?mainPart():ensureScratch();arrangementId=next.id;selection.clear();selectionRange=null;markerSelection=null;fitPianoRange();audio.setProject(project(),arrangement());bottom='scratch';render();},mixer:()=>{bottom='mixer';revealBottom();renderBottom();},stave:()=>{bottom='stave';if(bottomHeight<300){bottomHeight=300;persistPreferences();}revealBottom();applyLayout();renderBottom();draw();},history:()=>{bottom='history';revealBottom();renderBottom();},errors:()=>{bottom='errors';revealBottom();renderBottom();},
   play:async()=>{if(audio.isPlaying||audio.preparing||countIn.isCounting||localStartPending||recordStartPending){const counting=countIn.isCounting,preparing=audio.preparing||localStartPending||recordStartPending;countIn.cancel();stopMidi();if(!counting)cursor=audio.currentTime;audio.pause();if(counting)status('Count-in cancelled');else if(preparing){qualityMessage='Preview preparation cancelled';if($('quality-status'))$('quality-status').textContent=qualityMessage;status(qualityMessage);}}else await startLocalTransport();updateClock();},
   'count-in':async()=>{if(await dialog('Local preview count-in',`<label><input id="ws-count-in-enabled" type="checkbox" ${countInOptions.enabled?'checked':''}>Enable before local playback and MIDI recording</label><label>Count in<select id="ws-count-in-mode"><option value="bars" ${countInOptions.beats==null?'selected':''}>Bars of the current meter</option><option value="beats" ${countInOptions.beats!=null?'selected':''}>Meter pulses</option></select></label>${field('Number','count-in-count',countInOptions.beats??countInOptions.bars,'number','min="1" max="128"')}<p class="ws-muted">Original preview clicks follow the meter and practice speed at the cursor. Source audio, chart times and exports stay unchanged.</p>`)){const number=Number($('count-in-count').value),options={enabled:$('count-in-enabled').checked,bars:$('count-in-mode').value==='bars'?number:1,beats:$('count-in-mode').value==='beats'?number:null};planCountIn(project(),cursor,options);countIn.cancel();countInOptions=options;status(options.enabled?`Count-in enabled: ${number} ${options.beats==null?'bar(s)':'meter pulses'}`:'Count-in disabled');}},
@@ -1511,7 +1637,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   'beat-remove':()=>change('Remove beat marker',p=>applyGrid(p,removeBeat(p.beats,Math.max(0,Math.round(beatAt(p.beats,cursor)))),false)),
   'tempo-fit':()=>{if(audio.audioDuration<=0)throw Error('Import audio first');change('Fit beat map',p=>{const next=p.beats.map((b,i)=>({...b,time:i*audio.audioDuration/(p.beats.length-1)}));applyGrid(p,next,$('move-notes').checked);});},
   'tempo-reset':async()=>{if(await dialog('Constant BPM',field('BPM','tempo-bpm',$('bpm-display').textContent,'number','min="10" max="500" step="0.01"')+'<p class="ws-muted">Align mode keeps notes at their recording times. Enable “Move notes with beats” to preserve their musical positions.</p>'))change('Set constant tempo',p=>setTempo(p,Number($('tempo-bpm').value),{moveNotes:$('move-notes').checked}));},
-  help:()=>dialog('Editor keyboard and workflow','<dl class="ws-help"><dt>Timeline</dt><dd>Click to place cursor. Double-click to enter a note. Ctrl+wheel zooms around the pointer; Shift+wheel pans time; Alt+wheel changes lane height. Tab and Tempo retain separate zoom. Shift-click adds to selection. Drag selected notes to move; drag empty space to select.</dd><dt>Fret entry</dt><dd>Numbers use the selected fret-display convention. In physical mode, frets below the capo are unavailable. 0–9: frets 0–9. Numpad: 10–19. Ctrl+numpad: 20–24. Arrow keys: move cursor/string. Delete: remove selection.</dd><dt>Structure</dt><dd>A: anchor. F: chord. N: chord strum. Ctrl+P: phrase. Alt+S: section.</dd><dt>Techniques</dt><dd>Shift+S: slide to the next note on the string, then unpitched slide, then no slide. P: palm mute. M: fret-hand mute. H: hammer/pull. R: harmonic. U: tap. C: accent. O: vibrato. B: bend. S: toggle sustain. [ / ]: shorten / lengthen. G: toggle sustain gutter; Edit &gt; Sustain editing configures collision and gutter preferences.</dd><dt>Editing</dt><dd>Ctrl+Z/Y: undo/redo. Ctrl+C/X/V: copy/cut/merge paste. Ctrl+S: save the current target format. Use Save As &gt; Editable JSON to keep the complete authoring project. Space: play/pause.</dd><dt>Beat map</dt><dd>Switch to Tempo and drag beat triangles to the waveform. Use tap tempo or import a beat map. Choose whether notes follow the edit.</dd><dt>Piano and MIDI</dt><dd>Properties edits MIDI pitch (0 through 127), velocity (0 through 127) and hand assignment. Velocity 0 is silent in the editor guide. Choose a MIDI device explicitly in Playback, then Record MIDI; the sustain pedal extends released piano notes. Local count-in can start playback or recording after the chosen number of beats or bars.</dd><dt>Chord voicings</dt><dd>Open Chords / chord library, then Edit. The live diagram shows low strings on the left, unused strings as crosses and open strings as circles. T means thumb (finger 0); -1 means unset. It follows the selected capo-relative or physical fret display. Apply commits the voicing; Cancel keeps the chart unchanged.</dd><dt>Anchor coverage</dt><dd>Chords &gt; Repair anchor coverage previews missing or uncovered hand positions in the current difficulty. Choose the allowed width and phrase-start policy. Conflicting simultaneous frets block the repair; other difficulties and musical notes stay unchanged.</dd><dt>Drum charts</dt><dd>Properties edits the kit piece, velocity and hit details. The editor guide includes the canonical pieces and a generic cue for custom IDs. Native playtest checks that the active drum kit has lanes for the visible hits; kit settings are changed only by you.</dd><dt>Layout</dt><dd>View &gt; Show arrangements together stacks several parts on one timeline; click inside a part to edit it. Ctrl+J shows or hides the lower panel. The chord strip under the strings shows a diagram for each hand shape or chord, shading the fret-hand position (anchor): click Chords ▾ to fold it, ⟳ to switch between tab-style and upright boxes, ⇡ / ⇣ to move it above or below the strings.</dd><dt>Builds</dt><dd>Save As chooses FeedBack, a DLC Builder project, arrangement XML or editable JSON. Extended charts remain intact for FeedBack. Rocksmith 2014 stock limits are validated before export.</dd></dl>','Close'),
+  help:()=>dialog('Editor keyboard and workflow',keyboardHelp()+'<dl class="ws-help"><dt>Timeline</dt><dd>Click to place cursor. Double-click to enter a note. Ctrl+wheel zooms around the pointer; Shift+wheel pans time; Alt+wheel changes lane height. Tab and Tempo retain separate zoom. Shift-click adds to selection. Drag selected notes to move; drag empty space to select.</dd><dt>Fret entry</dt><dd>Numbers use the selected fret-display convention. In physical mode, frets below the capo are unavailable. 0–9: frets 0–9. Numpad: 10–19. Ctrl+numpad: 20–24. Arrow keys: move cursor/string. Delete: remove selection.</dd><dt>Structure</dt><dd>A: anchor. F: chord. N: chord strum. Ctrl+P: phrase. Alt+S: section.</dd><dt>Techniques</dt><dd>Shift+S: slide to the next note on the string, then unpitched slide, then no slide. P: palm mute. M: fret-hand mute. H: hammer/pull. R: harmonic. U: tap. C: accent. O: vibrato. B: bend. S: toggle sustain. [ / ]: shorten / lengthen. G: toggle sustain gutter; Edit &gt; Sustain editing configures collision and gutter preferences.</dd><dt>Editing</dt><dd>Ctrl+Z/Y: undo/redo. Ctrl+C/X/V: copy/cut/merge paste. Ctrl+S: save the current target format. Use Save As &gt; Editable JSON to keep the complete authoring project. Space: play/pause.</dd><dt>Beat map</dt><dd>Switch to Tempo and drag beat triangles to the waveform. Use tap tempo or import a beat map. Choose whether notes follow the edit.</dd><dt>Piano and MIDI</dt><dd>Properties edits MIDI pitch (0 through 127), velocity (0 through 127) and hand assignment. Velocity 0 is silent in the editor guide. Choose a MIDI device explicitly in Playback, then Record MIDI; the sustain pedal extends released piano notes. Local count-in can start playback or recording after the chosen number of beats or bars.</dd><dt>Chord voicings</dt><dd>Open Chords / chord library, then Edit. The live diagram shows low strings on the left, unused strings as crosses and open strings as circles. T means thumb (finger 0); -1 means unset. It follows the selected capo-relative or physical fret display. Apply commits the voicing; Cancel keeps the chart unchanged.</dd><dt>Anchor coverage</dt><dd>Chords &gt; Repair anchor coverage previews missing or uncovered hand positions in the current difficulty. Choose the allowed width and phrase-start policy. Conflicting simultaneous frets block the repair; other difficulties and musical notes stay unchanged.</dd><dt>Drum charts</dt><dd>Properties edits the kit piece, velocity and hit details. The editor guide includes the canonical pieces and a generic cue for custom IDs. Native playtest checks that the active drum kit has lanes for the visible hits; kit settings are changed only by you.</dd><dt>Layout</dt><dd>View &gt; Show arrangements together stacks several parts on one timeline; click inside a part to edit it. Ctrl+J shows or hides the lower panel. The chord strip under the strings shows a diagram for each hand shape or chord, shading the fret-hand position (anchor): click Chords ▾ to fold it, ⟳ to switch between tab-style and upright boxes, ⇡ / ⇣ to move it above or below the strings.</dd><dt>Builds</dt><dd>Save As chooses FeedBack, a DLC Builder project, arrangement XML or editable JSON. Extended charts remain intact for FeedBack. Rocksmith 2014 stock limits are validated before export.</dd></dl>','Close'),
   coverage:async()=>{const response=await fetch(`${API}/coverage`);if(response.ok){const d=await response.json();await dialog('Feature coverage',`<pre style="white-space:pre-wrap">${esc(JSON.stringify(d,null,2))}</pre>`,'Close');}else await dialog('Feature coverage','<p>This local development build is in progress. Workflow parity, native tones, dynamic difficulty, audio encoding and game verification remain explicit acceptance gates.</p>','Close');}
  };
  for(const name of chartOnlyActions){const run=actions[name];if(typeof run==='function')actions[name]=(...args)=>{if(!chartCommandAllowed(name)){status(chartEditing()?'This command requires a guitar or bass arrangement':'Open Tab or Tempo to edit the chart');return;}return run(...args);};}
@@ -1694,20 +1820,31 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   draw();
  }));
  on(canvas,'pointercancel',()=>{drag=null;draw();});
- on(root,'keyup',safe(async e=>{lyricKey(e);}));
+ on(root,'keyup',safe(async e=>{
+  // Insert pressed and released on its own is a key of its own (Charter: add a beat).
+  if(e.code==='Insert'&&insertHeld){insertHeld=false;if(!insertUsed&&!e.target.matches('input,textarea,select')&&!$('dialog').open){const id=keymap().byCombo.get('Insert');if(id)await runCommand(id);}return;}
+  lyricKey(e);
+ }));
  on(root,'keydown',safe(async e=>{
   if(lyricKey(e))return;
+  if(e.code==='Insert'&&!e.target.matches('input,textarea,select')){e.preventDefault();if(!e.repeat){insertHeld=true;insertUsed=false;}return;}
+  if(insertHeld)insertUsed=true;
+  const combo=comboFromEvent(e,{insertHeld}),early=combo?keymap().byCombo.get(combo):null;
   if(view==='tones'&&e.target.matches('input[data-knob-step],input[data-tone-volume-step]')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&['ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const input=e.target,step=Number(input.dataset.knobStep??input.dataset.toneVolumeStep),value=input.value.trim()?Number(input.value):Number(input.min);input.value=String(Math.max(Number(input.min),Math.min(Number(input.max),value+(e.key==='ArrowUp'?step:-step))));input.dispatchEvent(new Event('change',{bubbles:true}));return;}
   if(e.key==='Tab'&&!e.ctrlKey&&!e.metaKey&&e.target.dataset.vocalField&&await tabVocalField(e))return;
-  if((e.ctrlKey||e.metaKey)&&(['s','o'].includes(e.key.toLowerCase())||(e.shiftKey&&e.key.toLowerCase()==='i'))){
+  // Save, open and arrangement info also work from a text field: commit the field first.
+  if(['save','saveas','open','arrangement-info'].includes(early)&&(e.ctrlKey||e.metaKey||e.altKey||/^F\d/.test(combo))){
    e.preventDefault();if($('dialog').open)return;
    const focused=document.activeElement,beforeErrors=errorRevision;
    if(root.contains(focused)&&focused.matches('input,textarea,select')){if(!focused.checkValidity()){focused.reportValidity();return;}focused.blur();await Promise.resolve();if(errorRevision!==beforeErrors)return;}
-   await actions[e.key.toLowerCase()==='i'?'arrangement-info':e.key.toLowerCase()==='o'?'open':e.shiftKey?'saveas':'save']();return;
+   await actions[early]();return;
   }
   if((e.ctrlKey||e.metaKey)&&e.key==='Tab'&&!$('dialog').open){e.preventDefault();const visibleTimeline=()=>view==='vocals'?vocalController?.canvas:view==='tones'?$('tone-view').querySelector('input,select,button'):canvas,fromTimeline=e.target===visibleTimeline(),focused=document.activeElement,beforeErrors=errorRevision;if(root.contains(focused)&&focused.matches('input,textarea,select')){if(!focused.checkValidity()){focused.reportValidity();return;}focused.blur();await Promise.resolve();if(errorRevision!==beforeErrors)return;}if(fromTimeline){inspectorVisible=true;applyLayout();renderInspector();root.querySelector('.ws-inspector input,.ws-inspector button,.ws-inspector select')?.focus();}else visibleTimeline()?.focus({preventScroll:true});return;}
   if(e.target.matches('input,textarea,select')||$('dialog').open)return;
   const mod=e.ctrlKey||e.metaKey,key=rollArrow(e.key.toLowerCase(),bottomRoll());let action=null;
+  // Command keys come from the keyboard profile and the user's changes. A command key the profile
+  // leaves unbound does nothing; structural keys (frets, arrows, Delete...) carry on below.
+  if(combo){if(early){e.preventDefault();await runCommand(early);return;}if(!isStructural(combo))return;}
   if(!chartEditing()){
    const globalAction=mod?({z:e.shiftKey?'redo':'undo',y:'redo',k:'scratch',m:'mixer',b:'errors',i:e.shiftKey?null:'import-chart'})[key]:({' ':'play',l:'loop'})[key];
    if(globalAction){e.preventDefault();await actions[globalAction]();return;}
@@ -1776,10 +1913,10 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  audio.disposers.add(()=>{clearInterval(meterTimer);signalMeters.dispose();});
  audio.onTime=()=>{if(!root.isConnected)return;updateClock();updateTonePreview();if(audio.isPlaying){const x=xOf(audio.currentTime);if(bottomRoll())setTimeScroll(Math.max(0,audio.currentTime*zoom-48));else if(x>geometry().width-60)setTimeScroll(Math.max(0,audio.currentTime*zoom-200));draw();}};
  audio.onEnded=()=>{stopMidi();cursor=audio.currentTime;updateClock();};audio.setEnabled('metronome',false);audio.setGain('guide',0.7);audio.setGain('master',Number($('master').value)/100);audio.setProject(project(),arrangement());
- const preferences=readPreferences();staveTheme=preferences.staveTheme==='light'?'light':'dark';showRests=preferences.showRests!==false;if(preferences.lyric){lyricMode=preferences.lyric.mode==='tap'?'tap':'check';for(const key of ['scope','leadIn','latency'])if(preferences.lyric[key]!==undefined)lyricOptions[key]=preferences.lyric[key];}inspectorVisible=preferences.inspectorVisible??inspectorVisible;inspectorWidth=preferences.inspectorWidth??inspectorWidth;bottomHeight=preferences.bottomHeight??bottomHeight;bottomVisible=preferences.bottomVisible??bottomVisible;if(preferences.chordStrip&&typeof preferences.chordStrip==='object')chordStrip={visible:preferences.chordStrip.visible!==false,open:preferences.chordStrip.open!==false,position:preferences.chordStrip.position==='above'?'above':'below',upright:preferences.chordStrip.upright===true};zoom=preferences.zoom??zoom;viewZoom={tab:zoom,tempo:zoom,...preferences.viewZoom};laneScales={...laneScales,...preferences.laneScales};rollOrientations={...rollOrientations,...preferences.rollOrientations};zoom=viewZoom.tab;snap=preferences.snap??snap;fretConvention=preferences.fretConvention??fretConvention;invertStrings=preferences.invertStrings??invertStrings;validationProfile=preferences.validationProfile??validationProfile;countInOptions={...countInOptions,...preferences.countIn};
+ const preferences=readPreferences();staveTheme=preferences.staveTheme==='light'?'light':'dark';showRests=preferences.showRests!==false;if(preferences.lyric){lyricMode=preferences.lyric.mode==='tap'?'tap':'check';for(const key of ['scope','leadIn','latency'])if(preferences.lyric[key]!==undefined)lyricOptions[key]=preferences.lyric[key];}inspectorVisible=preferences.inspectorVisible??inspectorVisible;inspectorWidth=preferences.inspectorWidth??inspectorWidth;bottomHeight=preferences.bottomHeight??bottomHeight;bottomVisible=preferences.bottomVisible??bottomVisible;if(preferences.keyboard&&typeof preferences.keyboard==='object'){keyProfile=PROFILE_IDS.includes(preferences.keyboard.profile)?preferences.keyboard.profile:'oce';keyOverrides=preferences.keyboard.overrides&&typeof preferences.keyboard.overrides==='object'?preferences.keyboard.overrides:{};techniqueToggleEach=preferences.keyboard.each===true;}refreshMenuKeys();if(preferences.chordStrip&&typeof preferences.chordStrip==='object')chordStrip={visible:preferences.chordStrip.visible!==false,open:preferences.chordStrip.open!==false,position:preferences.chordStrip.position==='above'?'above':'below',upright:preferences.chordStrip.upright===true};zoom=preferences.zoom??zoom;viewZoom={tab:zoom,tempo:zoom,...preferences.viewZoom};laneScales={...laneScales,...preferences.laneScales};rollOrientations={...rollOrientations,...preferences.rollOrientations};zoom=viewZoom.tab;snap=preferences.snap??snap;fretConvention=preferences.fretConvention??fretConvention;invertStrings=preferences.invertStrings??invertStrings;validationProfile=preferences.validationProfile??validationProfile;countInOptions={...countInOptions,...preferences.countIn};
  if(preferences.mixer){try{audio.restoreMixerState(preferences.mixer);}catch{}}if(preferences.speed)audio.setSpeed(preferences.speed);if(preferences.pitch!==undefined)audio.setPitch(preferences.pitch);click=audio.enabled.metronome;guide=audio.enabled.guide;$('zoom').value=zoom;$('snap').value=snap;$('speed').value=audio.speed*100;$('speed-value').textContent=`${Math.round(audio.speed*100)}%`;$('pitch').value=audio.pitch;$('master').value=audio.gains.master*100;
  shadeHands=preferences.shadeHands??shadeHands;audio.quality=preferences.quality??'fast';qualityMessage=audio.quality==='spectral'?'Spectral preview selected; preparation starts on Play':'Fast granular preview';sustainOptions={...sustainOptions,...preferences.sustain};
- function persistPreferences(){writePreferences({inspectorVisible,inspectorWidth,bottomHeight,bottomVisible,chordStrip:{...chordStrip},zoom,viewZoom:{...viewZoom},laneScales:{...laneScales},rollOrientations:{...rollOrientations},snap,fretConvention,invertStrings,validationProfile,shadeHands,sustain:{...sustainOptions},quality:audio.quality,speed:audio.speed,pitch:audio.pitch,mixer:audio.getMixerState(),countIn:{...countInOptions},staveTheme,showRests,lyric:{mode:lyricMode,...lyricOptions}});}
+ function persistPreferences(){writePreferences({keyboard:{profile:keyProfile,overrides:keyOverrides,each:techniqueToggleEach},inspectorVisible,inspectorWidth,bottomHeight,bottomVisible,chordStrip:{...chordStrip},zoom,viewZoom:{...viewZoom},laneScales:{...laneScales},rollOrientations:{...rollOrientations},snap,fretConvention,invertStrings,validationProfile,shadeHands,sustain:{...sustainOptions},quality:audio.quality,speed:audio.speed,pitch:audio.pitch,mixer:audio.getMixerState(),countIn:{...countInOptions},staveTheme,showRests,lyric:{mode:lyricMode,...lyricOptions}});}
  on(root.querySelector('.ws-menu'),'pointerdown',refreshActionAvailability);
  root.addEventListener('keydown',e=>{if(e.key==='F10'||e.target.closest('.ws-menu'))refreshActionAvailability();},{capture:true,signal:abort.signal});
  on(root,'click',e=>{if(e.target.closest('button[data-action]'))refreshActionAvailability();});
