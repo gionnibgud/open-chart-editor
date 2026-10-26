@@ -2135,7 +2135,7 @@ def load_xml(data,authoring_layout=None):
     base = root.findtext('tonebase')
     if base or root.find('tones') is not None:
         arr['tones'] = {'base':base or 'Default','changes':[{'time':float(t.get('time',0)),'name':t.get('name','Default')} for t in root.findall('./tones/tone')], 'definitions':{}}
-    project={'version':1, 'title':root.findtext('title','Untitled'), 'artist':root.findtext('artistName',''), 'album':root.findtext('albumName',''), 'year':int(root.findtext('albumYear','2026') or 2026), 'duration':float(root.findtext('songLength','0')), 'beats':[{k:_number(v) for k,v in n.attrib.items()} for n in root.findall('./ebeats/ebeat')], 'sections':[_section({k:_number(v) for k,v in n.attrib.items()}) for n in root.findall('./sections/section')], 'arrangements':[arr]}
+    project={'version':1, **({'year':year} if (year:=song_year(root.findtext('albumYear'))) else {}), 'title':root.findtext('title','Untitled'), 'artist':root.findtext('artistName',''), 'album':root.findtext('albumName',''), 'duration':float(root.findtext('songLength','0')), 'beats':[{k:_number(v) for k,v in n.attrib.items()} for n in root.findall('./ebeats/ebeat')], 'sections':[_section({k:_number(v) for k,v in n.attrib.items()}) for n in root.findall('./sections/section')], 'arrangements':[arr]}
     if rs7x_order:
         project.setdefault('import_warnings',[]).append(f'{count}-string guitar XML read in the RS7X string order (strings 0-5 are low E to high e, 6 is the low B{", 7 the low F#" if count==8 else ""}). If the extra string looks wrong, the source used another order; tell us which tool wrote it.')
     elif not authoring_layout and kind=='bass' and count>4:
@@ -2270,8 +2270,12 @@ def save_xml(project, arrangement_id=None, *, rs7x=False):
         if el is None:
             el = ET.SubElement(root,tag)
         el.text = str(value)
-    for tag,key,default in [('title','title','Untitled'),('artistName','artist',''),('albumName','album',''),('albumYear','year',2026),('songLength','duration',0)]:
+    for tag,key,default in [('title','title','Untitled'),('artistName','artist',''),('albumName','album',''),('songLength','duration',0)]:
         text(tag,project.get(key,default))
+    # A song without a year is written without one, never with a made-up year.
+    if song_year(project.get('year')):text('albumYear',song_year(project.get('year')))
+    else:
+        for el in root.findall('albumYear'):root.remove(el)
     role=arrangement_role(arr)
     text('arrangement',role.title())
     properties=root.find('arrangementProperties')
@@ -2634,7 +2638,7 @@ def load_vocal_xml(data,filename='Vocals.xml'):
         vocals.append(vocal)
     duration=max((v['time']+v['length'] for v in vocals),default=0)
     _,timeline=_timeline([],[],max(Fraction(str(duration))*2,Fraction(4)))
-    return validate_project({'version':1,'title':filename.rsplit('.',1)[0],'artist':'','album':'','year':2026,'duration':duration,'sections':[],'vocals':vocals,'arrangements':[_import_arrangement('vocal-guide','Vocal guide')],**timeline,'_vocalXml':data.decode('utf-8-sig')})
+    return validate_project({'version':1,'title':filename.rsplit('.',1)[0],'artist':'','album':'','duration':duration,'sections':[],'vocals':vocals,'arrangements':[_import_arrangement('vocal-guide','Vocal guide')],**timeline,'_vocalXml':data.decode('utf-8-sig')})
 
 
 def _timeline(tempo_events,meter_events,end_quarter):
@@ -2884,7 +2888,7 @@ def load_midi(data,filename='Untitled.mid',*,_program_stream=None,_apply_program
         arr['notes'].append(note)
     if not arrangements:
         arrangements[(0,0)]=_import_arrangement('midi-tempo','MIDI tempo map')
-    project={'version':1,'title':filename.rsplit('.',1)[0].split('/')[-1].split('\\')[-1],'artist':'','album':'','year':2026,'duration':max(seconds(Fraction(end_tick,division)),timeline['beats'][-1]['time']),'sections':[{'name':name,'number':i+1,'start_time':seconds(Fraction(t,division))} for i,(t,name) in enumerate(markers)],'arrangements':list(arrangements.values()),**timeline,'import_warnings':sorted(warnings),'_import':{'format':'midi','source':base64.b64encode(data).decode('ascii')}}
+    project={'version':1,'title':filename.rsplit('.',1)[0].split('/')[-1].split('\\')[-1],'artist':'','album':'','duration':max(seconds(Fraction(end_tick,division)),timeline['beats'][-1]['time']),'sections':[{'name':name,'number':i+1,'start_time':seconds(Fraction(t,division))} for i,(t,name) in enumerate(markers)],'arrangements':list(arrangements.values()),**timeline,'import_warnings':sorted(warnings),'_import':{'format':'midi','source':base64.b64encode(data).decode('ascii')}}
     if _apply_programs:project=_midi_call(_midi_programs.decorate,project,data,stream)['project']
     return validate_project(project)
 
@@ -3122,7 +3126,7 @@ def _load_musicxml(data,filename='Untitled.musicxml'):
         note.update(time=seconds(start),sustain=0 if arr['type']=='drums' else round(seconds(stop)-seconds(start),9))
         arr['notes'].append(note)
     warnings.add('MusicXML layout, notation symbols and engraving are retained in the source; import renders timed notes, hands, basic techniques and the tempo map')
-    project={'version':1,'title':root.findtext('./work/work-title') or root.findtext('movement-title') or filename.rsplit('.',1)[0],'artist':root.findtext('./identification/creator',''),'album':'','year':2026,'duration':seconds(end_quarter),'sections':[{'name':name,'number':i+1,'start_time':seconds(q)} for i,(q,name) in enumerate(sections)],'arrangements':arrangements,**timeline,'import_warnings':sorted(warnings),'_import':{'format':'musicxml','source':base64.b64encode(data).decode('ascii')}}
+    project={'version':1,'title':root.findtext('./work/work-title') or root.findtext('movement-title') or filename.rsplit('.',1)[0],'artist':root.findtext('./identification/creator',''),'album':'','duration':seconds(end_quarter),'sections':[{'name':name,'number':i+1,'start_time':seconds(q)} for i,(q,name) in enumerate(sections)],'arrangements':arrangements,**timeline,'import_warnings':sorted(warnings),'_import':{'format':'musicxml','source':base64.b64encode(data).decode('ascii')}}
     return validate_project(project)
 
 
@@ -3768,6 +3772,38 @@ def _audio_warp(audio_map):
         slope=(audio[index+1]-audio[index])/(chart[index+1]-chart[index])
         return round(max(0,audio[index]+(time-chart[index])*slope),9)
     return warp
+
+
+def song_year(value):
+    """A four-digit year (1000-9999) from an int or text such as '1991' or '1991-09-17'; None
+    for anything else, including placeholders like '19__'."""
+    if isinstance(value,bool):return None
+    if isinstance(value,int):return value if 1000<=value<=9999 else None
+    match=re.match(r'\s*(\d{4})(?!\d)',str(value or ''))
+    return int(match.group(1)) if match and 1000<=int(match.group(1))<=9999 else None
+
+
+def audio_file_tags(path):
+    """Song details from an audio file's own tags (ID3, Vorbis, MP4...) via ffprobe:
+    {title, artist, album, year} with only the fields the file really has."""
+    import shutil
+    executable=shutil.which('ffprobe')
+    if not executable:return {}
+    try:
+        run=subprocess.run([executable,'-v','quiet','-print_format','json','-show_format',str(path)],capture_output=True,text=True,timeout=20,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+        tags={str(k).lower():str(v) for k,v in json.loads(run.stdout or '{}').get('format',{}).get('tags',{}).items()}
+    except (OSError,subprocess.TimeoutExpired,ValueError,AttributeError):
+        return {}
+    found={'title':tags.get('title'),'artist':tags.get('artist') or tags.get('album_artist'),'album':tags.get('album'),'year':song_year(tags.get('date') or tags.get('year'))}
+    return {key:value for key,value in found.items() if value}
+
+
+def audio_bytes_tags(data,name):
+    """audio_file_tags for audio held in memory (a folder or archive member)."""
+    with tempfile.TemporaryDirectory() as folder:
+        path=Path(folder)/('audio'+(Path(name).suffix.lower() or '.bin'))
+        path.write_bytes(data)
+        return audio_file_tags(path)
 
 
 # Values a new editor project starts with; any other value was set by the user.

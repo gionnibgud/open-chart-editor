@@ -332,19 +332,7 @@ def setup(app, context=None):
         except (pack_io.ProjectError,ValueError,TypeError,KeyError) as exc:
             raise HTTPException(400,str(exc)) from exc
 
-    def audio_tags(path):
-        """Song details from the file's own tags (ID3, Vorbis, MP4...) via ffprobe."""
-        executable=shutil.which('ffprobe')
-        if not executable:return {}
-        try:
-            run=subprocess.run([executable,'-v','quiet','-print_format','json','-show_format',str(path)],capture_output=True,text=True,timeout=20,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
-            tags={str(k).lower():str(v) for k,v in json.loads(run.stdout or '{}').get('format',{}).get('tags',{}).items()}
-        except (OSError,subprocess.TimeoutExpired,ValueError,AttributeError):
-            return {}
-        import re
-        year=re.match(r'\d{4}',tags.get('date') or tags.get('year') or '')
-        found={'title':tags.get('title'),'artist':tags.get('artist') or tags.get('album_artist'),'album':tags.get('album'),'year':int(year.group()) if year else None}
-        return {key:value for key,value in found.items() if value}
+    audio_tags=pack_io.audio_file_tags
 
     # Optional import assistance from a local gp-to-feedpak checkout (tools/assist/gp_assist.py).
     def assist_config():

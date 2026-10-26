@@ -416,7 +416,7 @@ def save_keyboard_xml(project, arrangement_id, *, template=None, song_id=None, a
     _copy_text(template, song, 'artistNameSort', str(project.get('artist', '')))
     ET.SubElement(song, 'albumName').text = str(project.get('album', ''))
     _copy_text(template, song, 'albumNameSort', str(project.get('album', '')))
-    ET.SubElement(song, 'albumYear').text = str(project.get('year', ''))
+    ET.SubElement(song, 'albumYear').text = str(pack_io.song_year(project.get('year')) or '')
     ET.SubElement(song, 'albumArt')
     ET.SubElement(song, 'lastConversionDateTime').text = datetime.datetime.now().strftime('%m-%d-%y %H:%M')
     ET.SubElement(song, 'instrumentTone', id='00000000-0000-0000-0000-000000000000')

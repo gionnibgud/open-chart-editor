@@ -246,7 +246,8 @@ def feedback_loose(project, *, audio=None, normalized_wav=None, flat_mp3=None):
         mirrors.append({'type':'keys','name':arr.get('name','Keys'),'file':path})
     if work.get('vocals'):put('vocals.xml',pack_io.save_vocal_xml(copy.deepcopy(work)))
     metadata={key:copy.deepcopy(work.get(key,default)) for key,default in
-              [('title','Untitled'),('artist',''),('album',''),('year',2026)]}
+              [('title','Untitled'),('artist',''),('album','')]}
+    if pack_io.song_year(work.get('year')):metadata['year']=pack_io.song_year(work.get('year'))
     metadata['arrangements']=mirrors
     # Bind editable JSON/XML and every performance asset. Legacy metadata is
     # hashed separately to avoid a self-reference in its own descriptor.
@@ -302,6 +303,9 @@ def _gpa_song(entries):
         member='audio/'+PurePosixPath(audio_path).name
         project['_pack']['entries'][member]=base64.b64encode(entries[audio_path]).decode('ascii')
         project['_pack'].setdefault('manifest',{})['stems']=[{'id':'full','file':member,'default':True,'name':'Full mix'}]
+        # The score rarely has a year; the song audio's own tags may (title and artist stay the score's).
+        filled=pack_io.fill_song_details(project,pack_io.audio_bytes_tags(entries[audio_path],audio_path))
+        if filled:project.setdefault('import_warnings',[]).append(f"Song {', '.join(filled)} filled from the tags of {PurePosixPath(audio_path).name}")
     project['_gpaSync']={'source':PurePosixPath(name).name,'xml':entries[name].decode('utf-8-sig')}
     return pack_io.validate_project(project)
 
@@ -475,6 +479,13 @@ def _native_source_xml(root, role, priority):
 
 
 _TONE_FIELDS = ('GearList','ToneDescriptors','NameSeparator','IsCustom','Volume','MacVolume','Key','Name','SortOrder')
+
+
+def _required_year(work):
+    """DLC Builder needs a year; the editor asks for one, so a missing year is refused, never invented."""
+    year=pack_io.song_year(work.get('year'))
+    if year is None:raise pack_io.ProjectError('The DLC Builder project needs the song year: set Year in Song details, or in Save As')
+    return year
 
 
 def _tone_dto(definition, key, role):
@@ -655,7 +666,7 @@ def rs2014_sources(project, arrangement_ids, *, include_vocals=False,
     text=lambda value:{'Value':str(value or ''),'SortValue':str(value or '')}
     dto={'Version':'1','Author':str(author),'DLCKey':key,
          'ArtistName':text(work.get('artist')),'Title':text(work.get('title')),
-         'AlbumName':text(work.get('album')),'Year':int(work.get('year') or 2026),
+         'AlbumName':text(work.get('album')),'Year':_required_year(work),
          'AlbumArtFile':cover_path,'AudioFile':{'Path':audio_path,'Volume':0},
          'AudioPreviewFile':{'Path':'','Volume':0},'AudioPreviewStartTime':0,
          'IgnoredIssues':[],'Arrangements':arrangements,'Tones':all_tones}

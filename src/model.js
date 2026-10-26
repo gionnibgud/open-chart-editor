@@ -20,7 +20,7 @@ export function makeArrangement(type = 'guitar', count = null, {instrument=type}
     basePitches:pitches(type,count),tuning:Array(count).fill(0),capo:0,centOffset:0,notes:[],chords:[],chord_templates:[],anchors:[],handshapes:[],phrases:[],toneChanges:[],tones:{base:'Clean',changes:[],definitions:{Clean:createTone('Clean')}}};
 }
 export function makeProject() {
-  return {version:1,title:'Untitled',artist:'Local author',album:'',year:2026,duration:60,
+  return {version:1,title:'Untitled',artist:'Local author',album:'',duration:60,
     beats:Array.from({length:121},(_,i)=>({time:i/2,measure:i%4===0?i/4+1:-1})),sections:[],arrangements:[makeArrangement()]};
 }
 export function demoProject() {

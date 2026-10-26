@@ -22,7 +22,7 @@ def fixture():
     arr={'id':'own-lead','type':'guitar','name':'Own lead','stringCount':6,
          'tuning':[0]*6,'notes':[{'id':'n','time':.5,'string':0,'fret':3,'sustain':.25,'techniques':{}}],
          'chords':[],'chord_templates':[],'anchors':[],'handshapes':[]}
-    return {'version':1,'title':'Own Source Study','artist':'Original Author',
+    return {'version':1,'title':'Own Source Study','artist':'Original Author','year':2024,
             'duration':2,'beats':[{'time':0,'measure':1},{'time':.5,'measure':-1}],
             'sections':[],'arrangements':[arr],
             '_pack':{'manifest':{'stems':[{'id':'full','file':'audio/own.wav'}],
