@@ -231,6 +231,12 @@
       "capability": "Future tone-system integrations, including Tone3000/NAM",
       "status": "Explicitly deferred at user request. Rigs and unknown assets remain retained without fetching or executing them.",
       "remaining": "Review tone-page architecture and Tone3000 browser later; no implementation or service research performed."
+    },
+    {
+      "id": "keyboard-mouse",
+      "capability": "Keyboard profiles and mouse models",
+      "status": "Implemented: OCE, R+ Workshop, EOF and Charter keyboard profiles with per-command rebinding, an 'each note on its own' technique-toggle option, and an EOF mouse model (right-click adds or removes a note, wheel sets sustain, Ctrl+wheel the fret, middle-click edits, left-click only selects).",
+      "remaining": "FOLLOW-UP: Charter's mouse behaviour (clicks, drags and wheel in its editor) is not yet confirmed, so there is no Charter mouse model; a short session in Charter noting each mouse action would settle it."
     }
   ],
   "verification": {

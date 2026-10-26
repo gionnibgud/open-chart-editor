@@ -5,7 +5,7 @@ import {ACTIONS,PROFILES,PROFILE_IDS,buildKeymap,displayCombo,BROWSER_RESERVED} 
 const maps=Object.fromEntries(PROFILE_IDS.map(id=>[id,buildKeymap(id)]));
 const cell=(id,command)=>{const keys=[...(maps[id].byCommand.get(command)||[]),...(maps[id].byCommand.get(command+':each')||[]).map(k=>k+' (each note)')];return keys.length?keys.map(k=>`\`${displayCombo(k.replace(' (each note)',''))}\`${k.endsWith(' (each note)')?' each note':''}${BROWSER_RESERVED.has(k)?' ⚠':''}`).join(', '):'';};
 const lines=['# Keyboard profiles','',
- 'Edit > **Keyboard shortcuts…** (also under Help) picks one of four keyboard profiles. Each follows the',
+ 'Edit > **Keyboard and mouse…** (also under Help) picks one of four keyboard profiles. Each follows the',
  'shortcuts of an editor you may already know, for every command OCE shares with it:','',
  ...PROFILE_IDS.map(id=>`- **${PROFILES[id].label}:** ${PROFILES[id].note}`),'',
  'In the same dialog you can give any command a different key (**Set…**, then press the key),',

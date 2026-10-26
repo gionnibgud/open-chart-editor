@@ -106,6 +106,9 @@ function mount(root){
  let viewZoom={tab:110,tempo:110},timelineView='tab',laneScales={guitar:1,bass:1,keys:1,drums:1},rollOrientations={keys:'left',drums:'left'};
  let sustainOptions={clampNext:false,gutterEnabled:false,gutterBeats:.125},sustainProvenance=new WeakMap();
  // Keyboard profile, the user's per-profile changes and the 'each note on its own' option.
+ // Mouse model: 'standard', or 'eof' (right-click adds/removes, wheel sets sustain, Ctrl+wheel the
+ // fret, middle-click edits, left-click only selects).
+ let mouseModel='standard',wheelCarry=0;
  let keyProfile='oce',keyOverrides={},techniqueToggleEach=false,insertHeld=false,insertUsed=false,keymapCache=null;
  const keymap=()=>{const overrides=keyOverrides[keyProfile]||{},key=keyProfile+JSON.stringify(overrides);if(keymapCache?.key!==key)keymapCache={key,...buildKeymap(keyProfile,overrides)};return keymapCache;};
  const keysFor=id=>keymap().byCommand.get(id)||[];
@@ -833,6 +836,19 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  function pickString(number){const a=arrangement();if(!['guitar','bass'].includes(a.type)||number>a.stringCount)return;lane=a.stringCount-number;draw();}
  function setFinger(finger){if(!['guitar','bass'].includes(arrangement().type))return;editSelection('Set left finger',n=>n.techniques.left_hand=finger);}
  // Menu items show the keys of the current profile.
+ // EOF mouse: the note under the pointer, if any (same hit test as the left click).
+ function noteUnderPointer(e){const {x,y}=pointerPoint(e),g=geometry();return {x,y,g,hit:editableNotes().findLast(n=>Math.abs(yOf(getNoteLane(n))-y)<Math.max(10,g.row/2)&&x>=xOf(n.time)-10&&x<=xOf(n.time)+Math.max(12,n.sustain*zoom))};}
+ function eofRightClick(e){
+  focusBandAt(pointerPoint(e).y);if(!chartEditing())return;
+  const {x,y,g,hit}=noteUnderPointer(e);if(x<g.left||y<g.top||y>=g.top+g.lanes.length*g.row)return;
+  if(hit){selection=new Set([hit.id]);selectionRange=null;markerSelection=null;actions.delete();return;}
+  cursor=quantize(timeOf(x));lane=laneOf(y);insertNote();
+ }
+ function eofMiddleClick(e){
+  focusBandAt(pointerPoint(e).y);const {hit}=noteUnderPointer(e);if(!hit)return;
+  selection=new Set([hit.id]);selectionRange=null;markerSelection=null;cursor=hit.time;lane=getNoteLane(hit);inspector='properties';inspectorVisible=true;applyLayout();render();
+  requestAnimationFrame(()=>{const field=$('note-fret');field?.focus();field?.select?.();});
+ }
  function refreshMenuKeys(){
   const known=new Set(ACTIONS.map(x=>x.id));
   for(const button of root.querySelectorAll('.ws-menu button[data-action]')){
@@ -845,7 +861,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  }
  function keyboardHelp(){
   const map=keymap(),groups=[...new Set(ACTIONS.map(x=>x.group))].filter(group=>group!=='Frets'||map.byCommand.has('fret-0'));
-  return `<h3>Keys · ${esc(PROFILES[keyProfile].label)} profile</h3><p class="ws-muted">Change the profile or any key under Edit &gt; Keyboard shortcuts. The workflow notes below name the Open Chart Editor keys.</p><dl class="ws-help">${groups.map(group=>{const rows=ACTIONS.filter(x=>x.group===group&&map.byCommand.has(x.id)).map(x=>`${esc(x.label)}: ${map.byCommand.get(x.id).map(displayCombo).join(' or ')}`);return rows.length?`<dt>${esc(group)}</dt><dd>${rows.join(' · ')}</dd>`:'';}).join('')}</dl>`;
+  return `<h3>Keys · ${esc(PROFILES[keyProfile].label)} profile</h3><p class="ws-muted">Change the profile, any key or the mouse under Edit &gt; Keyboard and mouse. The workflow notes below name the Open Chart Editor keys.</p><dl class="ws-help">${groups.map(group=>{const rows=ACTIONS.filter(x=>x.group===group&&map.byCommand.has(x.id)).map(x=>`${esc(x.label)}: ${map.byCommand.get(x.id).map(displayCombo).join(' or ')}`);return rows.length?`<dt>${esc(group)}</dt><dd>${rows.join(' · ')}</dd>`:'';}).join('')}</dl>`;
  }
  function cycleTechnique(keys){editSelection('Cycle technique',n=>{const active=keys.findIndex(k=>techniqueEnabled(n,k));keys.forEach(k=>setTechniqueFlag(n,k,false));if(active+1<keys.length)setTechniqueFlag(n,keys[active+1],true);});}
  function moveSelected(delta){const notes=selected(),minimum=Math.min(...notes.map(n=>n.time));delta=Math.max(delta,-minimum);const chords=arrangement().chords.filter(c=>(c.notes||[]).some(n=>selection.has(n.id)));change('Move notes',()=>{for(const n of notes)if(!chords.some(c=>c.notes.includes(n)))n.time+=delta;for(const c of chords){c.time+=delta;for(const n of c.notes)n.time+=delta;}});}
@@ -1497,7 +1513,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   'keyboard-settings':async()=>{
    let profile=keyProfile;const draft=clone(keyOverrides),label=id=>ACTIONS.find(x=>x.id===id)?.label||id;
    const rows=()=>{const map=buildKeymap(profile,draft[profile]||{}),changes=draft[profile]||{};return [...new Set(ACTIONS.map(x=>x.group))].map(group=>`<tr><th colspan="3">${esc(group)}</th></tr>`+ACTIONS.filter(x=>x.group===group).map(x=>{const keys=map.byCommand.get(x.id)||[],changed=Object.hasOwn(changes,x.id),reserved=keys.some(k=>BROWSER_RESERVED.has(k));return `<tr><td>${esc(x.label)}</td><td>${keys.length?keys.map(k=>`<kbd>${esc(displayCombo(k))}</kbd>`).join(' '):'<span class="ws-muted">none</span>'}${changed?' <span class="ws-muted">(changed)</span>':''}${reserved?' <span title="A browser tab may keep this key for itself; it works in the FeedBack desktop app">⚠</span>':''}</td><td><button type="button" data-key-set="${x.id}">Set…</button>${changed?` <button type="button" data-key-reset="${x.id}">Reset</button>`:''}</td></tr>`;}).join('')).join('');};
-   const pending=dialog('Keyboard shortcuts',`<label>Keyboard profile<select id="ws-key-profile">${PROFILE_IDS.map(id=>`<option value="${id}" ${id===profile?'selected':''}>${esc(PROFILES[id].label)}</option>`).join('')}</select></label><p class="ws-muted" id="ws-key-note"></p><label><input type="checkbox" id="ws-key-each" ${techniqueToggleEach?'checked':''}> Technique keys set each selected note on its own, instead of making them all the same</label><p class="ws-muted">Set… waits for the next key you press: Escape cancels, Backspace removes the command's keys. A key given to one command is taken from any other. ⚠ marks keys a browser tab may keep for itself.</p><div class="ws-key-table"><table><tbody id="ws-key-rows"></tbody></table></div><button type="button" id="ws-key-reset-all">Reset all changes for this profile</button>`,'Apply',{allowStateChanges:true});
+   const pending=dialog('Keyboard and mouse',`<label>Mouse<select id="ws-mouse-model"><option value="standard" ${mouseModel==='standard'?'selected':''}>Open Chart Editor / R+ Workshop: right-click opens a menu, the wheel scrolls</option><option value="eof" ${mouseModel==='eof'?'selected':''}>EOF: right-click adds or removes a note, the wheel sets sustain, Ctrl+wheel the fret, middle-click edits</option></select></label><p class="ws-muted">With the EOF mouse, left-click only selects, the wheel and Ctrl+wheel act on selected notes (with nothing selected they scroll and zoom as usual), and Shift+right-click still opens the menu.</p><label>Keyboard profile<select id="ws-key-profile">${PROFILE_IDS.map(id=>`<option value="${id}" ${id===profile?'selected':''}>${esc(PROFILES[id].label)}</option>`).join('')}</select></label><p class="ws-muted" id="ws-key-note"></p><label><input type="checkbox" id="ws-key-each" ${techniqueToggleEach?'checked':''}> Technique keys set each selected note on its own, instead of making them all the same</label><p class="ws-muted">Set… waits for the next key you press: Escape cancels, Backspace removes the command's keys. A key given to one command is taken from any other. ⚠ marks keys a browser tab may keep for itself.</p><div class="ws-key-table"><table><tbody id="ws-key-rows"></tbody></table></div><button type="button" id="ws-key-reset-all">Reset all changes for this profile</button>`,'Apply',{allowStateChanges:true});
    const paint=(note=PROFILES[profile].note)=>{$('key-rows').innerHTML=rows();$('key-note').textContent=note;};paint();
    on($('key-profile'),'change',e=>{profile=e.target.value;paint();});
    on($('key-reset-all'),'click',()=>{delete draft[profile];paint('All keys back to the profile');});
@@ -1512,8 +1528,8 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
     window.addEventListener('keydown',capture,true);
    });
    if(!await pending)return;
-   keyProfile=profile;techniqueToggleEach=$('key-each').checked;keyOverrides=draft;keymapCache=null;persistPreferences();refreshMenuKeys();
-   status(`Keyboard: ${PROFILES[profile].label}${Object.keys(draft[profile]||{}).length?' with your changes':''}`);
+   keyProfile=profile;techniqueToggleEach=$('key-each').checked;mouseModel=$('mouse-model').value==='eof'?'eof':'standard';keyOverrides=draft;keymapCache=null;persistPreferences();refreshMenuKeys();
+   status(`Keyboard: ${PROFILES[profile].label}${Object.keys(draft[profile]||{}).length?' with your changes':''} · ${mouseModel==='eof'?'EOF mouse':'standard mouse'}`);
   },
   'toggle-bottom':()=>{bottomVisible=!bottomVisible;applyLayout();persistPreferences();if(bottomVisible)renderBottom();draw();},'reset-layout':()=>{inspectorVisible=true;inspectorWidth=280;bottomHeight=155;bottomVisible=true;applyLayout();renderBottom();draw();},scratch:()=>{ensureScratch();bottom='scratch';revealBottom();renderBottom();},'scratch-focus':()=>{countIn.cancel();stopMidi();const next=arrangement().editorOnly?mainPart():ensureScratch();arrangementId=next.id;selection.clear();selectionRange=null;markerSelection=null;fitPianoRange();audio.setProject(project(),arrangement());bottom='scratch';render();},mixer:()=>{bottom='mixer';revealBottom();renderBottom();},stave:()=>{bottom='stave';if(bottomHeight<300){bottomHeight=300;persistPreferences();}revealBottom();applyLayout();renderBottom();draw();},history:()=>{bottom='history';revealBottom();renderBottom();},errors:()=>{bottom='errors';revealBottom();renderBottom();},
   play:async()=>{if(audio.isPlaying||audio.preparing||countIn.isCounting||localStartPending||recordStartPending){const counting=countIn.isCounting,preparing=audio.preparing||localStartPending||recordStartPending;countIn.cancel();stopMidi();if(!counting)cursor=audio.currentTime;audio.pause();if(counting)status('Count-in cancelled');else if(preparing){qualityMessage='Preview preparation cancelled';if($('quality-status'))$('quality-status').textContent=qualityMessage;status(qualityMessage);}}else await startLocalTransport();updateClock();},
@@ -1751,9 +1767,15 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   const left=geometry().left,anchor=Math.max(left,Math.min(geometry().width,anchorX)),time=(timeScroll()+anchor-left)/zoom;
   zoom=Math.round(Math.max(25,Math.min(400,value)));viewZoom[timelineView]=zoom;$('zoom').value=zoom;draw();setTimeScroll(time*zoom-anchor+left);persistPreferences();
  }
+ on(canvas,'mousedown',e=>{if(e.button===1&&mouseModel==='eof')e.preventDefault();});
  scroll.addEventListener('wheel',e=>{
   if(!['tab','tempo'].includes(view)||root.querySelector('dialog[open]'))return;
   const rect=scroll.getBoundingClientRect(),factor=e.deltaMode===1?16:e.deltaMode===2?scroll.clientHeight:1,dx=e.deltaX*factor,dy=e.deltaY*factor;
+  if(mouseModel==='eof'&&view==='tab'&&!e.altKey&&!e.shiftKey&&selected().length&&chartEditing()){
+   // One step per notch; trackpads send many small deltas, so they add up first.
+   e.preventDefault();wheelCarry+=dy;if(Math.abs(wheelCarry)<40)return;const direction=wheelCarry<0?1:-1;wheelCarry=0;
+   safe(()=>{if(e.ctrlKey||e.metaKey){if(arrangement().type!=='drums')change(direction>0?'Fret up':'Fret down',()=>transposeSelection(arrangement(),selection,direction));}else stepSustains(direction);})();return;
+  }
   if(e.ctrlKey||e.metaKey){e.preventDefault();setTimelineZoom(zoom*Math.exp(-Math.max(-200,Math.min(200,dy))*.003),pointerPoint(e).x);return;}
   if(e.altKey){
    e.preventDefault();const before=geometry(),localY=pointerPoint(e).y-laneScroll(),index=(laneScroll()+localY-before.top)/before.row,type=arrangement().type;
@@ -1768,6 +1790,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  },{passive:false,signal:abort.signal});
  on(scroll,'scroll',()=>{rememberScroll();draw();});on(canvas,'dblclick',safe(e=>{const {x,y}=pointerPoint(e);focusBandAt(y);const g=geometry();if(x>=g.left&&y>=g.top&&y<g.top+g.lanes.length*g.row){cursor=quantize(timeOf(x));lane=laneOf(y);insertNote();}}));
  on(canvas,'contextmenu',safe(e=>{
+  if(mouseModel==='eof'&&!e.shiftKey&&view==='tab'){e.preventDefault();closeContextMenu?.();eofRightClick(e);return;}
   e.preventDefault();closeContextMenu?.();horizontalSelectionAnchor=null;verticalSelectionAnchor=null;
   focusBandAt(pointerPoint(e).y);
   const {x,y}=pointerPoint(e),g=geometry(),hit=editableNotes().findLast(n=>Math.abs(yOf(getNoteLane(n))-y)<Math.max(10,g.row/2)&&x>=xOf(n.time)-10&&x<=xOf(n.time)+Math.max(12,n.sustain*zoom));
@@ -1786,6 +1809,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   closeContextMenu=openContextMenu(root,{x:e.clientX,y:e.clientY,items:[{label:'Import tab',action:'import-chart'}],restoreFocus:button,onChoose:safe(async action=>{await actions[action]();button.focus({preventScroll:true});})});
  }));
  on(canvas,'pointerdown',safe(e=>{
+  if(e.button===1&&mouseModel==='eof'&&view==='tab'){e.preventDefault();eofMiddleClick(e);return;}
   if(e.button!==0)return;horizontalSelectionAnchor=null;verticalSelectionAnchor=null;canvas.focus({preventScroll:true});focusBandAt(pointerPoint(e).y);const {x,y}=pointerPoint(e),g=geometry();
   if(g.chordStrip&&y>=g.chordStrip.top&&y<g.chordStrip.top+g.chordStrip.height){if(x<g.left){if(y<g.chordStrip.top+16)actions[x<60?'chord-strip':x<84?'chord-strip-rotate':'chord-strip-move']();}else selectChordStripAt(timeOf(x));return;}
   if(x<g.left){if((bottomRoll()||arrangement().type==='keys')&&y>=g.top){lane=keyboardLaneAt(x,y);draw();}else if(view==='tab'&&markerKindAt(y))awaitLaneAction(y);return;}
@@ -1800,7 +1824,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   if(view==='tempo'&&waveform?.length&&y>=90&&y<280&&x>=g.left){drag={kind:'audio-nudge',origin:timeOf(x),delta:0};canvas.setPointerCapture(e.pointerId);return;}
   const hit=editableNotes().findLast(n=>Math.abs(yOf(getNoteLane(n))-y)<Math.max(10,g.row/2)&&x>=xOf(n.time)-10&&x<=xOf(n.time)+Math.max(12,n.sustain*zoom));
   if(hit){selectionRange=null;if(tool==='eraser'){selection=new Set([hit.id]);actions.delete();return;}if(e.shiftKey){selection.has(hit.id)?selection.delete(hit.id):selection.add(hit.id);}else if(!selection.has(hit.id))selection=new Set([hit.id]);inspector='properties';cursor=hit.time;drag=x>=xOf(hit.time+hit.sustain)-6&&hit.sustain>0?{kind:'sustain',id:hit.id,end:hit.time+hit.sustain}:{kind:'note',origin:timeOf(x),delta:0};}
-  else{cursor=Math.max(0,time);if(y>=g.top)lane=laneOf(y);if(!e.shiftKey){selection.clear();selectionRange=null;}if(tool==='pencil'&&y>=g.top){insertNote();return;}drag={kind:'marquee',x,y,currentX:x,currentY:y};}
+  else{cursor=Math.max(0,time);if(y>=g.top)lane=laneOf(y);if(!e.shiftKey){selection.clear();selectionRange=null;}if(tool==='pencil'&&mouseModel!=='eof'&&y>=g.top){insertNote();return;}drag={kind:'marquee',x,y,currentX:x,currentY:y};}
   canvas.setPointerCapture(e.pointerId);renderInspector();draw();updateClock();
  }));
  async function awaitLaneAction(y){await actions[{tones:'tone',phrases:'phrase',sections:'section',anchors:'anchor'}[markerKindAt(y)]]();}
@@ -1913,10 +1937,10 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  audio.disposers.add(()=>{clearInterval(meterTimer);signalMeters.dispose();});
  audio.onTime=()=>{if(!root.isConnected)return;updateClock();updateTonePreview();if(audio.isPlaying){const x=xOf(audio.currentTime);if(bottomRoll())setTimeScroll(Math.max(0,audio.currentTime*zoom-48));else if(x>geometry().width-60)setTimeScroll(Math.max(0,audio.currentTime*zoom-200));draw();}};
  audio.onEnded=()=>{stopMidi();cursor=audio.currentTime;updateClock();};audio.setEnabled('metronome',false);audio.setGain('guide',0.7);audio.setGain('master',Number($('master').value)/100);audio.setProject(project(),arrangement());
- const preferences=readPreferences();staveTheme=preferences.staveTheme==='light'?'light':'dark';showRests=preferences.showRests!==false;if(preferences.lyric){lyricMode=preferences.lyric.mode==='tap'?'tap':'check';for(const key of ['scope','leadIn','latency'])if(preferences.lyric[key]!==undefined)lyricOptions[key]=preferences.lyric[key];}inspectorVisible=preferences.inspectorVisible??inspectorVisible;inspectorWidth=preferences.inspectorWidth??inspectorWidth;bottomHeight=preferences.bottomHeight??bottomHeight;bottomVisible=preferences.bottomVisible??bottomVisible;if(preferences.keyboard&&typeof preferences.keyboard==='object'){keyProfile=PROFILE_IDS.includes(preferences.keyboard.profile)?preferences.keyboard.profile:'oce';keyOverrides=preferences.keyboard.overrides&&typeof preferences.keyboard.overrides==='object'?preferences.keyboard.overrides:{};techniqueToggleEach=preferences.keyboard.each===true;}refreshMenuKeys();if(preferences.chordStrip&&typeof preferences.chordStrip==='object')chordStrip={visible:preferences.chordStrip.visible!==false,open:preferences.chordStrip.open!==false,position:preferences.chordStrip.position==='above'?'above':'below',upright:preferences.chordStrip.upright===true};zoom=preferences.zoom??zoom;viewZoom={tab:zoom,tempo:zoom,...preferences.viewZoom};laneScales={...laneScales,...preferences.laneScales};rollOrientations={...rollOrientations,...preferences.rollOrientations};zoom=viewZoom.tab;snap=preferences.snap??snap;fretConvention=preferences.fretConvention??fretConvention;invertStrings=preferences.invertStrings??invertStrings;validationProfile=preferences.validationProfile??validationProfile;countInOptions={...countInOptions,...preferences.countIn};
+ const preferences=readPreferences();staveTheme=preferences.staveTheme==='light'?'light':'dark';showRests=preferences.showRests!==false;if(preferences.lyric){lyricMode=preferences.lyric.mode==='tap'?'tap':'check';for(const key of ['scope','leadIn','latency'])if(preferences.lyric[key]!==undefined)lyricOptions[key]=preferences.lyric[key];}inspectorVisible=preferences.inspectorVisible??inspectorVisible;inspectorWidth=preferences.inspectorWidth??inspectorWidth;bottomHeight=preferences.bottomHeight??bottomHeight;bottomVisible=preferences.bottomVisible??bottomVisible;if(preferences.keyboard&&typeof preferences.keyboard==='object'){keyProfile=PROFILE_IDS.includes(preferences.keyboard.profile)?preferences.keyboard.profile:'oce';keyOverrides=preferences.keyboard.overrides&&typeof preferences.keyboard.overrides==='object'?preferences.keyboard.overrides:{};techniqueToggleEach=preferences.keyboard.each===true;mouseModel=preferences.keyboard.mouse==='eof'?'eof':'standard';}refreshMenuKeys();if(preferences.chordStrip&&typeof preferences.chordStrip==='object')chordStrip={visible:preferences.chordStrip.visible!==false,open:preferences.chordStrip.open!==false,position:preferences.chordStrip.position==='above'?'above':'below',upright:preferences.chordStrip.upright===true};zoom=preferences.zoom??zoom;viewZoom={tab:zoom,tempo:zoom,...preferences.viewZoom};laneScales={...laneScales,...preferences.laneScales};rollOrientations={...rollOrientations,...preferences.rollOrientations};zoom=viewZoom.tab;snap=preferences.snap??snap;fretConvention=preferences.fretConvention??fretConvention;invertStrings=preferences.invertStrings??invertStrings;validationProfile=preferences.validationProfile??validationProfile;countInOptions={...countInOptions,...preferences.countIn};
  if(preferences.mixer){try{audio.restoreMixerState(preferences.mixer);}catch{}}if(preferences.speed)audio.setSpeed(preferences.speed);if(preferences.pitch!==undefined)audio.setPitch(preferences.pitch);click=audio.enabled.metronome;guide=audio.enabled.guide;$('zoom').value=zoom;$('snap').value=snap;$('speed').value=audio.speed*100;$('speed-value').textContent=`${Math.round(audio.speed*100)}%`;$('pitch').value=audio.pitch;$('master').value=audio.gains.master*100;
  shadeHands=preferences.shadeHands??shadeHands;audio.quality=preferences.quality??'fast';qualityMessage=audio.quality==='spectral'?'Spectral preview selected; preparation starts on Play':'Fast granular preview';sustainOptions={...sustainOptions,...preferences.sustain};
- function persistPreferences(){writePreferences({keyboard:{profile:keyProfile,overrides:keyOverrides,each:techniqueToggleEach},inspectorVisible,inspectorWidth,bottomHeight,bottomVisible,chordStrip:{...chordStrip},zoom,viewZoom:{...viewZoom},laneScales:{...laneScales},rollOrientations:{...rollOrientations},snap,fretConvention,invertStrings,validationProfile,shadeHands,sustain:{...sustainOptions},quality:audio.quality,speed:audio.speed,pitch:audio.pitch,mixer:audio.getMixerState(),countIn:{...countInOptions},staveTheme,showRests,lyric:{mode:lyricMode,...lyricOptions}});}
+ function persistPreferences(){writePreferences({keyboard:{profile:keyProfile,overrides:keyOverrides,each:techniqueToggleEach,mouse:mouseModel},inspectorVisible,inspectorWidth,bottomHeight,bottomVisible,chordStrip:{...chordStrip},zoom,viewZoom:{...viewZoom},laneScales:{...laneScales},rollOrientations:{...rollOrientations},snap,fretConvention,invertStrings,validationProfile,shadeHands,sustain:{...sustainOptions},quality:audio.quality,speed:audio.speed,pitch:audio.pitch,mixer:audio.getMixerState(),countIn:{...countInOptions},staveTheme,showRests,lyric:{mode:lyricMode,...lyricOptions}});}
  on(root.querySelector('.ws-menu'),'pointerdown',refreshActionAvailability);
  root.addEventListener('keydown',e=>{if(e.key==='F10'||e.target.closest('.ws-menu'))refreshActionAvailability();},{capture:true,signal:abort.signal});
  on(root,'click',e=>{if(e.target.closest('button[data-action]'))refreshActionAvailability();});
