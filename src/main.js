@@ -50,6 +50,7 @@ import {buildAndPlaytest,endPlaytest,removePreview} from './playtest.js';
 import {insertChordZone,resizeChordZone,setChordZoneEnd,splitChordInstances,toggleChordStrum,deleteChordTemplate,chordZoneContents,moveChordZone,chordZoneStyle,setChordZoneStyle,applyDefaultChordName,chordStrumPresentation} from './chord-tools.js';
 import {applySustainEdits,steppedSustain} from './sustain-policy.js';
 import {adjustBendAtCursor} from './bend-tools.js';
+import {drawLiveView,DEFAULT_LIVE_OPTIONS} from './live-view.js';
 import {ACTIONS,PROFILES,PROFILE_IDS,GLOBAL_COMMANDS,baseCommand,comboFromEvent,displayCombo,buildKeymap,isStructural,BROWSER_RESERVED} from './keymaps.js';
 import {generateFingerprintZones,removeFingerprintZones} from './fingerprint-zones.js';
 import {SLOT_CATALOG,GEAR_CATALOG,gearsForSlot,loadGearCatalog,createTone,setGear,setKnob,importTone,exportTone,copyTone,allocateTone,removeTone,TonePreview,toneAuditionPlan} from './tone-rack.js';
@@ -112,6 +113,7 @@ function mount(root){
  let keyProfile='oce',keyOverrides={},techniqueToggleEach=false,insertHeld=false,insertUsed=false,keymapCache=null;
  const keymap=()=>{const overrides=keyOverrides[keyProfile]||{},key=keyProfile+JSON.stringify(overrides);if(keymapCache?.key!==key)keymapCache={key,...buildKeymap(keyProfile,overrides)};return keymapCache;};
  const keysFor=id=>keymap().byCommand.get(id)||[];
+ let liveOptions={...DEFAULT_LIVE_OPTIONS};
  let staveTheme='dark',showRests=true,staveMode='select',staveLength=1,staveHits=[],staveMetricsCache=null,staveKeyCache=null;
 let history=new History(demoProject()),arrangementId=history.project.arrangements[0].id,view='tab',inspector='settings',bottom='errors',selection=new Set(),cursor=0,lane=0,lastFret=3,zoom=110,snap=4,tool='pointer',clipboard=[],drag=null,dirty=false,saveHandle=null,lastSaveFormat='json',exportOptions={},lastDestination='',tapTimes=[],waveform=null,loadedAudio=null,draftTimer=null;
  let toneImportGeneration=0,tempoImportGeneration=0,chartImportGeneration=0;
@@ -849,6 +851,13 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   selection=new Set([hit.id]);selectionRange=null;markerSelection=null;cursor=hit.time;lane=getNoteLane(hit);inspector='properties';inspectorVisible=true;applyLayout();render();
   requestAnimationFrame(()=>{const field=$('note-fret');field?.focus();field?.select?.();});
  }
+ // Scrubbing: the cursor follows the pointer unsnapped; near an edge the timeline scrolls on.
+ function scrubTo(x){
+  const g=geometry(),edge=48;
+  if(x>g.width-edge)setTimeScroll(timeScroll()+Math.min(60,x-(g.width-edge)));
+  else if(x<g.left+edge&&timeScroll()>0)setTimeScroll(timeScroll()-Math.min(60,g.left+edge-x));
+  setCursor(timeOf(Math.max(g.left,Math.min(g.width,x))));
+ }
  function refreshMenuKeys(){
   const known=new Set(ACTIONS.map(x=>x.id));
   for(const button of root.querySelectorAll('.ws-menu button[data-action]')){
@@ -994,6 +1003,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   if(g.chordStrip)drawChordStripLabel(g);
   if(drag?.kind==='marquee'){ctx.fillStyle='#2b8aca33';ctx.strokeStyle='#44a5dd';ctx.fillRect(drag.x,drag.y,drag.currentX-drag.x,drag.currentY-drag.y);ctx.strokeRect(drag.x,drag.y,drag.currentX-drag.x,drag.currentY-drag.y);}
   if(bottom==='stave')drawStavePanel();
+  if(bottom==='live')drawLivePanel();
  }
 
  // Availability follows this editor's actual command prerequisites. Exact
@@ -1108,6 +1118,22 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   if(bottomRoll())return {xs:t=>left+t*zoom-timeScroll(),timeAt:x=>(x-left+timeScroll())/zoom};
   return {xs:t=>xOf(t)+offset,timeAt:x=>timeOf(x-offset)};
  }
+ // Live view: the current part as a Rocksmith-style highway, in step with the cursor and playback.
+ const chordMembers=new WeakMap();
+ function drawLivePanel(){
+  const el=$('live');if(!el||!el.isConnected)return;
+  const a=arrangement(),width=Math.max(300,el.parentElement.clientWidth),height=Math.max(160,Math.floor($('bottom').getBoundingClientRect().bottom-el.getBoundingClientRect().top-6)),dpr=Math.min(window.devicePixelRatio||1,2);
+  if(el.width!==Math.floor(width*dpr)||el.height!==Math.floor(height*dpr)){el.width=Math.floor(width*dpr);el.height=Math.floor(height*dpr);el.style.width=width+'px';el.style.height=height+'px';}
+  const pen=el.getContext('2d');pen.setTransform(dpr,0,0,dpr,0,0);
+  const index=draw.cache?.arrangement===a?draw.cache:bandIndex(a);
+  let members=chordMembers.get(a);if(!members||members.count!==a.chords.length){members={count:a.chords.length,ids:new Set(a.chords.flatMap(c=>(c.notes||[]).map(n=>n.id)))};chordMembers.set(a,members);}
+  const last=(list,t,key='time')=>{let found=null;for(const item of list)if((item[key]??0)<=t+1e-4)found=item;return found;};
+  drawLiveView(pen,{width,height,arrangement:a,time:audio.isPlaying?audio.currentTime:cursor,playing:audio.isPlaying,options:liveOptions,
+   notes:(t0,t1)=>index.notesBetween(t0,t1).filter(n=>!members.ids.has(n.id)),chords:(t0,t1)=>index.chordsBetween(t0,t1),zones:(t0,t1)=>index.zonesBetween(t0,t1).map(row=>row.item),
+   anchorAt:t=>index.anchorAt(t),anchors:[...a.anchors].sort((x,y)=>x.time-y.time),templates:a.chord_templates,beats:project().beats,isRepeat:c=>index.compactChords.has(c),
+   phraseAt:t=>last(a.phrases,t)?.name||'',sectionAt:t=>last(project().sections,t,'start_time')?.name||'',
+   stringColor:s=>stringColor(a,s),chordLabel:(template,notes)=>chordLabel(a,template,notes),techniqueTags,shownFret});
+ }
  function drawStavePanel(){
   const el=$('stave');if(!el||!el.isConnected)return;
   const a=arrangement(),width=Math.max(300,el.parentElement.clientWidth),height=Math.max(150,Math.floor($('bottom').getBoundingClientRect().bottom-el.getBoundingClientRect().top-6)),dpr=Math.min(window.devicePixelRatio||1,2);
@@ -1176,6 +1202,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  }
  function renderBottom(){
   if(bottom!=='stave')delete $('bottom-content').dataset.stave;
+  if(bottom!=='live')delete $('bottom-content').dataset.live;
   issueFinder.bind(history);const analysis=issueFinder.get(validationProfile);$('errors-label').textContent=`Errors (${analysis.errors.length}) / Warnings (${analysis.warnings.length})`;
   const el=$('bottom-content');if(bottom==='errors'){
    const page=issueFinder.page({profile:validationProfile,filter:issueFilter,page:issuePage});issuePage=page.page;
@@ -1193,6 +1220,22 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
    el.innerHTML=`<h3>${current.editorOnly?'Main reference':'Scratch track'} · ${esc(other?.name||'Empty')} <button data-action="scratch-focus">${current.editorOnly?'Return to main':'Edit scratch'}</button></h3><p class="ws-muted">Scratch material is saved with the editable project and Feedpak editor sidecar, and excluded from playable charts. Copy, switch tracks and paste to transfer ideas.</p><canvas id="ws-scratch-preview" aria-label="Secondary track preview" style="width:100%;height:100px"></canvas>`;
    const secondary=$('scratch-preview'),width=Math.max(300,el.clientWidth-20);secondary.width=width;secondary.height=100;const pen=secondary.getContext('2d');pen.fillStyle='#17181d';pen.fillRect(0,0,width,100);
    if(other){const notes=[...other.notes,...other.chords.flatMap(c=>c.notes||[])],layout=other.type==='drums'?drumLayout(other):null,lanes=other.type==='keys'?128:layout?layout.ids.length:other.stringCount;for(const note of notes){const lane=other.type==='keys'?notePitch(other,note):layout?layout.indexOf(note):note.string,x=note.time/project().duration*width,y=90-lane/Math.max(1,lanes-1)*80;pen.fillStyle=other.type==='keys'?COLORS[(notePitch(other,note)%12)%COLORS.length]:stringColor(other,note.string||0);pen.fillRect(x,y,Math.max(3,(note.sustain||0)/project().duration*width),5);}on(secondary,'click',e=>{countIn.cancel();stopMidi();arrangementId=other.id;selection.clear();selectionRange=null;markerSelection=null;fitPianoRange();audio.setProject(project(),arrangement());setCursor(e.offsetX/width*project().duration);render();});}
+  }
+  else if(bottom==='live'){
+   const a=arrangement(),signature=[a.id,a.name,a.type,a.stringCount,JSON.stringify(liveOptions)].join('|');
+   if(el.dataset.live===signature&&$('live')){drawLivePanel();return;}
+   el.dataset.live=signature;
+   const fretted=['guitar','bass'].includes(a.type);
+   el.innerHTML=`<h3 class="ws-stave-bar">Live view <span class="ws-muted">· ${esc(a.name)}${fretted?` · ${a.stringCount} strings`:''} · follows the cursor and playback</span>`
+    +(fretted?` <button data-live-invert title="Which string runs along the top of the highway">${liveOptions.lowStringTop?'Low string on top':'Low string at the bottom'}</button>`
+    +`<button data-live-lefty class="${liveOptions.leftHanded?'active':''}" aria-pressed="${liveOptions.leftHanded}" title="Mirror the neck for a left-handed player">Left-handed</button>`
+    +` <button data-live-speed="-1" title="Slower highway: notes closer together">Slower</button><span class="ws-muted"> ${liveOptions.speed.toFixed(2)}× </span><button data-live-speed="1" title="Faster highway: notes further apart">Faster</button>`:'')
+    +`</h3><canvas id="ws-live" aria-label="Live highway view of ${esc(a.name)}" style="display:block"></canvas>`;
+   const update=next=>{liveOptions={...liveOptions,...next};persistPreferences();renderBottom();};
+   on(el.querySelector('[data-live-invert]'),'click',()=>update({lowStringTop:!liveOptions.lowStringTop}));
+   on(el.querySelector('[data-live-lefty]'),'click',()=>update({leftHanded:!liveOptions.leftHanded}));
+   el.querySelectorAll('[data-live-speed]').forEach(button=>on(button,'click',()=>update({speed:Math.max(.5,Math.min(2,Math.round((liveOptions.speed+.25*Number(button.dataset.liveSpeed))*100)/100))})));
+   drawLivePanel();
   }
   else if(bottom==='stave'){
    // Rebuild the toolbar only when what it shows changes; an edit just repaints,
@@ -1510,6 +1553,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   'chord-strip-rotate':()=>{chordStrip={...chordStrip,visible:true,open:true,upright:!chordStrip.upright};persistPreferences();draw();status(`Chord diagrams ${chordStrip.upright?'upright':'tab-style'}`);},
   'chord-strip-show':()=>{chordStrip={...chordStrip,visible:!chordStrip.visible};persistPreferences();draw();},
   'slide-cycle':()=>cycleSlide(),
+  live:()=>{bottom='live';if(bottomHeight<320){bottomHeight=320;persistPreferences();}revealBottom();applyLayout();renderBottom();draw();},
   'keyboard-settings':async()=>{
    let profile=keyProfile;const draft=clone(keyOverrides),label=id=>ACTIONS.find(x=>x.id===id)?.label||id;
    const rows=()=>{const map=buildKeymap(profile,draft[profile]||{}),changes=draft[profile]||{};return [...new Set(ACTIONS.map(x=>x.group))].map(group=>`<tr><th colspan="3">${esc(group)}</th></tr>`+ACTIONS.filter(x=>x.group===group).map(x=>{const keys=map.byCommand.get(x.id)||[],changed=Object.hasOwn(changes,x.id),reserved=keys.some(k=>BROWSER_RESERVED.has(k));return `<tr><td>${esc(x.label)}</td><td>${keys.length?keys.map(k=>`<kbd>${esc(displayCombo(k))}</kbd>`).join(' '):'<span class="ws-muted">none</span>'}${changed?' <span class="ws-muted">(changed)</span>':''}${reserved?' <span title="A browser tab may keep this key for itself; it works in the FeedBack desktop app">⚠</span>':''}</td><td><button type="button" data-key-set="${x.id}">Set…</button>${changed?` <button type="button" data-key-reset="${x.id}">Reset</button>`:''}</td></tr>`;}).join('')).join('');};
@@ -1814,6 +1858,9 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   if(g.chordStrip&&y>=g.chordStrip.top&&y<g.chordStrip.top+g.chordStrip.height){if(x<g.left){if(y<g.chordStrip.top+16)actions[x<60?'chord-strip':x<84?'chord-strip-rotate':'chord-strip-move']();}else selectChordStripAt(timeOf(x));return;}
   if(x<g.left){if((bottomRoll()||arrangement().type==='keys')&&y>=g.top){lane=keyboardLaneAt(x,y);draw();}else if(view==='tab'&&markerKindAt(y))awaitLaneAction(y);return;}
   const time=quantize(timeOf(x));
+  // Scrub: drag the playhead marker, or anywhere on the Tab view's waveform strip, to move smoothly
+  // through the song. The beat-number row above draws a loop; Tempo's waveform slides the audio.
+  if(x>=g.left&&(y<45&&Math.abs(x-xOf(audio.isPlaying?audio.currentTime:cursor))<=8||view==='tab'&&y>=29&&y<56)){drag={kind:'scrub'};canvas.setPointerCapture(e.pointerId);canvas.style.cursor='ew-resize';setCursor(timeOf(x));return;}
   if(y<29){selection.clear();selectionRange=null;markerSelection=null;const kind=loopRegionDefined&&Math.abs(x-xOf(audio.loop.start))<9?'loop-start':loopRegionDefined&&Math.abs(x-xOf(audio.loop.end))<9?'loop-end':'loop-range';drag={kind,start:time,value:time};canvas.setPointerCapture(e.pointerId);draw();return;}
   if(view==='tab'&&Math.abs(y-(g.top+g.lanes.length*g.row+15))<=15){const index=arrangement().handshapes.findLastIndex(h=>Math.abs(x-xOf(h.end_time))<=9);if(index>=0){selectedZoneIndex=index;drag={kind:'zone-end',index,end:arrangement().handshapes[index].end_time};canvas.setPointerCapture(e.pointerId);draw();return;}const body=arrangement().handshapes.findLastIndex(h=>x>=xOf(h.start_time)&&x<xOf(h.end_time));if(body>=0){const contents=chordZoneContents(arrangement(),body);selectedZoneIndex=body;inspector='chords';drag={kind:'zone-move',index:body,origin:timeOf(x),delta:0,ids:new Set(contents.notes.map(n=>n.id)),zoneIndexes:new Set(contents.zones.map(h=>arrangement().handshapes.indexOf(h)))};canvas.setPointerCapture(e.pointerId);renderInspector();draw();return;}}
   if(view==='tab'&&markerKindAt(y)){const kind=markerKindAt(y),list=markerList(kind),timeKey=kind==='sections'?'start_time':'time',item=[...list].sort((a,b)=>a[timeKey]-b[timeKey]).findLast(item=>item[timeKey]<=timeOf(x));if(item){markerSelection={kind,index:list.indexOf(item)};selection.clear();selectionRange=null;inspector='properties';cursor=item[timeKey];drag={kind:'marker',marker:{...markerSelection},timeKey,time:item[timeKey]};canvas.setPointerCapture(e.pointerId);renderInspector();draw();updateClock();return;}}
@@ -1828,9 +1875,10 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   canvas.setPointerCapture(e.pointerId);renderInspector();draw();updateClock();
  }));
  async function awaitLaneAction(y){await actions[{tones:'tone',phrases:'phrase',sections:'section',anchors:'anchor'}[markerKindAt(y)]]();}
- on(canvas,'pointermove',e=>{if(!drag)return;const {x,y}=pointerPoint(e);if(drag.kind.startsWith('loop-'))drag.value=Math.min(project().duration,quantize(timeOf(x)));else if(drag.kind==='beat'||drag.kind==='beat-shift')drag.time=Math.max(0,timeOf(x));else if(drag.kind==='audio-nudge')drag.delta=timeOf(x)-drag.origin;else if(drag.kind==='zone-move'){const start=arrangement().handshapes[drag.index].start_time;drag.delta=Math.max(0,quantize(start+timeOf(x)-drag.origin))-start;}else if(drag.kind==='zone-end'){const start=arrangement().handshapes[drag.index].start_time,division=snap||4,next=timeAt(project().beats,(Math.floor(beatAt(project().beats,start)*division)+1)/division);drag.end=Math.max(next,quantize(timeOf(x)));}else if(drag.kind==='marker')drag.time=quantize(timeOf(x));else if(drag.kind==='sustain')drag.end=quantize(timeOf(x));else if(drag.kind==='note')drag.delta=quantize(timeOf(x))-quantize(drag.origin);else{drag.currentX=x;drag.currentY=y;}draw();});
+ on(canvas,'pointermove',e=>{if(!drag)return;const {x,y}=pointerPoint(e);if(drag.kind==='scrub'){scrubTo(x);return;}if(drag.kind.startsWith('loop-'))drag.value=Math.min(project().duration,quantize(timeOf(x)));else if(drag.kind==='beat'||drag.kind==='beat-shift')drag.time=Math.max(0,timeOf(x));else if(drag.kind==='audio-nudge')drag.delta=timeOf(x)-drag.origin;else if(drag.kind==='zone-move'){const start=arrangement().handshapes[drag.index].start_time;drag.delta=Math.max(0,quantize(start+timeOf(x)-drag.origin))-start;}else if(drag.kind==='zone-end'){const start=arrangement().handshapes[drag.index].start_time,division=snap||4,next=timeAt(project().beats,(Math.floor(beatAt(project().beats,start)*division)+1)/division);drag.end=Math.max(next,quantize(timeOf(x)));}else if(drag.kind==='marker')drag.time=quantize(timeOf(x));else if(drag.kind==='sustain')drag.end=quantize(timeOf(x));else if(drag.kind==='note')drag.delta=quantize(timeOf(x))-quantize(drag.origin);else{drag.currentX=x;drag.currentY=y;}draw();});
  on(canvas,'pointerup',safe(e=>{
   if(!drag)return;const saved=drag;drag=null;canvas.releasePointerCapture(e.pointerId);
+  if(saved.kind==='scrub'){canvas.style.cursor='';draw();return;}
   if(saved.kind.startsWith('loop-')){let {start,end}=audio.loop;if(saved.kind==='loop-range'){start=Math.min(saved.start,saved.value);end=Math.max(saved.start,saved.value);}else if(saved.kind==='loop-start')start=Math.min(saved.value,end-.001);else end=Math.max(saved.value,start+.001);if(end-start>.001){countIn.cancel();audio.setLoop(start,end,loop);loopRegionDefined=true;renderInspector();status(`Loop region ${seconds(start)} – ${seconds(end)} · press L to ${loop?'disable':'enable'}`);}else setCursor(saved.start);}
   else if(saved.kind==='beat-shift')shiftBeatMap(saved.time-project().beats[saved.index].time);
    else if(saved.kind==='audio-nudge'){if(Math.abs(saved.delta*zoom)<3){cursor=Math.max(0,saved.origin);updateClock();draw();}else shiftBeatMap(-saved.delta);}
@@ -1937,10 +1985,10 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  audio.disposers.add(()=>{clearInterval(meterTimer);signalMeters.dispose();});
  audio.onTime=()=>{if(!root.isConnected)return;updateClock();updateTonePreview();if(audio.isPlaying){const x=xOf(audio.currentTime);if(bottomRoll())setTimeScroll(Math.max(0,audio.currentTime*zoom-48));else if(x>geometry().width-60)setTimeScroll(Math.max(0,audio.currentTime*zoom-200));draw();}};
  audio.onEnded=()=>{stopMidi();cursor=audio.currentTime;updateClock();};audio.setEnabled('metronome',false);audio.setGain('guide',0.7);audio.setGain('master',Number($('master').value)/100);audio.setProject(project(),arrangement());
- const preferences=readPreferences();staveTheme=preferences.staveTheme==='light'?'light':'dark';showRests=preferences.showRests!==false;if(preferences.lyric){lyricMode=preferences.lyric.mode==='tap'?'tap':'check';for(const key of ['scope','leadIn','latency'])if(preferences.lyric[key]!==undefined)lyricOptions[key]=preferences.lyric[key];}inspectorVisible=preferences.inspectorVisible??inspectorVisible;inspectorWidth=preferences.inspectorWidth??inspectorWidth;bottomHeight=preferences.bottomHeight??bottomHeight;bottomVisible=preferences.bottomVisible??bottomVisible;if(preferences.keyboard&&typeof preferences.keyboard==='object'){keyProfile=PROFILE_IDS.includes(preferences.keyboard.profile)?preferences.keyboard.profile:'oce';keyOverrides=preferences.keyboard.overrides&&typeof preferences.keyboard.overrides==='object'?preferences.keyboard.overrides:{};techniqueToggleEach=preferences.keyboard.each===true;mouseModel=preferences.keyboard.mouse==='eof'?'eof':'standard';}refreshMenuKeys();if(preferences.chordStrip&&typeof preferences.chordStrip==='object')chordStrip={visible:preferences.chordStrip.visible!==false,open:preferences.chordStrip.open!==false,position:preferences.chordStrip.position==='above'?'above':'below',upright:preferences.chordStrip.upright===true};zoom=preferences.zoom??zoom;viewZoom={tab:zoom,tempo:zoom,...preferences.viewZoom};laneScales={...laneScales,...preferences.laneScales};rollOrientations={...rollOrientations,...preferences.rollOrientations};zoom=viewZoom.tab;snap=preferences.snap??snap;fretConvention=preferences.fretConvention??fretConvention;invertStrings=preferences.invertStrings??invertStrings;validationProfile=preferences.validationProfile??validationProfile;countInOptions={...countInOptions,...preferences.countIn};
+ const preferences=readPreferences();staveTheme=preferences.staveTheme==='light'?'light':'dark';showRests=preferences.showRests!==false;if(preferences.lyric){lyricMode=preferences.lyric.mode==='tap'?'tap':'check';for(const key of ['scope','leadIn','latency'])if(preferences.lyric[key]!==undefined)lyricOptions[key]=preferences.lyric[key];}inspectorVisible=preferences.inspectorVisible??inspectorVisible;inspectorWidth=preferences.inspectorWidth??inspectorWidth;bottomHeight=preferences.bottomHeight??bottomHeight;bottomVisible=preferences.bottomVisible??bottomVisible;if(preferences.liveView&&typeof preferences.liveView==='object')liveOptions={lowStringTop:preferences.liveView.lowStringTop!==false,leftHanded:preferences.liveView.leftHanded===true,speed:Number.isFinite(preferences.liveView.speed)?Math.max(.5,Math.min(2,preferences.liveView.speed)):1};if(preferences.keyboard&&typeof preferences.keyboard==='object'){keyProfile=PROFILE_IDS.includes(preferences.keyboard.profile)?preferences.keyboard.profile:'oce';keyOverrides=preferences.keyboard.overrides&&typeof preferences.keyboard.overrides==='object'?preferences.keyboard.overrides:{};techniqueToggleEach=preferences.keyboard.each===true;mouseModel=preferences.keyboard.mouse==='eof'?'eof':'standard';}refreshMenuKeys();if(preferences.chordStrip&&typeof preferences.chordStrip==='object')chordStrip={visible:preferences.chordStrip.visible!==false,open:preferences.chordStrip.open!==false,position:preferences.chordStrip.position==='above'?'above':'below',upright:preferences.chordStrip.upright===true};zoom=preferences.zoom??zoom;viewZoom={tab:zoom,tempo:zoom,...preferences.viewZoom};laneScales={...laneScales,...preferences.laneScales};rollOrientations={...rollOrientations,...preferences.rollOrientations};zoom=viewZoom.tab;snap=preferences.snap??snap;fretConvention=preferences.fretConvention??fretConvention;invertStrings=preferences.invertStrings??invertStrings;validationProfile=preferences.validationProfile??validationProfile;countInOptions={...countInOptions,...preferences.countIn};
  if(preferences.mixer){try{audio.restoreMixerState(preferences.mixer);}catch{}}if(preferences.speed)audio.setSpeed(preferences.speed);if(preferences.pitch!==undefined)audio.setPitch(preferences.pitch);click=audio.enabled.metronome;guide=audio.enabled.guide;$('zoom').value=zoom;$('snap').value=snap;$('speed').value=audio.speed*100;$('speed-value').textContent=`${Math.round(audio.speed*100)}%`;$('pitch').value=audio.pitch;$('master').value=audio.gains.master*100;
  shadeHands=preferences.shadeHands??shadeHands;audio.quality=preferences.quality??'fast';qualityMessage=audio.quality==='spectral'?'Spectral preview selected; preparation starts on Play':'Fast granular preview';sustainOptions={...sustainOptions,...preferences.sustain};
- function persistPreferences(){writePreferences({keyboard:{profile:keyProfile,overrides:keyOverrides,each:techniqueToggleEach,mouse:mouseModel},inspectorVisible,inspectorWidth,bottomHeight,bottomVisible,chordStrip:{...chordStrip},zoom,viewZoom:{...viewZoom},laneScales:{...laneScales},rollOrientations:{...rollOrientations},snap,fretConvention,invertStrings,validationProfile,shadeHands,sustain:{...sustainOptions},quality:audio.quality,speed:audio.speed,pitch:audio.pitch,mixer:audio.getMixerState(),countIn:{...countInOptions},staveTheme,showRests,lyric:{mode:lyricMode,...lyricOptions}});}
+ function persistPreferences(){writePreferences({liveView:{...liveOptions},keyboard:{profile:keyProfile,overrides:keyOverrides,each:techniqueToggleEach,mouse:mouseModel},inspectorVisible,inspectorWidth,bottomHeight,bottomVisible,chordStrip:{...chordStrip},zoom,viewZoom:{...viewZoom},laneScales:{...laneScales},rollOrientations:{...rollOrientations},snap,fretConvention,invertStrings,validationProfile,shadeHands,sustain:{...sustainOptions},quality:audio.quality,speed:audio.speed,pitch:audio.pitch,mixer:audio.getMixerState(),countIn:{...countInOptions},staveTheme,showRests,lyric:{mode:lyricMode,...lyricOptions}});}
  on(root.querySelector('.ws-menu'),'pointerdown',refreshActionAvailability);
  root.addEventListener('keydown',e=>{if(e.key==='F10'||e.target.closest('.ws-menu'))refreshActionAvailability();},{capture:true,signal:abort.signal});
  on(root,'click',e=>{if(e.target.closest('button[data-action]'))refreshActionAvailability();});
