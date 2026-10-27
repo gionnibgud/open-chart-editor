@@ -122,6 +122,9 @@ export function drawLiveView(ctx, view) {
  ctx.fillText([section, phrase].filter(Boolean).join(' · '), 10, 8);
  ctx.textBaseline = 'alphabetic';
 
+ // The fret-hand position for a note or chord; a marker placed on the note itself (or a hair after,
+ // from rounding) counts.
+ function handAt(t) {return view.anchorAt(t + 0.02) || view.anchorAt(t);}
  function noteX(fret) {return fret > 0 ? fret - 0.5 : null;}
  // `span` is the chord box's fret range for a chord's open strings; a lone open string spans the
  // fret-hand position, as in the game.
@@ -131,7 +134,7 @@ export function drawLiveView(ctx, view) {
   const sustainEnd = Math.min(zFar, zOf(n.time + (n.sustain || 0))), t = n.techniques || {};
   if (n.fret === 0) {
    // Open string: a slim bar in the string's colour.
-   const anchor = view.anchorAt(n.time) || {fret: 1, width: 4}, [x0, x1] = span ? [span[0] + 0.15, span[1] - 0.15] : [anchor.fret - 1 + 0.15, anchor.fret - 1 + (anchor.width || 4) - 0.15];
+   const anchor = handAt(n.time) || {fret: 1, width: 4}, [x0, x1] = span ? [span[0] + 0.15, span[1] - 0.15] : [anchor.fret - 1 + 0.15, anchor.fret - 1 + (anchor.width || 4) - 0.15];
    if (n.sustain > 0) poly([[x0, h, z], [x1, h, z], [x1, h, sustainEnd], [x0, h, sustainEnd]], hexAlpha(color, 0.08));
    // A glowing line rather than a box: soft halo first, then a bright core.
    ctx.save(); ctx.shadowColor = color; ctx.shadowBlur = 14; ctx.lineCap = 'round';
@@ -160,10 +163,10 @@ export function drawLiveView(ctx, view) {
   const members = chord.notes || [], template = view.templates[chord.chord_id], z = zOf(chord.time), repeat = view.isRepeat?.(chord);
   if (!members.length) return;
   const fretted = members.filter(n => n.fret > 0);
-  let lo = fretted.length ? Math.min(...fretted.map(n => n.fret)) - 1 : (view.anchorAt(chord.time)?.fret || 1) - 1;
-  let hi = fretted.length ? Math.max(...fretted.map(n => n.fret)) : lo + (view.anchorAt(chord.time)?.width || 4);
+  let lo = fretted.length ? Math.min(...fretted.map(n => n.fret)) - 1 : (handAt(chord.time)?.fret || 1) - 1;
+  let hi = fretted.length ? Math.max(...fretted.map(n => n.fret)) : lo + (handAt(chord.time)?.width || 4);
   // The box (and so its open strings) covers the fret-hand position as well as the fretted notes.
-  const hand = view.anchorAt(chord.time);
+  const hand = handAt(chord.time);
   if (hand) {lo = Math.min(lo, Math.max(1, hand.fret || 1) - 1); hi = Math.max(hi, Math.max(1, hand.fret || 1) - 1 + (hand.width || 4));}
   const heights = members.map(n => y(n.string)), bottom = Math.min(...heights) - 0.25, top = Math.max(...heights) + 0.25;
   ctx.globalAlpha = chord.time < time ? 0.4 : 1;
