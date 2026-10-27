@@ -159,8 +159,12 @@ export function drawLiveView(ctx, view) {
  function drawChord(chord) {
   const members = chord.notes || [], template = view.templates[chord.chord_id], z = zOf(chord.time), repeat = view.isRepeat?.(chord);
   if (!members.length) return;
-  const fretted = members.filter(n => n.fret > 0), lo = fretted.length ? Math.min(...fretted.map(n => n.fret)) - 1 : (view.anchorAt(chord.time)?.fret || 1) - 1;
-  const hi = fretted.length ? Math.max(...fretted.map(n => n.fret)) : lo + (view.anchorAt(chord.time)?.width || 4);
+  const fretted = members.filter(n => n.fret > 0);
+  let lo = fretted.length ? Math.min(...fretted.map(n => n.fret)) - 1 : (view.anchorAt(chord.time)?.fret || 1) - 1;
+  let hi = fretted.length ? Math.max(...fretted.map(n => n.fret)) : lo + (view.anchorAt(chord.time)?.width || 4);
+  // The box (and so its open strings) covers the fret-hand position as well as the fretted notes.
+  const hand = view.anchorAt(chord.time);
+  if (hand) {lo = Math.min(lo, Math.max(1, hand.fret || 1) - 1); hi = Math.max(hi, Math.max(1, hand.fret || 1) - 1 + (hand.width || 4));}
   const heights = members.map(n => y(n.string)), bottom = Math.min(...heights) - 0.25, top = Math.max(...heights) + 0.25;
   ctx.globalAlpha = chord.time < time ? 0.4 : 1;
   poly([[lo, bottom, z], [hi, bottom, z], [hi, top, z], [lo, top, z]], repeat ? 'rgba(120,200,160,0.10)' : 'rgba(120,200,160,0.06)', '#8bd3ad', repeat ? 2.5 : 1.5);
