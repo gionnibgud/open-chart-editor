@@ -18,6 +18,7 @@ import copy
 import datetime
 import hashlib
 import json
+import math
 import re
 import uuid
 import xml.etree.ElementTree as ET
@@ -131,10 +132,103 @@ def _load_keyboard(root, name, index):
 def _vocals(root):
     """<trueVocals> -> the native <vocals> document the editor already reads."""
     out = ET.Element('vocals')
+    offset = _song_offset(root, 'R+ lyrics')
     for vocal in root.findall('./vocals/vocal'):
-        ET.SubElement(out, 'vocal', {k: v for k, v in vocal.attrib.items() if k in ('time', 'note', 'length', 'lyric')})
+        attrs = {k: v for k, v in vocal.attrib.items() if k in ('time', 'note', 'length', 'lyric')}
+        try:
+            time = float(attrs.get('time', '0')) - offset
+        except ValueError as exc:
+            raise pack_io.ProjectError('R+ lyrics contain an invalid vocal time') from exc
+        if not math.isfinite(time) or time < 0:
+            raise pack_io.ProjectError('R+ lyrics offset moves a vocal event before the song start')
+        attrs['time'] = str(time)
+        ET.SubElement(out, 'vocal', attrs)
     out.set('count', str(len(out)))
     return ET.tostring(out, encoding='utf-8', xml_declaration=True)
+
+
+def _song_offset(root, name):
+    try:
+        offset = float(root.findtext('offset', '0') or 0)
+    except ValueError as exc:
+        raise pack_io.ProjectError(f'{name} has an invalid song offset') from exc
+    if not math.isfinite(offset):
+        raise pack_io.ProjectError(f'{name} has an invalid song offset')
+    return offset
+
+
+def _normalized_chart(root, name):
+    offset = _song_offset(root, name)
+    normalized = copy.deepcopy(root)
+    for element in normalized.iter():
+        if element.tag == 'ebeat':
+            continue
+        for field in ('time', 'startTime', 'endTime'):
+            value = element.get(field)
+            if value is None:
+                continue
+            try:
+                timestamp = float(value) - offset
+            except ValueError as exc:
+                raise pack_io.ProjectError(f'{name} has an invalid timestamp') from exc
+            if not math.isfinite(timestamp):
+                raise pack_io.ProjectError(f'{name} has an invalid timestamp')
+            element.set(field, str(max(0.0, timestamp)))
+    ebeats = normalized.find('ebeats')
+    if ebeats is not None:
+        for beat in list(ebeats):
+            try:
+                timestamp = float(beat.get('time', '0')) - offset
+            except ValueError as exc:
+                raise pack_io.ProjectError(f'{name} has an invalid beat time') from exc
+            if not math.isfinite(timestamp):
+                raise pack_io.ProjectError(f'{name} has an invalid beat time')
+            if timestamp < 0:
+                ebeats.remove(beat)
+            else:
+                beat.set('time', str(timestamp))
+        ebeats.set('count', str(len(ebeats)))
+    start_beat = normalized.find('startBeat')
+    if start_beat is not None and start_beat.text:
+        try:
+            timestamp = float(start_beat.text) - offset
+        except ValueError as exc:
+            raise pack_io.ProjectError(f'{name} has an invalid startBeat') from exc
+        if not math.isfinite(timestamp):
+            raise pack_io.ProjectError(f'{name} has an invalid startBeat')
+        start_beat.text = str(max(0.0, timestamp))
+    song_length = normalized.find('songLength')
+    if song_length is not None and song_length.text:
+        try:
+            length = float(song_length.text) - offset
+        except ValueError as exc:
+            raise pack_io.ProjectError(f'{name} has an invalid songLength') from exc
+        if not math.isfinite(length):
+            raise pack_io.ProjectError(f'{name} has an invalid songLength')
+        song_length.text = str(max(0.0, length))
+    offset_element = normalized.find('offset')
+    if offset_element is None:
+        offset_element = ET.SubElement(normalized, 'offset')
+    offset_element.text = '0.000'
+    return normalized, ET.tostring(normalized, encoding='utf-8', xml_declaration=True), offset
+
+
+def _beat_times(root, name):
+    offset = _song_offset(root, name)
+    times = []
+    for beat in root.findall('./ebeats/ebeat'):
+        try:
+            time = float(beat.get('time', '0')) - offset
+        except ValueError as exc:
+            raise pack_io.ProjectError(f'{name} has an invalid beat time') from exc
+        if not math.isfinite(time):
+            raise pack_io.ProjectError(f'{name} has an invalid beat time')
+        times.append(time)
+    return times
+
+
+def _beat_maps_agree(left, right):
+    return len(left) == len(right) and all(abs(a - b) <= 0.02 for a, b in zip(left, right))
 
 
 def _tone_files(entries):
@@ -200,24 +294,42 @@ def load_rplus_folder(entries):
         charts.append((name, match, root, data))
     if not charts:
         raise pack_io.ProjectError('No R+ song XML (Official_*.xml or UGC_*.xml, version 17/19) in this folder')
-    # A song has one beat map. Official charts carry it; user-made (UGC) charts are often left on a
-    # flat placeholder tempo, so they never set the grid while an official chart is present.
+    # Select the majority map from non-HumStrum official charts and lyrics. HumStrum files can
+    # carry a divergent map; UGC maps are commonly placeholders.
+    official = [c for c in charts if c[1].group(1) == 'Official']
+    non_humstrum = [c for c in official if c[1].group(2).lower() not in ('humstrum', 'altrhythm')]
+    non_keyboard = [c for c in non_humstrum if c[2].findtext('instrument') != 'Keyboard']
+    if non_keyboard:
+        non_humstrum = non_keyboard
+    candidates = non_humstrum or official or charts
+    voters = non_humstrum or official or charts
+    lyrics = sorted(n for n in entries if '/' not in n and n.lower().startswith('lyrics_') and n.lower().endswith('.xml'))
+    lyric_roots = [(_parse(entries[name]), name) for name in lyrics]
+    lyric_maps = [(_beat_times(root, name), name) for root, name in lyric_roots if root.tag == 'trueVocals']
+    chart_maps = [(c, _beat_times(c[2], c[0])) for c in voters]
     order = {'lead': 0, 'bass': 1, 'rhythm': 2}
-    grid = min(charts, key=lambda c: (c[1].group(1) != 'Official', c[2].findtext('instrument') == 'Keyboard', order.get(c[1].group(2).lower(), 3), c[0]))
-    base = pack_io.load_xml(grid[3].replace(b'<song version="' + grid[2].get('version').encode() + b'"', b'<song version="7"', 1))
+    grid = min(candidates, key=lambda c: (
+        -sum(_beat_maps_agree(_beat_times(c[2], c[0]), times) for _, times in chart_maps)
+        -sum(_beat_maps_agree(_beat_times(c[2], c[0]), times) for times, _ in lyric_maps),
+        order.get(c[1].group(2).lower(), 3), c[0]))
+    _, grid_data, _ = _normalized_chart(grid[2], grid[0])
+    base = pack_io.load_xml(grid_data.replace(b'<song version="' + grid[2].get('version').encode() + b'"', b'<song version="7"', 1))
     project = copy.deepcopy(base)
     project['arrangements'] = []
     project.pop('import_warnings', None)
     warnings, charts_info, grid_times = [], [], [b['time'] for b in base['beats']]
     tones = _tone_files(entries)
+    duration = float(base.get('duration', 0))
     for index, (name, match, root, data) in enumerate(charts):
         instrument = root.findtext('instrument', '')
         source, kind, number = match.group(1), match.group(2), match.group(3)
+        normalized, normalized_data, offset = _normalized_chart(root, name)
+        duration = max(duration, float(normalized.findtext('songLength', '0') or 0))
         events = []
         if instrument == 'Keyboard':
-            arr, extras, events = _load_keyboard(root, name, index)
+            arr, extras, events = _load_keyboard(normalized, name, index)
         else:
-            patched = data.replace(b'<song version="' + root.get('version').encode() + b'"', b'<song version="7"', 1)
+            patched = normalized_data.replace(b'<song version="' + root.get('version').encode() + b'"', b'<song version="7"', 1)
             # R+ also files 6-string HumStrum chord charts under its Bass instrument.
             strings = [int(n.get('string', 0)) for n in root.iter() if n.tag in ('note', 'chordNote')]
             bass = kind.lower().endswith('bass') or instrument == 'Bass' and max(strings, default=0) < 4
@@ -239,13 +351,15 @@ def load_rplus_folder(entries):
         # Only a second official chart can disagree with the song's beat map; a UGC chart's own grid is
         # dropped (its notes are timed in seconds and keep their times).
         if source == 'Official' and grid[1].group(1) == 'Official':
-            drift = max((_nearest_gap(grid_times, float(b.get('time', 0))) for b in root.findall('./ebeats/ebeat')), default=0)
+            chart_grid = [float(b.get('time', 0)) for b in normalized.findall('./ebeats/ebeat')]
+            drift = max((_nearest_gap(grid_times, t) for t in chart_grid), default=0)
             if drift > 0.02:
-                warnings.append(f'{name} has a different beat map from {grid[0]} (beats up to {drift:.2f} s apart); the song uses the {grid[0]} beat map and its notes keep their times')
+                warnings.append(f'{name} has a different beat map from {grid[0]} (beats up to {drift:.2f} s apart); the song uses the {grid[0]} beat map')
         if instrument != 'Keyboard':
-            names = _chart_tones(arr, root, tones)
+            names = _chart_tones(arr, normalized, tones)
         arr['_rplus'] = {'file': name, 'source': source, 'kind': kind, 'number': number, 'arrangementId': match.group(4).lower(), 'revision': int(match.group(5)),
                          'instrument': instrument, 'version': root.get('version'), 'songId': root.findtext('songId', ''),
+                         'offset': offset,
                          'toneIds': [t.get('toneId') for t in root.findall('./toneIterations/toneIteration')]}
         if instrument != 'Keyboard' and names:
             arr['_rplus']['toneNames'] = names
@@ -262,13 +376,12 @@ def load_rplus_folder(entries):
         arr['_rplus']['fingerprint'] = _fingerprint(arr)
         project['arrangements'].append(arr)
         charts_info.append(name)
-    project['duration'] = max(float(c[2].findtext('songLength', '0') or 0) for c in charts)
+    project['duration'] = duration
     for key, field in (('title', 'songName'), ('artist', 'artistName'), ('album', 'albumName'), ('year', 'songYear')):
         if metadata.get(field) not in (None, ''):
             project[key] = metadata[field]
-    lyrics = sorted(n for n in entries if '/' not in n and n.lower().startswith('lyrics_') and n.lower().endswith('.xml'))
     if lyrics:
-        root = _parse(entries[lyrics[0]])
+        root = lyric_roots[0][0]
         if root.tag == 'trueVocals':
             vocals = pack_io.load_vocal_xml(_vocals(root), lyrics[0])
             for key in ('vocals', '_vocalXml'):
@@ -381,6 +494,7 @@ def save_keyboard_xml(project, arrangement_id, *, template=None, song_id=None, a
     arr = next((a for a in project['arrangements'] if a['id'] == arrangement_id), None)
     if arr is None or arr.get('type') != 'keys':
         raise pack_io.ProjectError('R+ keyboard export needs a keys arrangement')
+    offset = _song_offset(template, 'R+ keyboard template') if template is not None else 0.0
     # Chord members are notes too (keys charts from Guitar Pro / MusicXML store them as chords).
     members = [{**n, 'time': n.get('time', c.get('time', 0))} for c in arr.get('chords', []) for n in c.get('notes', [])]
     notes = sorted((n for n in arr.get('notes', []) + members if 21 <= _pitch(n) <= 108), key=lambda n: (n['time'], _pitch(n)))
@@ -402,12 +516,16 @@ def save_keyboard_xml(project, arrangement_id, *, template=None, song_id=None, a
     ET.SubElement(song, 'keyLower').text = str(lower)
     ET.SubElement(song, 'keyUpper').text = str(upper)
     ET.SubElement(song, 'instrument').text = 'Keyboard'
-    _copy_text(template, song, 'offset', '0.000')
+    ET.SubElement(song, 'offset').text = '0.000'
     ET.SubElement(song, 'centOffset').text = '0'
     ET.SubElement(song, 'songLength').text = _fmt(max(project.get('duration', 0), notes[-1]['time'] + notes[-1].get('sustain', 0)))
     _copy_text(template, song, 'internalName')
     _copy_text(template, song, 'songNameSort', str(project.get('title', '')).lower())
-    _copy_text(template, song, 'startBeat', '0.000')
+    try:
+        start_beat = float(template.findtext('startBeat', '0') or 0) + offset if template is not None else (project.get('beats') or [{'time': 0}])[0]['time']
+    except ValueError as exc:
+        raise pack_io.ProjectError('R+ keyboard template has an invalid start beat') from exc
+    ET.SubElement(song, 'startBeat').text = _fmt(start_beat)
     _copy_text(template, song, 'averageTempo', '0.000')
     _copy_text(template, song, 'wavefilepath')
     ET.SubElement(song, 'tuning', {f'string{i}': '0' for i in range(6)})
@@ -426,6 +544,14 @@ def save_keyboard_xml(project, arrangement_id, *, template=None, song_id=None, a
         for phrase in phrases:
             phrase.set('maxDifficulty', '0')
         iterations = copy.deepcopy(template.find('phraseIterations'))
+        for iteration in iterations:
+            try:
+                time = float(iteration.get('time', '0')) + offset
+            except ValueError as exc:
+                raise pack_io.ProjectError('R+ keyboard template has an invalid phrase time') from exc
+            if not math.isfinite(time):
+                raise pack_io.ProjectError('R+ keyboard template has an invalid phrase time')
+            iteration.set('time', _fmt(time))
     else:
         rows = sorted(arr.get('phrases') or [{'name': s.get('name', 'A'), 'time': s.get('time', s.get('startTime', 0))} for s in project.get('sections', [])] or [{'name': 'A', 'time': 0}], key=lambda p: p['time'])
         names = ['default'] + sorted({p['name'] for p in rows} - {'default', 'END'}) + ['END']
@@ -588,6 +714,10 @@ def rplus_folder(project):
                     el = ET.Element(tag)
                     root.insert(0 if tag == 'songId' else 1, el)
                 el.text = value
+            offset = root.find('offset')
+            if offset is None:
+                offset = ET.SubElement(root, 'offset')
+            offset.text = '0.000'
             _write_tone_iterations(root, arr, source)
             # An edited chart keeps its source (Official or UGC) and number; new charts are Official, number 1.
             name = free_name(kind, arrangement_uuid, revision, source.get('source', 'Official'), source.get('number') or '1')

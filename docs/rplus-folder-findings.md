@@ -1,6 +1,21 @@
 # R+ loose folders, keyboard charts and .rsw: findings (2026-10-24)
 
-Status: research only, nothing implemented yet. Next session builds from this.
+Status: research notes; R+ folder import and keyboard export have since been implemented.
+
+## Offset handling (2026-10-29)
+- On folder import, each arrangement's `<offset>` is subtracted from absolute
+  timestamps (notes, beats, sections, phrase iterations, events and tone changes).
+  Pre-audio beat markers are omitted, and the chart is normalized to zero offset
+  so edits/export do not apply the source offset a second time.
+- The song grid is selected from Official non-HumStrum charts, favoring the beat map
+  shared by the other arrangements and the authored lyrics beat map. Keyboard-only
+  grid sources are avoided when a playable guitar/bass chart is available.
+  HumStrum maps do not set the shared grid; a divergent map is reported as a warning.
+- Lyrics vocal event times subtract `<offset>` to place syllables on the audio
+  reference. For Bluey, `Mum` at 14.026 s becomes 11.705 s.
+- Bluey Theme Tune (Instrument Parade): Lead, Bass, Simple/Keyboard and lyrics use
+  the same 396-beat map with offset `2.321`; one HumStrum chart has a divergent map
+  and offset `1.610`. The shared grid's measure 9 moves from `10.934` to `8.613` s.
 
 ## Goal (user request)
 1. Open and edit an R+ song folder (test bed: Opeth - In My Time of Need scrape:

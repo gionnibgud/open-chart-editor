@@ -102,7 +102,33 @@ class ReadTests(unittest.TestCase):
         self.assertEqual([(n['pitch'], n['hand']) for n in keys['notes']], [(60, 'rh'), (48, 'lh')])
         self.assertEqual([v['text'] for v in project['vocals']], ['Hel-', 'lo'])
         self.assertEqual(project['_pack']['manifest']['stems'][0]['file'], 'audio.wem')
-        self.assertEqual(len(project['beats']), 16)
+        self.assertEqual(len(project['beats']), 15)
+        self.assertAlmostEqual(project['duration'], 7.5)
+
+    def test_arrangement_and_lyrics_offsets_shift_their_timelines_earlier(self):
+        lyrics = LYRICS.replace(b'<trueVocals>', b'<trueVocals><offset>0.500</offset>')
+        project = open_folder(**{f'lyrics_{SONG}_en_v0.xml': lyrics})
+        self.assertEqual([v['time'] for v in project['vocals']], [1.5, 2.0])
+        self.assertEqual([v['length'] for v in project['vocals']], [0.4, 0.4])
+        self.assertAlmostEqual(project['beats'][0]['time'], 0.0)
+        self.assertAlmostEqual(project['beats'][1]['time'], 0.5)
+        lead = next(a for a in project['arrangements'] if a['_rplus']['kind'] == 'Lead')
+        self.assertEqual([n['time'] for n in lead['notes']], [1.5, 2.0])
+        self.assertEqual([p['time'] for p in lead['phrases']], [0.0, 1.5, 7.0])
+        self.assertEqual(lead['_xml'].find('<offset>0.000</offset>') >= 0, True)
+
+    def test_majority_non_humstrum_maps_excludes_humstrum_grid_outlier(self):
+        bass_id = 'aaaaaaaa-0000-0000-0000-000000000004'
+        bass_body = LEAD_BODY.replace('string="5"', 'string="3"').replace('string="4"', 'string="2"')
+        entries = folder(**{
+            f'Official_Bass1_{bass_id}_v1.xml': chart('Bass', 'Bass', bass_body),
+            f'lyrics_{SONG}_en_v0.xml': LYRICS.replace(b'<trueVocals>', b'<trueVocals><offset>0.500</offset>')
+        })
+        project = e.load_folder_archive(as_zip(entries))
+        bass = next(a for a in project['arrangements'] if a['_rplus']['kind'] == 'Bass')
+        self.assertEqual([n['time'] for n in bass['notes']], [1.5, 2.0])
+        self.assertAlmostEqual(project['beats'][0]['time'], 0.0)
+        self.assertIn('different beat map', ' '.join(project['import_warnings']))
 
     def test_own_beat_map_is_reported(self):
         warnings = ' '.join(open_folder()['import_warnings'])
@@ -119,14 +145,14 @@ class ReadTests(unittest.TestCase):
                                  f'tone_{tone}.json': json.dumps({'toneId': tone, 'toneData': {'Key': 'Crunch', 'Name': 'Crunch', 'Volume': -12.0, 'GearList': gear}}).encode(),
                                  f'tone_{other}.json': json.dumps({'toneId': other, 'toneData': {'Key': 'Lead', 'Name': 'Lead', 'GearList': gear}}).encode()})
         arr = next(a for a in project['arrangements'] if a['_rplus']['kind'] == 'Lead')
-        self.assertEqual((arr['tones']['base'], arr['tones']['changes']), ('Crunch', [{'time': 4.0, 'name': 'Lead'}]))
+        self.assertEqual((arr['tones']['base'], arr['tones']['changes']), ('Crunch', [{'time': 3.5, 'name': 'Lead'}]))
         self.assertEqual(arr['tones']['definitions']['Crunch']['GearList'], gear)
         # An edited chart names the same tones again.
         arr['notes'][0]['fret'] += 1
         files, _ = r.rplus_folder(project)
         root = ET.fromstring(files[f'Official_Lead1_{LEAD}_v5.xml'])
         self.assertEqual([(t.get('startTime'), t.get('toneId')) for t in root.findall('./toneIterations/toneIteration')],
-                         [('0.000', tone), ('4.000', other)])
+                         [('0.000', tone), ('3.500', other)])
 
     def test_folder_without_audio_still_opens(self):
         entries = folder()
@@ -168,7 +194,7 @@ class UgcTests(unittest.TestCase):
         project = open_folder(**{f'Official_Lead1_{LEAD}_v4.xml': chart('Lead', 'Guitar', LEAD_BODY, beats=ebeats(16, 0.52)),
                                  f'UGC_Lead2_{self.UGC_LEAD}_v1.xml': chart('Lead', 'Guitar', LEAD_BODY, beats=ebeats(8, 1.0))})
         self.assertEqual(project['_import']['grid'], f'Official_Lead1_{LEAD}_v4.xml')
-        self.assertAlmostEqual(project['beats'][1]['time'], 0.52)
+        self.assertAlmostEqual(project['beats'][0]['time'], 0.02)
         self.assertFalse([w for w in project['import_warnings'] if w.startswith('UGC_')], 'one song, one beat map: UGC grids are not reported')
 
     def test_edited_ugc_chart_keeps_its_prefix_and_number(self):
@@ -183,6 +209,17 @@ class WriteTests(unittest.TestCase):
     def test_nothing_changed_writes_nothing(self):
         with self.assertRaisesRegex(p.ProjectError, 'Nothing to add'):
             r.rplus_folder(open_folder())
+
+    def test_edited_chart_exports_without_shifting_its_timeline(self):
+        project = open_folder()
+        lead = next(a for a in project['arrangements'] if a['_rplus']['kind'] == 'Lead')
+        lead['notes'][0]['fret'] += 1
+        files, _ = r.rplus_folder(project)
+        name = f'Official_Lead1_{LEAD}_v5.xml'
+        root = ET.fromstring(files[name])
+        self.assertEqual(root.findtext('offset'), '0.000')
+        self.assertEqual(root.find('levels/level/notes/note').get('time'), '1.5')
+        self.assertEqual(float(root.find('ebeats/ebeat').get('time')), 0.0)
 
     def test_edited_keyboard_becomes_next_revision_and_keeps_untouched_notes(self):
         project = open_folder()
@@ -203,8 +240,8 @@ class WriteTests(unittest.TestCase):
         added = next(n for n in notes if n.get('midi') == '64')
         self.assertEqual({k: added.get(k) for k in ('clef', 'fret', 'name', 'octave', 'staff', 'string')},
                          {'clef': 'treble', 'fret': '44', 'name': 'E', 'octave': '4', 'staff': '1', 'string': '0'})
-        # 3.0 s is beat 3 of bar 2 at 120 BPM; 0.875 beats + the 1/8-beat gap is a quarter note.
-        self.assertEqual([b.attrib for b in added.findall('beats/beat')], [{'dots': '0', 'length': '1.0000', 'measure': '2', 'position': '3.0000'}])
+        # 3.0 s is beat 3 of bar 2 on the offset-corrected timeline.
+        self.assertEqual([b.attrib for b in added.findall('beats/beat')], [{'dots': '0', 'length': '1.0000', 'measure': '2', 'position': '4.0000'}])
         for tag in ('chords', 'handShapes', 'anchors', 'tuplets'):
             self.assertIsNotNone(root.find(f'levels/level/{tag}'), tag)
         self.assertEqual({a.get('fret') for a in root.findall('levels/level/anchors/anchor')}, {'28'})
