@@ -627,6 +627,26 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   accepting=true;change('Import arrangements',p=>Object.assign(p,normalizeProject(result.project)));arrangementId=result.arrangement_ids[0]||arrangementId;selection.clear();selectionRange=null;markerSelection=null;fitPianoRange();audio.setProject(project(),arrangement());render();status(`Imported ${result.arrangement_ids.length} arrangements${assistNote}${result.warnings.length?` · ${result.warnings.length} warnings in Error Finder`:''}`);
   }catch(error){if(accepting||current())throw error;}
  }
+ async function importLyrics(file){
+  const request=++chartImportGeneration,owner=history,state=history.stateId,generation=projectGeneration,openIntent=openGeneration;
+  const current=()=>request===chartImportGeneration&&history===owner&&history.stateId===state&&projectGeneration===generation&&openGeneration===openIntent&&!abort.signal.aborted&&root.isConnected;
+  try{
+   status(`Reading lyrics from ${file.name}…`);
+   const body=new FormData();body.append('file',file);
+   const response=await fetch(`${API}/load`,{method:'POST',body});
+   if(!current())return;if(!response.ok)throw Error(await response.text());
+   const {project:incoming}=await response.json();if(!current())return;
+   if(!Array.isArray(incoming.vocals)||!incoming.vocals.length)throw Error('This file does not contain an existing lyrics chart');
+   const sourceSnapshot=JSON.stringify(project()),sourceHistory=history;
+   const replace=await dialog('Import lyrics',`<p>Import ${incoming.vocals.length} lyric syllables from ${esc(file.name)}?</p><p>This replaces the current lyrics${project().vocals?.length?' ('+project().vocals.length+' syllables)':''}. Instrument charts, audio and the beat map stay unchanged. You can undo the import.</p>`,'Import lyrics');
+   if(!replace||!current())return;
+   if(history!==sourceHistory||JSON.stringify(project())!==sourceSnapshot)throw Error('The project changed while the lyrics import was open. Import the file again to keep your latest edits.');
+   const vocals=clone(incoming.vocals),count=vocals.length;
+   stopMidi();view='vocals';vocalPage=0;pendingVocalSelection=vocals.map(vocal=>vocal.id);
+   change('Import lyrics',p=>{p.vocals=vocals;p._vocalXml=incoming._vocalXml;p.duration=Math.max(p.duration,...vocals.map(vocal=>vocal.time+(vocal.length||0)));});
+   status(`Imported ${count} lyric syllables from ${file.name}`);
+  }catch(error){if(current())throw error;}
+ }
  const receiveSaveCompletion=completion=>{
   if(abort.signal.aborted||!root.isConnected||history!==completion.history||completion.sequence!==completion.state.latest)return;
   if(completion.format==='json')saveHandle=completion.handle;lastSaveFormat=completion.format;lastDestination=completion.destination;
@@ -1602,26 +1622,6 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   if(!project().arrangements.some(a=>a.id===arrangementId))arrangementId=project().arrangements[0].id;
   selection.clear();selectionRange=null;markerSelection=null;dirty=true;audio.setProject(project(),arrangement());syncProjectAudio();render();queueDraft();
  }
- const actions={
-  'arrangement-info':()=>{inspectorVisible=true;inspector='settings';applyLayout();renderInspector();draw();$('arr-name')?.focus({preventScroll:true});},
-  new:async()=>{const request=++openGeneration;if(await dialog('New project','<p>Create a blank project? Save any edits first.</p>','Create')&&request===openGeneration)switchProject(makeProject());},
-  welcome:()=>recentDialog(true),'open-recent':()=>recentDialog(),
-  demo:async()=>{const request=++openGeneration;if(await confirmReplace()&&request===openGeneration)switchProject(demoProject());},open:()=>openProjectDialog(),'open-folder':()=>$('open-folder').click(),'import-chart':()=>$('import-file').click(),audio:()=>$('audio-file').click(),save:()=>saveAs(true),saveas:()=>saveAs(),
-  undo:()=>navigateHistory(()=>history.undo()),redo:()=>navigateHistory(()=>history.redo()),'history-checkpoint':()=>{history.setCheckpoint();renderBottom();status('History checkpoint set');},'history-return':()=>navigateHistory(()=>history.returnToCheckpoint()),
-  tab:()=>{stopMidi();view='tab';render();},tempo:()=>{stopMidi();view='tempo';render();},tones:()=>{stopMidi();view='tones';render();},
-  vocals:()=>{stopMidi();view='vocals';render();},
-  'vocal-add':()=>vocalEdit('add',{time:cursor}),
-  'vocal-phrase':async()=>{if(await dialog('Enter original lyric phrase',field('Text','vocal-phrase','')+field('Seconds per syllable','vocal-step',.5,'number','min="0.05" step="0.01"')+'<p class="ws-muted">Whitespace separates syllables. The whole phrase must fit within the song duration.</p>')){const rows=project().vocals||[],added=createVocalPhrase($('vocal-phrase').value,{at:cursor,step:Number($('vocal-step').value),duration:project().duration,count:rows.length,uid,existingIds:rows.map(row=>row.id)});pendingVocalSelection=added.map(row=>row.id);change('Enter vocal phrase',p=>{(p.vocals||=[]).push(...added);p.vocals.sort((a,b)=>a.time-b.time);});}},
-  'toggle-inspector':()=>{inspectorVisible=!inspectorVisible;applyLayout();draw();},'split-view':async()=>{
-   const parts=project().arrangements.filter(a=>!a.readOnly);if(parts.length<2)throw Error('Add a second arrangement to show arrangements together');
-   const chosen=new Set(splitActive()?splitBandIds():[arrangementId]);
-   if(!await dialog('Show arrangements together',`<p>Stack arrangements on one timeline to decide which notes belong on which part. Each one stays a full editor: click inside a part to edit it. Phrase, tone and anchor lanes and the chord strip fold away while several are shown.</p><div class="ws-split-list">${parts.map(a=>`<label><input type="checkbox" data-split-id="${esc(a.id)}" ${chosen.has(a.id)?'checked':''}> ${esc(a.name)} <span class="ws-muted">${esc(a.instrument&&a.instrument!==a.type?a.instrument:a.type)}</span></label>`).join('')}</div><p class="ws-muted">Leave one ticked to go back to a single editor.</p>`))return;
-   const picked=[...root.querySelectorAll('[data-split-id]')].filter(input=>input.checked).map(input=>input.dataset.splitId);
-   splitIds=picked.length>1?picked:[];
-   if(picked.length&&!picked.includes(arrangementId)){countIn.cancel();stopMidi();arrangementId=picked[0];selectedZoneIndex=null;selection.clear();selectionRange=null;markerSelection=null;audio.setProject(project(),arrangement());}
-   if(splitIds.length&&view!=='tab')view='tab';
-   render();status(splitIds.length?`Showing ${splitIds.length} arrangements together · click a part to edit it`:'Showing one arrangement');
-  },
  async function monitorLiveInput(){
   if(liveInput.active||liveInput.pending){liveInput.stop();status('Live input stopped');return;}
   const devices=await liveInput.listDevices();let at5={available:false,message:'AmpliTube host status is unavailable'};
@@ -1641,6 +1641,26 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
    if(!result.stale)status('Monitoring '+result.label+' locally');
   }catch(error){status('Live input: '+error.message,true);}
  }
+ const actions={
+  'arrangement-info':()=>{inspectorVisible=true;inspector='settings';applyLayout();renderInspector();draw();$('arr-name')?.focus({preventScroll:true});},
+  new:async()=>{const request=++openGeneration;if(await dialog('New project','<p>Create a blank project? Save any edits first.</p>','Create')&&request===openGeneration)switchProject(makeProject());},
+  welcome:()=>recentDialog(true),'open-recent':()=>recentDialog(),
+  demo:async()=>{const request=++openGeneration;if(await confirmReplace()&&request===openGeneration)switchProject(demoProject());},open:()=>openProjectDialog(),'open-folder':()=>$('open-folder').click(),'import-chart':()=>$('import-file').click(),'import-lyrics':()=>$('lyrics-file').click(),audio:()=>$('audio-file').click(),save:()=>saveAs(true),saveas:()=>saveAs(),
+  undo:()=>navigateHistory(()=>history.undo()),redo:()=>navigateHistory(()=>history.redo()),'history-checkpoint':()=>{history.setCheckpoint();renderBottom();status('History checkpoint set');},'history-return':()=>navigateHistory(()=>history.returnToCheckpoint()),
+  tab:()=>{stopMidi();view='tab';render();},tempo:()=>{stopMidi();view='tempo';render();},tones:()=>{stopMidi();view='tones';render();},
+  vocals:()=>{stopMidi();view='vocals';render();},
+  'vocal-add':()=>vocalEdit('add',{time:cursor}),
+  'vocal-phrase':async()=>{if(await dialog('Enter original lyric phrase',field('Text','vocal-phrase','')+field('Seconds per syllable','vocal-step',.5,'number','min="0.05" step="0.01"')+'<p class="ws-muted">Whitespace separates syllables. The whole phrase must fit within the song duration.</p>')){const rows=project().vocals||[],added=createVocalPhrase($('vocal-phrase').value,{at:cursor,step:Number($('vocal-step').value),duration:project().duration,count:rows.length,uid,existingIds:rows.map(row=>row.id)});pendingVocalSelection=added.map(row=>row.id);change('Enter vocal phrase',p=>{(p.vocals||=[]).push(...added);p.vocals.sort((a,b)=>a.time-b.time);});}},
+  'toggle-inspector':()=>{inspectorVisible=!inspectorVisible;applyLayout();draw();},'split-view':async()=>{
+   const parts=project().arrangements.filter(a=>!a.readOnly);if(parts.length<2)throw Error('Add a second arrangement to show arrangements together');
+   const chosen=new Set(splitActive()?splitBandIds():[arrangementId]);
+   if(!await dialog('Show arrangements together',`<p>Stack arrangements on one timeline to decide which notes belong on which part. Each one stays a full editor: click inside a part to edit it. Phrase, tone and anchor lanes and the chord strip fold away while several are shown.</p><div class="ws-split-list">${parts.map(a=>`<label><input type="checkbox" data-split-id="${esc(a.id)}" ${chosen.has(a.id)?'checked':''}> ${esc(a.name)} <span class="ws-muted">${esc(a.instrument&&a.instrument!==a.type?a.instrument:a.type)}</span></label>`).join('')}</div><p class="ws-muted">Leave one ticked to go back to a single editor.</p>`))return;
+   const picked=[...root.querySelectorAll('[data-split-id]')].filter(input=>input.checked).map(input=>input.dataset.splitId);
+   splitIds=picked.length>1?picked:[];
+   if(picked.length&&!picked.includes(arrangementId)){countIn.cancel();stopMidi();arrangementId=picked[0];selectedZoneIndex=null;selection.clear();selectionRange=null;markerSelection=null;audio.setProject(project(),arrangement());}
+   if(splitIds.length&&view!=='tab')view='tab';
+   render();status(splitIds.length?`Showing ${splitIds.length} arrangements together · click a part to edit it`:'Showing one arrangement');
+  },
   'chord-strip':()=>{chordStrip={...chordStrip,visible:true,open:!chordStrip.open};persistPreferences();draw();},
   'chord-strip-move':()=>{chordStrip={...chordStrip,visible:true,position:chordStrip.position==='above'?'below':'above'};persistPreferences();draw();status(`Chord strip ${chordStrip.position} the strings`);},
   'chord-strip-rotate':()=>{chordStrip={...chordStrip,visible:true,open:true,upright:!chordStrip.upright};persistPreferences();draw();status(`Chord diagrams ${chordStrip.upright?'upright':'tab-style'}`);},
@@ -1883,7 +1903,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  on($('zoom'),'input',e=>setTimelineZoom(Number(e.target.value)));on($('snap'),'change',e=>{snap=Number(e.target.value);draw();});
  on($('speed'),'input',e=>{countIn.cancel();audio.setSpeed(Number(e.target.value)/100);$('speed-value').textContent=`${e.target.value}%`;});on($('pitch'),'change',safe(e=>audio.setPitch(Number(e.target.value))));on($('master'),'input',e=>{audio.setGain('master',Number(e.target.value)/100);if(bottom==='mixer')renderBottom();});
  on($('open-folder'),'change',safe(async e=>{const files=Array.from(e.target.files||[]);if(!files.length)return;const request=++openGeneration,owner=history,generation=projectGeneration,state=history.stateId;try{const file=await readFolderFiles(files,{signal:abort.signal});if(request!==openGeneration||history!==owner||projectGeneration!==generation||history.stateId!==state||abort.signal.aborted||!root.isConnected)return;await openFile(file,null,{request});if(request===openGeneration&&project()._gpaSync)await offerGpaBeatMap();}finally{e.target.value='';}}));
- on($('open-file'),'change',safe(async e=>{try{if(e.target.files[0])await openFile(e.target.files[0]);}finally{e.target.value='';}}));on($('import-file'),'change',safe(async e=>{try{if(e.target.files[0])await importChart(e.target.files[0]);}finally{e.target.value='';}}));on($('audio-file'),'change',safe(e=>e.target.files[0]&&uploadAudio(e.target.files[0])));
+ on($('open-file'),'change',safe(async e=>{try{if(e.target.files[0])await openFile(e.target.files[0]);}finally{e.target.value='';}}));on($('import-file'),'change',safe(async e=>{try{if(e.target.files[0])await importChart(e.target.files[0]);}finally{e.target.value='';}}));on($('lyrics-file'),'change',safe(async e=>{const file=e.target.files[0];e.target.value='';if(file)await importLyrics(file);}));on($('audio-file'),'change',safe(e=>e.target.files[0]&&uploadAudio(e.target.files[0])));
  on($('tone-file'),'change',safe(async e=>{
   const file=e.target.files[0];if(!file)return;e.target.value='';const request=++toneImportGeneration,owner=history,state=history.stateId,generation=projectGeneration,part=arrangementId,openIntent=openGeneration;
   const current=()=>request===toneImportGeneration&&history===owner&&history.stateId===state&&projectGeneration===generation&&arrangementId===part&&openGeneration===openIntent&&!abort.signal.aborted&&root.isConnected;let accepting=false;
@@ -1944,6 +1964,11 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   e.preventDefault();closeContextMenu?.();
   const button=$('tab-button');
   closeContextMenu=openContextMenu(root,{x:e.clientX,y:e.clientY,items:[{label:'Import tab',action:'import-chart'}],restoreFocus:button,onChoose:safe(async action=>{await actions[action]();button.focus({preventScroll:true});})});
+ }));
+ on($('vocals-button'),'contextmenu',safe(e=>{
+  e.preventDefault();closeContextMenu?.();
+  const button=$('vocals-button');
+  closeContextMenu=openContextMenu(root,{x:e.clientX,y:e.clientY,items:[{label:'Import lyrics chart…',action:'import-lyrics'}],restoreFocus:button,onChoose:safe(async action=>{await actions[action]();button.focus({preventScroll:true});})});
  }));
  on(canvas,'pointerdown',safe(e=>{
   if(e.button===1&&mouseModel==='eof'&&view==='tab'){e.preventDefault();eofMiddleClick(e);return;}
