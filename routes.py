@@ -20,8 +20,10 @@ import threading
 import wave
 import math
 import zipfile
+import logging
+from concurrent.futures import ThreadPoolExecutor
 
-from fastapi import File, HTTPException, UploadFile
+from fastapi import File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, Response
 
 try:
@@ -59,6 +61,13 @@ except ImportError:
     _folder_spec=importlib.util.spec_from_file_location('open_chart_editor_folder_io',Path(__file__).with_name('folder_io.py'))
     folder_io=importlib.util.module_from_spec(_folder_spec)
     _folder_spec.loader.exec_module(folder_io)
+
+try:
+    from . import at5_vst3
+except ImportError:
+    _at5_spec=importlib.util.spec_from_file_location('open_chart_editor_at5_vst3',Path(__file__).with_name('at5_vst3.py'))
+    at5_vst3=importlib.util.module_from_spec(_at5_spec)
+    _at5_spec.loader.exec_module(at5_vst3)
 
 PREFIX = '/api/plugins/open_chart_editor' 
 
@@ -98,6 +107,24 @@ def setup(app, context=None):
     preview_gate = asyncio.Semaphore(1)
     preview_reserved = 0
     preview_inflight = set()
+    at5_gate = asyncio.Lock()
+    at5_executor = None
+    at5_processor = None
+    logger = logging.getLogger(__name__)
+
+    async def close_at5_host():
+        nonlocal at5_executor, at5_processor
+        if at5_executor is None:
+            return
+        try:
+            if at5_processor is not None:
+                await asyncio.get_running_loop().run_in_executor(at5_executor, at5_processor.close)
+        finally:
+            at5_executor.shutdown(wait=True, cancel_futures=True)
+            at5_executor = None
+            at5_processor = None
+
+    app.router.on_shutdown.append(close_at5_host)
 
     def original_asset(token):
         item = assets.get(token)
@@ -141,6 +168,177 @@ def setup(app, context=None):
     async def health():
         result={'ok':True,'version':1,'formats':['feedpak','json','xml','vocal_xml'],'import_formats':['feedpak','json','rs2014-xml-v7','rs2014-vocal-xml','midi-format-0-1-ppqn','musicxml-partwise','compressed-musicxml','guitar-pro-3-8-local-converter'], 'rs2014':'arrangement XML v7, separate vocal XML and DLC Builder project sources; no PSARC packaging','ffmpeg':bool(shutil.which('ffmpeg'))}
         return result
+
+    @app.get(PREFIX+'/at5/status')
+    async def at5_status():
+        return at5_vst3.host_status()
+
+    @app.websocket(PREFIX+'/at5/live')
+    async def at5_live(websocket: WebSocket):
+        nonlocal at5_executor, at5_processor
+        client_host=websocket.client.host if websocket.client else ''
+        if not at5_vst3.local_websocket_origin_allowed(
+            websocket.headers.get('host',''),
+            client_host,
+            websocket.headers.get('origin',''),
+        ):
+            await websocket.close(code=1008,reason='AT5 preview is available only to the local OCE page')
+            return
+
+        await websocket.accept()
+        status=at5_vst3.host_status()
+        if not status['available']:
+            await websocket.send_json({'type':'error','message':status['message']})
+            await websocket.close(code=1011)
+            return
+        if at5_gate.locked():
+            await websocket.send_json({'type':'error','message':'AmpliTube 5 is already in use by another live monitor'})
+            await websocket.close(code=1013)
+            return
+
+        await at5_gate.acquire()
+        if at5_executor is None:
+            at5_executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='oce-at5-vst3')
+        executor=at5_executor
+        loop=asyncio.get_running_loop()
+        try:
+            config=await websocket.receive_json()
+            if not isinstance(config,dict) or config.get('type')!='configure':
+                raise at5_vst3.At5Vst3Error('The live host received an invalid configuration.')
+            try:
+                sample_rate=int(config.get('sample_rate',0))
+                frame_count=int(config.get('frame_count',0))
+            except (TypeError,ValueError) as exc:
+                raise at5_vst3.At5Vst3Error('The browser audio format is invalid.') from exc
+            if sample_rate<8000 or sample_rate>192000:
+                raise at5_vst3.At5Vst3Error('The browser audio sample rate is unsupported.')
+            if frame_count not in at5_vst3.SUPPORTED_FRAME_COUNTS:
+                raise at5_vst3.At5Vst3Error('The browser requested an unsupported audio block size.')
+            tone=config.get('tone')
+            tier=config.get('tier','max')
+            if not isinstance(tone,dict):
+                raise at5_vst3.At5Vst3Error('A Rocksmith chart tone is required for AmpliTube live monitoring.')
+            if tier not in at5_vst3.AT5_TIERS:
+                raise at5_vst3.At5Vst3Error('The selected AmpliTube library tier is invalid.')
+            tone_key=tone.get('key')
+            tone_name=tone.get('name')
+            gear=tone.get('gear')
+            if not isinstance(tone_key,str) or not tone_key.strip():
+                raise at5_vst3.At5Vst3Error('The selected Rocksmith tone has no valid key.')
+            if not isinstance(tone_name,str) or not tone_name.strip():
+                tone_name=tone_key
+            if not isinstance(gear,dict):
+                raise at5_vst3.At5Vst3Error('The selected Rocksmith tone has no GearList to convert.')
+            if len(json.dumps(tone).encode('utf-8'))>64*1024:
+                raise at5_vst3.At5Vst3Error('The selected Rocksmith tone exceeds the live conversion size limit.')
+            preset_xml,conversion_messages=await loop.run_in_executor(
+                executor,
+                at5_vst3.convert_rocksmith_tone_with_warnings,
+                tone_key,
+                tone_name,
+                gear,
+                tier,
+            )
+            preset_name=tone_name or tone_key
+
+            if at5_processor is None:
+                at5_processor=await loop.run_in_executor(
+                    executor,
+                    at5_vst3.open_live_processor,
+                    status['plugin_path'],
+                    preset_xml,
+                    preset_name,
+                )
+            else:
+                await loop.run_in_executor(
+                    executor,
+                    at5_processor.configure,
+                    preset_xml,
+                    preset_name,
+                )
+            processor=at5_processor
+            await websocket.send_json({
+                'type':'ready',
+                'engine':'AmpliTube 5 VST3',
+                'preset':preset_name,
+                'frame_count':frame_count,
+                'warnings':conversion_messages,
+            })
+            while True:
+                message=await websocket.receive()
+                if message['type']=='websocket.disconnect':
+                    break
+                if message.get('text') is not None:
+                    tone_label=''
+                    try:
+                        command=json.loads(message['text'])
+                        if not isinstance(command,dict) or command.get('type')!='tone':
+                            raise at5_vst3.At5Vst3Error('The live host received an unsupported command.')
+                        next_tone=command.get('tone')
+                        if isinstance(next_tone,dict):
+                            tone_label=next_tone.get('name') or next_tone.get('key') or ''
+                        if not isinstance(next_tone,dict) or not isinstance(next_tone.get('gear'),dict):
+                            raise at5_vst3.At5Vst3Error('The selected Rocksmith tone has no GearList to convert.')
+                        if len(message['text'].encode('utf-8'))>64*1024:
+                            raise at5_vst3.At5Vst3Error('The selected Rocksmith tone exceeds the live conversion size limit.')
+                        next_tier=command.get('tier','max')
+                        if next_tier not in at5_vst3.AT5_TIERS:
+                            raise at5_vst3.At5Vst3Error('The selected AmpliTube library tier is invalid.')
+                        next_key=next_tone.get('key')
+                        next_name=next_tone.get('name')
+                        if not isinstance(next_key,str) or not next_key.strip():
+                            raise at5_vst3.At5Vst3Error('The selected Rocksmith tone has no valid key.')
+                        if not isinstance(next_name,str) or not next_name.strip():
+                            next_name=next_key
+                        next_preset,next_warnings=await loop.run_in_executor(
+                            executor,
+                            at5_vst3.convert_rocksmith_tone_with_warnings,
+                            next_key,
+                            next_name,
+                            next_tone['gear'],
+                            next_tier,
+                        )
+                        await loop.run_in_executor(
+                            executor,
+                            processor.configure,
+                            next_preset,
+                            next_name or next_key,
+                        )
+                        await websocket.send_json({
+                            'type':'tone-ready',
+                            'tone':next_name or next_key,
+                            'tier':next_tier,
+                            'warnings':next_warnings,
+                        })
+                    except (ValueError,at5_vst3.At5Vst3Error) as exc:
+                        await websocket.send_json({
+                            'type':'tone-error',
+                            'tone':tone_label,
+                            'message':str(exc),
+                        })
+                    continue
+                pcm=message.get('bytes')
+                if pcm is None:
+                    raise at5_vst3.At5Vst3Error('The live host received an invalid audio message.')
+                output=await loop.run_in_executor(
+                    executor,
+                    processor.process_chunk,
+                    pcm,
+                    sample_rate,
+                    frame_count,
+                )
+                await websocket.send_bytes(output)
+        except WebSocketDisconnect:
+            pass
+        except Exception as exc:
+            logger.exception('AmpliTube 5 live VST3 session failed')
+            try:
+                await websocket.send_json({'type':'error','message':str(exc)})
+                await websocket.close(code=1011)
+            except (WebSocketDisconnect,RuntimeError) as send_error:
+                logger.debug('AT5 VST3 client disconnected before error notification: %s',send_error)
+        finally:
+            at5_gate.release()
 
     @app.get(PREFIX+'/coverage')
     async def coverage():

@@ -1,0 +1,61 @@
+import {createRequire} from 'node:module';
+import assert from 'node:assert/strict';
+const require=createRequire(import.meta.url),{chromium}=require('C:/Users/zagat/AppData/Roaming/npm/node_modules/rea-agents/node_modules/playwright-core');
+const browser=await chromium.launch({headless:true,executablePath:'C:/Users/zagat/AppData/Local/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-win64/chrome-headless-shell.exe',args:['--mute-audio','--autoplay-policy=no-user-gesture-required','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream']});
+const context=await browser.newContext({viewport:{width:1700,height:1050}});await context.addInitScript(()=>{
+ const listeners={};window.feedBack={on:(name,fn)=>{(listeners[name]??=[]).push(fn);return()=>{listeners[name]=(listeners[name]||[]).filter(f=>f!==fn);};}};
+ window.__vst3Frames={sent:0,received:0,receivedTypes:[],messages:[],commands:[],closed:0};
+ const NativeWebSocket=window.WebSocket,send=NativeWebSocket.prototype.send;
+ NativeWebSocket.prototype.send=function(data){if(typeof data!=='string')window.__vst3Frames.sent++;else try{window.__vst3Frames.commands.push(JSON.parse(data));}catch{}return send.call(this,data);};
+ window.WebSocket=new Proxy(NativeWebSocket,{construct(Target,args){const socket=new Target(...args);socket.addEventListener('message',event=>{window.__vst3Frames.receivedTypes.push(typeof event.data);if(event.data instanceof ArrayBuffer)window.__vst3Frames.received++;else try{window.__vst3Frames.messages.push(JSON.parse(event.data));}catch{}});socket.addEventListener('close',()=>window.__vst3Frames.closed++);return socket;}});
+});
+const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
+try{
+ await page.goto(process.env.OCE_URL||'http://127.0.0.1:8767');await page.waitForSelector('#ws-app[data-mounted="true"]');
+ await page.locator('[data-action="mixer"]').first().evaluate(element=>element.click());
+ await page.locator('[data-action="live-input"]').click();await page.locator('#ws-dialog[open]').waitFor();
+ await page.locator('#ws-live-engine').selectOption('at5-vst3');
+ assert.equal(await page.locator('#ws-live-tier').inputValue(),'max');
+ await page.locator('#ws-live-block-size').selectOption('256');
+ await page.locator('#ws-dialog-submit').click();
+ await page.waitForFunction(()=>document.querySelector('.ws-live-input span')?.textContent.includes('AmpliTube 5 VST3'),null,{timeout:90000});
+ await page.waitForFunction(()=>window.__vst3Frames.sent>5&&window.__vst3Frames.received>5,null,{timeout:60000});
+ assert.equal(await page.evaluate(()=>window.__vst3Frames.commands.find(message=>message.type==='configure').frame_count),256);
+ assert.ok(await page.evaluate(()=>window.__vst3Frames.messages.some(message=>message.type==='ready'&&message.frame_count===256)));
+ await page.locator('#ws-tones-button').click();
+ await page.waitForFunction(()=>document.querySelector('#ws-tones-button.active'));
+ await page.locator('[data-action="tone-copy"]').click();
+ await page.locator('#ws-tone-copy-name').fill('Live mapped copy');
+ await page.locator('#ws-dialog-submit').click();
+ await page.waitForFunction(()=>window.__vst3Frames.messages.some(message=>message.type==='tone-ready'&&message.tone==='Live mapped copy'),null,{timeout:30000});
+ await page.locator('select[data-gear-slot="Amp"]').selectOption('Amp_MarshallJCM800');
+ await page.waitForFunction(()=>window.__vst3Frames.messages.filter(message=>message.type==='tone-ready'&&message.tone==='Live mapped copy').length>=2,null,{timeout:30000});
+ assert.ok(await page.evaluate(()=>window.__vst3Frames.commands.some(message=>message.type==='tone'&&message.tone.gear.Amp.Key==='Amp_MarshallJCM800')));
+ await page.locator('#ws-tone-audition-selected').uncheck();
+ await page.waitForFunction(()=>window.__vst3Frames.messages.at(-1)?.type==='tone-ready'&&window.__vst3Frames.messages.at(-1)?.tone==='Clean',null,{timeout:30000});
+ await page.locator('.ws-tone-actions button[data-action="tone"]').click();
+ await page.locator('#ws-dialog[open]').waitFor();
+ await page.locator('#ws-dialog-submit').click();
+ await page.waitForFunction(()=>window.__vst3Frames.messages.filter(message=>message.type==='tone-ready'&&message.tone==='Live mapped copy').length>=3,null,{timeout:30000});
+ const toneStatus=await page.locator('#ws-status').textContent();
+ assert.ok(!toneStatus.includes('clearTone is not a function'),`tone view should not apply software tone methods to the VST3 effect: ${toneStatus}`);
+ assert.match(await page.locator('#ws-tone-preview-source').textContent(),/AmpliTube live input follows the same tone selection using FeedBack's Rocksmith-to-AT5 mapping/);
+ await page.locator('[data-action="live-input"]').click();
+ await page.waitForFunction(()=>window.__vst3Frames.closed>0,null,{timeout:5000});
+ await page.locator('[data-action="live-input"]').click();
+ await page.locator('#ws-dialog[open]').waitFor();
+ assert.equal(await page.locator('#ws-live-engine').inputValue(),'at5-vst3');
+ assert.equal(await page.locator('#ws-live-tier').inputValue(),'max');
+ assert.equal(await page.locator('#ws-live-block-size').inputValue(),'256');
+ await page.keyboard.press('Escape');
+ const frames=await page.evaluate(()=>window.__vst3Frames);
+ assert.ok(frames.sent>5,`expected live audio blocks to reach the VST3 host; got ${frames.sent}`);
+ assert.ok(frames.received>5,`expected processed audio blocks from the VST3 host; got ${frames.received}`);
+ assert.ok(frames.closed>0,'expected the live VST3 WebSocket to close cleanly');
+ assert.deepEqual(errors,[]);
+ console.log(JSON.stringify({ok:true,engine:'AmpliTube 5 VST3',toneSwitch:'FeedBack RS-to-AT5',frames,errors}));
+}catch(error){
+ console.error(JSON.stringify({ok:false,error:error.stack,frames:await page.evaluate(()=>window.__vst3Frames).catch(()=>null),status:await page.locator('#ws-status').textContent().catch(()=>''),live:await page.locator('.ws-live-input span').textContent().catch(()=>''),errors},null,2));process.exitCode=1;
+}finally{
+ await context.close();await browser.close();
+}

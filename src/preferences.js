@@ -15,6 +15,15 @@ export function readPreferences(storage){
   if(value.rollOrientations&&typeof value.rollOrientations==='object')result.rollOrientations=Object.fromEntries(['keys','drums'].map(type=>[type,value.rollOrientations[type]==='bottom'?'bottom':'left']));
   if(value.sustain&&typeof value.sustain==='object'&&!Array.isArray(value.sustain))result.sustain={clampNext:value.sustain.clampNext===true,gutterEnabled:value.sustain.gutterEnabled===true,gutterBeats:number(value.sustain.gutterBeats,0,16,.125)};
   if(value.mixer&&typeof value.mixer==='object'&&!Array.isArray(value.mixer))result.mixer=value.mixer;
+  if(value.liveMonitor&&typeof value.liveMonitor==='object'&&!Array.isArray(value.liveMonitor)){
+   const input=value.liveMonitor;
+   result.liveMonitor={
+    deviceId:typeof input.deviceId==='string'&&input.deviceId.length<=1024?input.deviceId:'',
+    engine:input.engine==='at5-vst3'?'at5-vst3':'software',
+    tier:['max','at5','se','cs'].includes(input.tier)?input.tier:'max',
+    frameCount:[256,512,1024].includes(input.frameCount)?input.frameCount:1024
+   };
+  }
   if(value.countIn&&typeof value.countIn==='object')result.countIn={enabled:value.countIn.enabled===true,bars:Math.round(number(value.countIn.bars,1,16,1)),beats:value.countIn.beats==null?null:Math.round(number(value.countIn.beats,1,64,4))};
   return result;
  }catch{return{};}

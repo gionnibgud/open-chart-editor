@@ -1,0 +1,3 @@
+# Optional local AmpliTube 5 VST3 live-input host.
+pedalboard>=0.9.26,<1
+websockets>=13,<16

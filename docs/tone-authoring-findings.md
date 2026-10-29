@@ -1,8 +1,31 @@
 # Tones for FeedBack content: AmpliTube 5, Tone3000/NAM (findings, 2026-10-25)
 
-Research only; nothing implemented. Sources read: FeedPak spec 1.25 (§6.9 tones, §7.9
+Sources read: FeedPak spec 1.25 (§6.9 tones, §7.9
 `rigs.json`), FeedBack core `lib/tones.py`/`feedpak.py`, plugins `at5_tone` 0.7.0 (desktop
 user plugins), `nam_tone` 1.2.3, `tone3000_match` 0.5.4, `rig_builder` 3.1.6.
+
+## OCE live AmpliTube preview status
+
+OCE can host the installed AmpliTube 5 VST3 for live-input monitoring. Install
+`requirements-vst3.txt` and make the FeedBack `at5_tone` plugin source available. OCE
+discovers it from the sibling development checkout or the standard FeedBack Desktop plugin
+folder; otherwise set `OCE_AT5_TONE_PLUGIN` to that plugin folder. If AmpliTube is not in the
+standard Windows VST3 location, set `OCE_AMPLITUBE_VST3` to its binary or bundle path.
+
+Open Mixer > Monitor live instrument, choose **AmpliTube 5 VST3**, and select the installed
+AmpliTube model tier. OCE converts the currently selected chart tone's Rocksmith GearList
+with FeedBack's existing RS-to-AT5 converter before monitoring starts, then applies converted
+presets as chart tone markers change during playback. MAX is the default tier for the closest
+available model matches. The conversion is an approximation, not an emulation of Rocksmith's
+native DSP; unsupported gear may be omitted or mapped to a fallback by the converter.
+
+Audio stays on the local machine and is not recorded. After the first session, OCE keeps the
+VST3 instance loaded for reuse and releases it when the server shuts down. The browser-to-host
+bridge supports 256-, 512-, and 1024-sample blocks, with 1024 as the default. Choose a smaller
+block in the live-monitor dialog to reduce bridge latency; if you hear dropouts, select a larger
+block. Block duration is only one part of total latency, and smaller blocks require more frequent
+browser-to-host processing. Software tone preview remains available as a separate approximate
+option.
 
 ## What the pack format already allows
 
@@ -43,11 +66,13 @@ Consequences:
   lists (`tone_*.json` `toneData.GearList`). Keeping those definitions in exported content
   keeps both plugins working without any new tone authoring.
 
-## Proposed editor work (needs approval)
+## Remaining proposed editor work
 
 1. **Tone engines in the Tones view.** Per tone name: attach a NAM capture (+ optional cab IR),
-   an AmpliTube 5 preset (`.at5p`, free/max), and/or a Tone3000 tone link (id, URL, licence),
-   alongside the existing Rocksmith-style definition. Keep everything in the project master.
+   an authored AmpliTube 5 preset (`.at5p`, free/max), and/or a Tone3000 tone link (id, URL,
+   licence), alongside the existing Rocksmith-style definition. Keep everything in the project
+   master. Live AT5 monitoring currently uses the existing RS-to-AT5 conversion rather than
+   persisted per-tone `.at5p` attachments.
 2. **FeedPak / typed loose export.** Write one rig per tone in `rigs.json`: amp block
    realizations `nam` (asset under `rigs/nam/<sha256>.nam`) then `plugin` (vst3, IK
    Multimedia AmpliTube 5, preset name, preset file as an extra asset); cab block `ir`; always
