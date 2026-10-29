@@ -1,5 +1,6 @@
 // Small browser preferences stay separate from every song/export schema.
 // Renamed with the project; the old key is read once if the new one is empty.
+import {pianoPaletteId} from './piano-colors.js';
 const KEY='oce.preferences.v1',OLD_KEY='workshop-editor.preferences.v1';
 const number=(value,min,max,fallback)=>typeof value==='number'&&Number.isFinite(value)?Math.max(min,Math.min(max,value)):fallback;
 export function readPreferences(storage){
@@ -8,6 +9,7 @@ export function readPreferences(storage){
   const value=JSON.parse(raw);if(!value||typeof value!=='object'||Array.isArray(value))return{};
   const result={inspectorVisible:value.inspectorVisible!==false,inspectorWidth:number(value.inspectorWidth,200,2000,280),bottomHeight:number(value.bottomHeight,100,1200,155),zoom:number(value.zoom,25,400,110),snap:[0,1,2,3,4,6,8].includes(value.snap)?value.snap:4,fretConvention:value.fretConvention==='physical'?'physical':'relative',invertStrings:value.invertStrings===true,validationProfile:value.validationProfile==='workshop'?'oce':['feedpak','cdlc','oce'].includes(value.validationProfile)?value.validationProfile:'feedpak',speed:number(value.speed,.25,2,1),pitch:number(value.pitch,-24,24,0)};
   result.shadeHands=value.shadeHands===true;
+  result.pianoPalette=pianoPaletteId(value.pianoPalette);
   result.staveTheme=value.staveTheme==='light'?'light':'dark';
   result.quality=value.quality==='spectral'?'spectral':'fast';
   if(value.viewZoom&&typeof value.viewZoom==='object')result.viewZoom={tab:number(value.viewZoom.tab,25,400,result.zoom),tempo:number(value.viewZoom.tempo,25,400,result.zoom)};
