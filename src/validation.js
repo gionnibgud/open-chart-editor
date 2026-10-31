@@ -194,7 +194,10 @@ export function findChartIssues(project, options = {}) {
           if (finite(relative) && relative <= previous) emit('bend.pointOrder', 'Bend points must have strictly increasing relative times.', {item: note, path: `${location}.bend[${pointIndex}]`, time});
           if (finite(relative)) previous = relative;
         }
-        const key = a.type === 'drums' ? note.piece ?? note.p : a.type === 'keys' ? pitch : lane;
+        // Piano legitimately plays the same pitch in both hands at once (e.g. a unison
+        // doubling), each with its own independent sustain - that is two voices, not one
+        // key struck twice, so the hand distinguishes the lane alongside the pitch.
+        const key = a.type === 'drums' ? note.piece ?? note.p : a.type === 'keys' ? `${pitch}:${note.hand ?? ''}` : lane;
         if (finite(time) && finite(sustain) && sustain >= 0 && key !== undefined) events.push({note, time, sustain, key, path: location});
       };
       for (const [index, note] of list(notes).entries()) checkNote(note, `${path}.notes[${index}]`);

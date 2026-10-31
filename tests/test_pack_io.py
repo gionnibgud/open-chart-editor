@@ -494,6 +494,29 @@ class PackIOTests(unittest.TestCase):
         self.assertFalse(rebuilt['_wire'].get('fhm',False))
         self.assertFalse(rebuilt['notes'][0]['techniques']['fret_hand_mute'])
 
+    def test_chord_level_link_next_is_not_inherited_onto_members_that_do_not_declare_their_own(self):
+        """Regression: a sweep of real Rocksmith+ charts found link_next being inherited onto
+        every chord member whenever the <chord> tag itself carried linkNext="1" - including
+        members with zero sustain and no linkNext/slideTo of their own, which cannot actually
+        link to anything. R+ XML marks link_next per voice on the specific <chordNote> that
+        continues (mirroring it onto the parent <chord> as a one-voice-links summary, unlike
+        palm_mute/vibrato/etc which genuinely apply to the whole chord), so only a member's own
+        attribute should produce link_next - never the chord-level one alone."""
+        song=project();arr=song['arrangements'][0]
+        arr['notes']=[];arr['chord_templates']=[{'name':'Own','frets':[3,0,-1,-1,-1,-1],'fingers':[1,-1,-1,-1,-1,-1]}]
+        arr['chords']=[{'time':2,'chord_id':0,'notes':[{'string':0,'fret':3,'sustain':0.1,'techniques':{'slide_to':5,'link_next':True}},
+                                                         {'string':1,'fret':0,'sustain':0.1,'techniques':{}}]}]
+        xml=p.save_xml(song)
+        root=ET.fromstring(xml)
+        chord=root.find('./levels/level/chords/chord')
+        chord.set('linkNext','1')
+        self.assertEqual(chord.find('./chordNote[@string="0"]').get('linkNext'),'1')
+        self.assertIsNone(chord.find('./chordNote[@string="1"]').get('linkNext'))
+        loaded=p.load_xml(ET.tostring(root))
+        notes={n['string']:n for n in loaded['arrangements'][0]['chords'][0]['notes']}
+        self.assertTrue(notes[0]['techniques']['link_next'])
+        self.assertNotIn('link_next',notes[1]['techniques'])
+
     def test_native_slap_pluck_sentinels_mute_alias_and_advisory_fields(self):
         song=project();note=song['arrangements'][0]['notes'][0]
         note['techniques']={'pluck':False,'slap':False,'pick_direction':-1,'fret_hand_mute':True,'bend_type':4,'strum_group':9,'scale_degree':3}

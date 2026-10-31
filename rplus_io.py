@@ -312,7 +312,20 @@ def load_rplus_folder(entries):
         -sum(_beat_maps_agree(_beat_times(c[2], c[0]), times) for _, times in chart_maps)
         -sum(_beat_maps_agree(_beat_times(c[2], c[0]), times) for times, _ in lyric_maps),
         order.get(c[1].group(2).lower(), 3), c[0]))
-    _, grid_data, _ = _normalized_chart(grid[2], grid[0])
+    grid_normalized, grid_data, _ = _normalized_chart(grid[2], grid[0])
+    if grid[2].findtext('instrument') == 'Keyboard':
+        # This parse only feeds the song-level beat grid/duration below; the arrangement it
+        # produces is discarded. A keyboard chart's note/finger encoding doesn't fit the
+        # fretted-note schema load_xml validates (e.g. piano fingering runs 1-5, one past the
+        # fretted left-hand range), so strip the notes rather than coerce them to fit.
+        for level in grid_normalized.findall('./levels/level'):
+            for child_tag in ('notes', 'chords', 'anchors', 'handShapes'):
+                child = level.find(child_tag)
+                if child is not None:
+                    child.set('count', '0')
+                    for item in list(child):
+                        child.remove(item)
+        grid_data = ET.tostring(grid_normalized, encoding='utf-8', xml_declaration=True)
     base = pack_io.load_xml(grid_data.replace(b'<song version="' + grid[2].get('version').encode() + b'"', b'<song version="7"', 1))
     project = copy.deepcopy(base)
     project['arrangements'] = []

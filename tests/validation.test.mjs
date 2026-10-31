@@ -50,6 +50,20 @@ test('a sustain joined exactly at the epsilon boundary is not flagged merely bec
   assert.equal(issuesWith(p,'sustain.overlap').length,0);
 });
 
+test('piano legitimately plays the same pitch in both hands at once; only a genuine within-hand collision is a duplicate/overlap',()=>{
+  // Regression: a sweep of real Rocksmith+ keyboard charts found false note.duplicate/
+  // sustain.overlap findings whenever both hands struck the same key at the same instant
+  // with different sustains (a real, common unison voicing) - the lane key only grouped by
+  // pitch, so two independent one-hand-each notes looked like one key struck twice.
+  const p=chart('keys'),a=p.arrangements[0];
+  a.notes=[{id:'lh',time:1,pitch:48,sustain:0.2,hand:'lh'},{id:'rh',time:1,pitch:48,sustain:1.3,hand:'rh'}];
+  assert.equal(issuesWith(p,'note.duplicate').length,0);
+  assert.equal(issuesWith(p,'sustain.overlap').length,0);
+  a.notes=[{id:'first',time:1,pitch:48,sustain:0.6,hand:'lh'},{id:'second',time:1.2,pitch:48,sustain:0.1,hand:'lh'}];
+  assert.equal(issuesWith(p,'note.duplicate').length,0);
+  assert.ok(issuesWith(p,'sustain.overlap').length>0);
+});
+
 test('same-onset duplicate is found even beneath an earlier longer sustain',()=>{
   const p=chart();p.arrangements[0].notes=[note('long',0,0,3,10),note('a',1),note('b',1)];
   assert.deepEqual(issuesWith(p,'note.duplicate').map(x=>x.note),['b']);

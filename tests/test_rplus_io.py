@@ -155,6 +155,22 @@ class ReadTests(unittest.TestCase):
         self.assertLessEqual(point['t'], note['sustain'] + 1e-6)
         self.assertAlmostEqual(point['t'], note['sustain'])
 
+    def test_folder_with_only_a_keyboard_chart_still_imports(self):
+        """Regression: a real Rocksmith+ folder (Coldplay - "Amsterdam") with no Official
+        Lead/Rhythm/Bass chart at all - only a Keyboard one - failed to import entirely.
+        The beat-grid extraction parses whichever chart becomes the sole "grid" candidate
+        as if it were generic fretted-note XML, and piano fingering legitimately runs 1-5
+        (thumb to pinky) where fretted left-hand fingering only runs 0-4, so a keyboard
+        chart's own finger values raised ProjectError and aborted the whole folder."""
+        entries = folder()
+        entries.pop(f'Official_Lead1_{LEAD}_v4.xml')
+        entries.pop(f'Official_HumStrum1_{STRUM}_v2.xml')
+        project = e.load_folder_archive(as_zip(entries))
+        by_kind = {a['_rplus']['kind']: a for a in project['arrangements']}
+        self.assertEqual(by_kind['Keyboard']['type'], 'keys')
+        self.assertAlmostEqual(project['duration'], 7.5)
+        self.assertEqual(len(project['beats']), 15)
+
     def test_majority_non_humstrum_maps_excludes_humstrum_grid_outlier(self):
         bass_id = 'aaaaaaaa-0000-0000-0000-000000000004'
         bass_body = LEAD_BODY.replace('string="5"', 'string="3"').replace('string="4"', 'string="2"')

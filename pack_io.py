@@ -619,7 +619,7 @@ def _chord_mute_techniques(chord):
     return {key: _mute_flag(value, key) for key, value in parent.items()}
 
 
-def _short_techniques(techniques):
+def _short_techniques(techniques, keys=False):
     out = {k:copy.deepcopy(v) for k,v in techniques.items() if k in NOTE_TECH}
     for key,name in TECH_NAMES.items():
         if name in techniques:
@@ -634,7 +634,9 @@ def _short_techniques(techniques):
     for key in ('plk','slp'):
         if key in out and isinstance(out[key],int) and not isinstance(out[key],bool):
             out[key]=out[key]!=-1
-    for key,minimum,maximum in [('bt',0,4),('fg',-1,4),('ch',-1,None),('sd',-1,11),('pkd',-1,1)]:
+    # Piano fingering is numbered 1-5 (thumb to pinky); fretted left-hand fingering is 0-4
+    # (thumb to pinky), so a keyboard chart's finger value legitimately runs one higher.
+    for key,minimum,maximum in [('bt',0,4),('fg',-1,5 if keys else 4),('ch',-1,None),('sd',-1,11),('pkd',-1,1)]:
         if key in out:
             value=out[key]
             if not isinstance(value,int) or isinstance(value,bool) or value<minimum or maximum is not None and value>maximum:
@@ -740,6 +742,12 @@ def _materialize_chords(arr,native=False):
         for key in ('pm','mt','fhm'):
             parent.pop(key,None)
         parent.update(_chord_mute_techniques(chord))
+        # link_next describes one voice's own sustain continuing into the next note, not the
+        # chord shape as a whole (unlike mute/vibrato/etc, which do apply uniformly): R+ XML
+        # marks it on the specific chordNote that continues, and only mirrors it onto the
+        # <chord> tag as a summary. Inheriting it onto every member here produced false
+        # "link does not reach the next event" warnings on members with no sustain to link.
+        parent.pop('ln',None)
         inherited={TECH_NAMES[key]:bool(value) if key in BOOL_TECH else copy.deepcopy(value) for key,value in parent.items()}
         if 'forceDestPitch' in chord or 'force_destination_pitch' in chord.get('techniques',{}):
             inherited['force_destination_pitch']=_force_destination_pitch(chord.get('techniques',{}).get('force_destination_pitch',chord.get('forceDestPitch')))
@@ -945,7 +953,7 @@ def _validate_note_record(note,arr,label,parent_time=None):
         raise ProjectError(f'{label} Note velocity must be an integer between {minimum} and 127')
     techniques=note.get('techniques',{})
     if not isinstance(techniques,dict):raise ProjectError(label+' techniques must be an object')
-    tech=_short_techniques(techniques)
+    tech=_short_techniques(techniques, keys=kind=='keys')
     for key in ('sl','slu'):
         if key in tech and (type(tech[key]) is not int or tech[key]<-1):raise ProjectError(label+' slide destination must be an integer at least -1')
     if 'bn' in tech:_finite_record(tech['bn'],label+' bend',minimum=None)
