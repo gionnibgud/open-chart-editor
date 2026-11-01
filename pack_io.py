@@ -2735,6 +2735,9 @@ def save_vocal_xml(project):
         root.remove(child)
     vocals=sorted(project.get('vocals',[]),key=lambda v:v['time'])
     root.set('count',str(len(vocals)))
+    # Marks this file as OCE's own export, whose note values are genuinely drawn from the
+    # project's vocal pitch field: load_vocal_xml trusts note as pitch only for a file so marked.
+    root.set('generator','open-chart-editor')
     for vocal in vocals:
         element=ET.fromstring(vocal['_xml']) if vocal.get('_xml') else ET.Element('vocal')
         element.attrib.update(time=str(vocal['time']),length=str(vocal['length']),lyric=vocal['text'],note=str(vocal.get('pitch') if vocal.get('pitch') is not None else 60))
@@ -2752,11 +2755,18 @@ def load_vocal_xml(data,filename='Vocals.xml'):
         raise ProjectError('Expected native Rocksmith vocal XML containing vocal events')
     if int(root.get('count',len(root)))!=len(root):
         raise ProjectError('Vocal XML count does not match its events')
+    # Rocksmith's own vocal XML "note" attribute is not performance pitch: the stock game never
+    # uses it, charters never curate it, and real exports carry either a constant dummy value
+    # (observed: 0) or an out-of-range sentinel (observed: 254). Only trust it as pitch when the
+    # file is OCE's own export (save_vocal_xml stamps this), since there it genuinely reflects
+    # the project's vocal pitch field.
+    trusted=root.get('generator')=='open-chart-editor'
     vocals=[]
     for i,element in enumerate(root):
         vocal={'id':f'v{i}','time':float(element.get('time','0')),'length':float(element.get('length','0')),'text':element.get('lyric',''),'_xml':ET.tostring(element,encoding='unicode')}
-        if element.get('note') is not None:
-            vocal['pitch']=int(element.get('note'))
+        note=element.get('note')
+        if trusted and note is not None and 0<=int(note)<=127:
+            vocal['pitch']=int(note)
         vocals.append(vocal)
     duration=max((v['time']+v['length'] for v in vocals),default=0)
     _,timeline=_timeline([],[],max(Fraction(str(duration))*2,Fraction(4)))

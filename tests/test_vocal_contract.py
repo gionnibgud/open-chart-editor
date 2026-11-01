@@ -103,7 +103,20 @@ class VocalContract(unittest.TestCase):
     def test_xml_boundaries_unknown_attributes_and_syllables(self):
         source=b'<vocals count="2" future="own"><vocal time="1.125" length="0" note="0" lyric="Own &amp; &lt;one&gt;" future="a"/><vocal time="1.125" length="0.625" note="127" lyric="own+" future="b"/></vocals>'
         song=p.load_vocal_xml(source);before=copy.deepcopy(song);root=ET.fromstring(p.save_vocal_xml(song))
-        self.assertEqual(song,before);self.assertEqual(root.get('future'),'own');self.assertEqual([(v.get('note'),v.get('lyric'),v.get('future'))for v in root],[('0','Own & <one>','a'),('127','own+','b')]);self.assertEqual([float(v.get('length'))for v in root],[0,.625])
+        # Rocksmith's own note attribute is never trusted as performance pitch; re-saving writes
+        # the harmless default note (60) rather than propagating the untrusted source value.
+        self.assertEqual(song,before);self.assertEqual(root.get('future'),'own');self.assertEqual([(v.get('note'),v.get('lyric'),v.get('future'))for v in root],[('60','Own & <one>','a'),('60','own+','b')]);self.assertEqual([float(v.get('length'))for v in root],[0,.625])
+        self.assertNotIn('pitch',song['vocals'][0]);self.assertNotIn('pitch',song['vocals'][1])
+
+    def test_native_vocal_note_attribute_is_never_trusted_as_pitch(self):
+        # Rocksmith's own vocal XML note attribute is not performance pitch, in range or out of
+        # it: the stock game never uses it and charters never curate it (observed real exports:
+        # a constant dummy 0, or an out-of-range sentinel such as 254). Keep the lyric, drop any
+        # note value regardless.
+        for note in ('0','60','127','254'):
+            source=f'<vocals count="1"><vocal time="1" length="0.5" note="{note}" lyric="Own"/></vocals>'.encode()
+            song=p.load_vocal_xml(source)
+            self.assertNotIn('pitch',song['vocals'][0]);self.assertEqual(song['vocals'][0]['text'],'Own')
 
     def test_explicit_vocal_merge_warps_duration_and_retains_opaque_source(self):
         blob,entries=fixture(True);incoming=p.load_feedpak(blob);target=project();target['beats']=[{'time':0,'measure':1},{'time':1,'measure':-1}]
