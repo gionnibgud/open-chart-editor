@@ -2210,11 +2210,18 @@ def load_xml(data,authoring_layout=None):
     kind = authoring_layout.get('type') if authoring_layout else 'bass' if role=='bass' else 'guitar'
     levels = root.findall('./levels/level')
     level = max(levels, key=lambda l: int(l.get('difficulty', 0))) if levels else ET.Element('level', difficulty='0')
+    # <transcriptionTrack> is Rocksmith's own complete, authoritative chart; <levels> holds
+    # separately-generated Dynamic Difficulty practice content, whose highest tier is not
+    # guaranteed to match it (DD generation is sometimes stale or incomplete in the wild - a
+    # real EOF/toolkit export was found with its top five DD levels truncated to a fraction of
+    # the real chart). OCE has no DD authoring of its own yet, so it reads the full track.
+    transcription = root.find('./transcriptionTrack')
+    source = transcription if transcription is not None else level
     count = authoring_layout.get('stringCount',6) if authoring_layout else eof_strings or len(BASES[kind])
     tuning = root.find('tuning')
-    arr = {'id': 'arr0', 'name': root.findtext('arrangement', 'Lead'), 'type': kind, 'stringCount': count, 'basePitches': BASES.get(kind,[])[:] if count==len(BASES.get(kind,[])) else _instrument_bases(kind,count), 'tuning': [int(tuning.get(f'string{i}',0)) if tuning is not None else 0 for i in range(count)], 'capo': int(root.findtext('capo','0')), 'notes': [_xml_note(n,i) for i,n in enumerate(level.findall('./notes/note'))], 'chords': [], 'chord_templates': [], 'anchors': [], 'handshapes': [], '_xml': data.decode('utf-8-sig'), '_difficulty': int(level.get('difficulty',0))}
+    arr = {'id': 'arr0', 'name': root.findtext('arrangement', 'Lead'), 'type': kind, 'stringCount': count, 'basePitches': BASES.get(kind,[])[:] if count==len(BASES.get(kind,[])) else _instrument_bases(kind,count), 'tuning': [int(tuning.get(f'string{i}',0)) if tuning is not None else 0 for i in range(count)], 'capo': int(root.findtext('capo','0')), 'notes': [_xml_note(n,i) for i,n in enumerate(source.findall('./notes/note'))], 'chords': [], 'chord_templates': [], 'anchors': [], 'handshapes': [], '_xml': data.decode('utf-8-sig'), '_difficulty': int(level.get('difficulty',0))}
     arr['centOffset']=float(root.findtext('centOffset','0'))
-    for chord in level.findall('./chords/chord'):
+    for chord in source.findall('./chords/chord'):
         row = {k:_number(v) for k,v in chord.attrib.items()}
         row.update(time=row.pop('time',0), chord_id=row.pop('chordId',0), _xml=ET.tostring(chord,encoding='unicode'))
         row['notes'] = [_xml_note(n,i,row['time']) for i,n in enumerate(chord.findall('chordNote'))]
@@ -2222,7 +2229,7 @@ def load_xml(data,authoring_layout=None):
     for template in root.findall('./chordTemplates/chordTemplate'):
         arr['chord_templates'].append({'name': template.get('chordName',''), 'displayName': template.get('displayName',''), 'frets': [int(template.get(f'fret{i}',-1)) for i in range(count)], 'fingers': [int(template.get(f'finger{i}',-1)) for i in range(count)], '_xml': ET.tostring(template,encoding='unicode')})
     for tag,field in [('anchors','anchors'),('handShapes','handshapes')]:
-        arr[field] = [{k:_number(v) for k,v in el.attrib.items()} for el in level.findall(f'./{tag}/*')]
+        arr[field] = [{k:_number(v) for k,v in el.attrib.items()} for el in source.findall(f'./{tag}/*')]
     for shape in arr['handshapes']:
         for old,new in [('chordId','chord_id'),('startTime','start_time'),('endTime','end_time')]:
             if old in shape:

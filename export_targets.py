@@ -318,8 +318,9 @@ def _gpa_song(entries):
 
 
 def _load_eof_folder(entries, metadata):
-    """An Editor on Fire project folder with no exported Rocksmith XML yet: read notes.eof
-    directly. Only pro guitar/bass tracks (EOF's Rocksmith-oriented format) are converted."""
+    """An Editor on Fire project folder: read its own notes.eof directly, even when the
+    folder also holds loose arrangement XML exported earlier (that export can be stale).
+    Only pro guitar/bass tracks (EOF's Rocksmith-oriented format) are converted."""
     try:
         parsed = eof_io.parse_eof(entries['notes.eof'])
         project = eof_io.eof_project(parsed)
@@ -395,6 +396,11 @@ def load_folder_archive(data):
             isinstance(row.get('file'),str) and not row['file'].lower().endswith('.xml'))
             for row in metadata['arrangements']):
         return pack_io.load_project(data,'selected-folder.feedpak')
+    if 'notes.eof' in entries:
+        # An Editor on Fire project folder is read from its own binary project file, even when
+        # it also holds loose arrangement XML exported earlier: that export can be stale (a
+        # DD/toolkit pass can leave it incomplete) while notes.eof is the author's current work.
+        return _load_eof_folder(entries, metadata)
     projects=[];vocals=None;retained=[]
     for name,content in entries.items():
         if '/' in name or not name.lower().endswith('.xml'):continue
@@ -409,10 +415,6 @@ def load_folder_archive(data):
             retained.append(name);continue
         projects.append((name,pack_io.load_xml(checked)))
     if not projects:
-        if 'notes.eof' in entries:
-            # An Editor on Fire project that has not yet been exported to Rocksmith XML has
-            # no loose arrangement XML at all; read its own binary project file instead.
-            return _load_eof_folder(entries, metadata)
         raise pack_io.ProjectError('No editable native guitar/bass chart in this legacy folder; piano/drum/notation data needs a typed bridge and is not converted to fake guitar notes')
     result=copy.deepcopy(projects[0][1]);result['arrangements']=[]
     result['duration']=max(project.get('duration',0) for _,project in projects)
