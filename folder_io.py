@@ -59,8 +59,8 @@ def entry_zip(entries, max_bytes):
         if any('/'.join(parts[:i]) in names for i in range(1, len(parts))):
             raise FolderError('File/directory collision in song folder')
     if (not any(n in names for n in ('manifest.yaml', 'manifest.yml', 'manifest.json', 'source-manifest.json', 'notes.eof'))
-            and not any('/' not in n and n.endswith('.xml') for n in names)):
-        raise FolderError('Select a FeedPak, FeedBack song, Editor on Fire project or source-handoff folder containing a root manifest, notes.eof or arrangement XML')
+            and not any('/' not in n and n.endswith(('.xml', '.rscp')) for n in names)):
+        raise FolderError('Select a FeedPak, FeedBack song, Editor on Fire project, Charter project or source-handoff folder containing a root manifest, notes.eof, .rscp or arrangement XML')
     output = io.BytesIO()
     with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
         for name, data in sorted(entries.items()):

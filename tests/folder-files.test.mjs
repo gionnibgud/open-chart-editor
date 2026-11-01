@@ -16,6 +16,13 @@ test('an EOF project folder (has notes.eof) skips its own accumulated backup/exp
  const plainFiles=[own('Song/manifest.yaml'),own('Song/audio.wem.backup')];
  assert.deepEqual(folderSelection(plainFiles).entries.map(e=>e.path),['manifest.yaml','audio.wem.backup']);
 });
+test('a Charter project folder (has a root *.rscp file) skips its own backups/ subtree; a non-Charter folder does not',()=>{
+ const own=(name,size=1)=>({webkitRelativePath:name,size});
+ const charterFiles=[own('Song/project.rscp'),own('Song/guitar.ogg'),own('Song/backups/2024-01-01_12-00-00/project.rscp'),own('Song/backups/2024-01-01_12-00-00/guitar.ogg')];
+ assert.deepEqual(folderSelection(charterFiles).entries.map(e=>e.path),['project.rscp','guitar.ogg']);
+ const plainFiles=[own('Song/manifest.yaml'),own('Song/backups/not-really-a-backup.wav')];
+ assert.deepEqual(folderSelection(plainFiles).entries.map(e=>e.path),['manifest.yaml','backups/not-really-a-backup.wav']);
+});
 test('all paths, sizes and checksums are checked before any directory writes',async()=>{
  for(const modify of [t=>t.entries[1].sha256='0'.repeat(64),t=>t.entries[1].path='../own.wav',t=>t.entries.push(entry('MANIFEST.yaml','other')),t=>t.entries.push(entry('audio','collision')),t=>t.entries.push(entry('Audio/other.wav','collision')),t=>t.entries[1].size++]){
   const payload=tree();modify(payload);let writes=0;const parent={getDirectoryHandle(){writes++;throw Error('Unexpected write');}};

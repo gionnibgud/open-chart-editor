@@ -21,7 +21,7 @@ from pathlib import Path, PurePosixPath
 from xml.etree import ElementTree as ET
 
 try:
-    from . import pack_io, rplus_io, rs7x, eof_io
+    from . import pack_io, rplus_io, rs7x, eof_io, charter_io
 except ImportError:
     import pack_io
     try:
@@ -45,6 +45,13 @@ except ImportError:
         _eof_spec=importlib.util.spec_from_file_location('open_chart_editor_eof_io',Path(__file__).with_name('eof_io.py'))
         eof_io=importlib.util.module_from_spec(_eof_spec)
         _eof_spec.loader.exec_module(eof_io)
+    try:
+        import charter_io
+    except ImportError:
+        import importlib.util
+        _charter_spec=importlib.util.spec_from_file_location('open_chart_editor_charter_io',Path(__file__).with_name('charter_io.py'))
+        charter_io=importlib.util.module_from_spec(_charter_spec)
+        _charter_spec.loader.exec_module(charter_io)
 
 
 # Names written into exported folders. The old ones (from before the project was renamed
@@ -344,6 +351,32 @@ def _load_eof_folder(entries, metadata):
     return pack_io.validate_project(project)
 
 
+def _load_charter_folder(entries, metadata, rscp_name):
+    """A Lordszynencja/Charter project folder: read its own *.rscp XML project file."""
+    try:
+        parsed = charter_io.parse_charter(entries[rscp_name])
+        project = charter_io.charter_project(parsed)
+    except charter_io.CharterError as exc:
+        raise pack_io.ProjectError('Cannot read Charter project: '+str(exc)) from exc
+    for key in ('title', 'artist', 'album', 'year'):
+        if key in metadata:
+            project[key] = copy.deepcopy(metadata[key])
+    audio_names = [name for name in entries if '/' not in name and
+                   PurePosixPath(name).suffix.lower() in ('.wav', '.ogg', '.mp3', '.wem') and 'preview' not in name.lower()]
+    if not audio_names:
+        raise pack_io.ProjectError('Charter project folder has no owned full audio')
+    # Charter's own project names its audio stem explicitly; trust that over a size guess.
+    preferred = [s['path'] for s in parsed.get('stems', []) if s.get('path')] + ([parsed['music_file_name']] if parsed.get('music_file_name') else [])
+    audio_name = next((name for name in preferred if name in audio_names), max(audio_names, key=lambda name: len(entries[name])))
+    project['_pack'] = {'manifest': {'stems': [{'id': 'full', 'file': audio_name, 'default': True}]},
+                        'entries': {name: base64.b64encode(content).decode('ascii') for name, content in entries.items()}}
+    filled = pack_io.fill_song_details(project, pack_io.audio_bytes_tags(entries[audio_name], audio_name))
+    if filled:
+        project.setdefault('import_warnings', []).append(f"Song {', '.join(filled)} filled from the tags of {PurePosixPath(audio_name).name}")
+    project['_import'] = {'format': 'charter'}
+    return pack_io.validate_project(project)
+
+
 def load_folder_archive(data):
     """Only explicit user-selected folder transports enter this adapter."""
     tree=entry_tree_from_zip(data);entries=tree.entries
@@ -401,6 +434,9 @@ def load_folder_archive(data):
         # it also holds loose arrangement XML exported earlier: that export can be stale (a
         # DD/toolkit pass can leave it incomplete) while notes.eof is the author's current work.
         return _load_eof_folder(entries, metadata)
+    rscp_name=next((name for name in entries if '/' not in name and name.lower().endswith('.rscp')),None)
+    if rscp_name:
+        return _load_charter_folder(entries, metadata, rscp_name)
     projects=[];vocals=None;retained=[]
     for name,content in entries.items():
         if '/' in name or not name.lower().endswith('.xml'):continue
