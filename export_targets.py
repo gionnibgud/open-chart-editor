@@ -21,7 +21,7 @@ from pathlib import Path, PurePosixPath
 from xml.etree import ElementTree as ET
 
 try:
-    from . import pack_io, rplus_io, rs7x
+    from . import pack_io, rplus_io, rs7x, eof_io
 except ImportError:
     import pack_io
     try:
@@ -38,6 +38,13 @@ except ImportError:
         _rplus_spec=importlib.util.spec_from_file_location('open_chart_editor_rplus_io',Path(__file__).with_name('rplus_io.py'))
         rplus_io=importlib.util.module_from_spec(_rplus_spec)
         _rplus_spec.loader.exec_module(rplus_io)
+    try:
+        import eof_io
+    except ImportError:
+        import importlib.util
+        _eof_spec=importlib.util.spec_from_file_location('open_chart_editor_eof_io',Path(__file__).with_name('eof_io.py'))
+        eof_io=importlib.util.module_from_spec(_eof_spec)
+        _eof_spec.loader.exec_module(eof_io)
 
 
 # Names written into exported folders. The old ones (from before the project was renamed
@@ -310,6 +317,32 @@ def _gpa_song(entries):
     return pack_io.validate_project(project)
 
 
+def _load_eof_folder(entries, metadata):
+    """An Editor on Fire project folder with no exported Rocksmith XML yet: read notes.eof
+    directly. Only pro guitar/bass tracks (EOF's Rocksmith-oriented format) are converted."""
+    try:
+        parsed = eof_io.parse_eof(entries['notes.eof'])
+        project = eof_io.eof_project(parsed)
+    except eof_io.EofError as exc:
+        raise pack_io.ProjectError('Cannot read Editor on Fire project: '+str(exc)) from exc
+    for key in ('title', 'artist', 'album', 'year'):
+        if key in metadata:
+            project[key] = copy.deepcopy(metadata[key])
+    audio_names = [name for name in entries if '/' not in name and
+                   PurePosixPath(name).suffix.lower() in ('.wav', '.ogg', '.mp3', '.wem') and 'preview' not in name.lower()]
+    if not audio_names:
+        raise pack_io.ProjectError('Editor on Fire project folder has no owned full audio')
+    known = ['guitar.wav', 'guitar.ogg', 'guitar.wem', 'audio.wem', 'song.wem', 'audio.mp3', 'song.mp3', 'audio.ogg', 'song.ogg', 'audio.wav', 'song.wav']
+    audio_name = next((name for name in known if name in audio_names), max(audio_names, key=lambda name: len(entries[name])))
+    project['_pack'] = {'manifest': {'stems': [{'id': 'full', 'file': audio_name, 'default': True}]},
+                        'entries': {name: base64.b64encode(content).decode('ascii') for name, content in entries.items()}}
+    filled = pack_io.fill_song_details(project, pack_io.audio_bytes_tags(entries[audio_name], audio_name))
+    if filled:
+        project.setdefault('import_warnings', []).append(f"Song {', '.join(filled)} filled from the tags of {PurePosixPath(audio_name).name}")
+    project['_import'] = {'format': 'editor-on-fire'}
+    return pack_io.validate_project(project)
+
+
 def load_folder_archive(data):
     """Only explicit user-selected folder transports enter this adapter."""
     tree=entry_tree_from_zip(data);entries=tree.entries
@@ -376,6 +409,10 @@ def load_folder_archive(data):
             retained.append(name);continue
         projects.append((name,pack_io.load_xml(checked)))
     if not projects:
+        if 'notes.eof' in entries:
+            # An Editor on Fire project that has not yet been exported to Rocksmith XML has
+            # no loose arrangement XML at all; read its own binary project file instead.
+            return _load_eof_folder(entries, metadata)
         raise pack_io.ProjectError('No editable native guitar/bass chart in this legacy folder; piano/drum/notation data needs a typed bridge and is not converted to fake guitar notes')
     result=copy.deepcopy(projects[0][1]);result['arrangements']=[]
     result['duration']=max(project.get('duration',0) for _,project in projects)

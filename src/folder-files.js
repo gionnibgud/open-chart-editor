@@ -5,10 +5,21 @@ export function folderEntryName(name){
  if(typeof name!=='string'||!name||name.length>2048||name.split('/').some(p=>!p||p==='.'||p==='..'||/[\x00-\x1f<>:"\\|?*]/.test(p)||/[ .]$/.test(p)||devices.test(p)))throw Error('Unsafe folder entry name');
  return name;
 }
+// An Editor on Fire project folder accumulates its own working junk over an authoring
+// session (save-point backups, old Guitar Pro/PSARC exports) that can run the live folder
+// well past the import limit; a folder actually shaped like one (has notes.eof at its
+// root) gets that junk skipped automatically rather than requiring it be pruned by hand.
+const EOF_JUNK=/\.(bak|lastsaved|backup|psarc)$/i;
 export function folderSelection(files){
  const list=Array.from(files||[]);if(!list.length||list.length>MAX_FILES)throw Error('Choose a song folder with at most 4096 files');
- const entries=[],seen=new Set();let root,total=0;
- for(const file of list){const name=folderEntryName(file.webkitRelativePath),parts=name.split('/');if(parts.length<2)throw Error('Select a folder rather than individual files');if(root&&root!==parts[0])throw Error('Select one song folder');root=parts.shift();const path=parts.join('/'),key=path.toLowerCase();if(seen.has(key))throw Error('Case-colliding folder entries');seen.add(key);total+=file.size;if(!Number.isSafeInteger(file.size)||file.size<0||total>LIMIT)throw Error('Song folder exceeds the 256 MiB import limit');entries.push({path,file});}
+ const parsed=[];let root;
+ for(const file of list){const name=folderEntryName(file.webkitRelativePath),parts=name.split('/');if(parts.length<2)throw Error('Select a folder rather than individual files');if(root&&root!==parts[0])throw Error('Select one song folder');root=parts.shift();parsed.push({path:parts.join('/'),file});}
+ const isEofFolder=parsed.some(e=>e.path==='notes.eof');
+ const entries=[],seen=new Set();let total=0;
+ for(const {path,file} of parsed){
+  if(isEofFolder&&EOF_JUNK.test(path))continue;
+  const key=path.toLowerCase();if(seen.has(key))throw Error('Case-colliding folder entries');seen.add(key);total+=file.size;if(!Number.isSafeInteger(file.size)||file.size<0||total>LIMIT)throw Error('Song folder exceeds the 256 MiB import limit');entries.push({path,file});
+ }
  return {name:root,entries};
 }
 export async function readFolderFiles(files,{fetcher=globalThis.fetch,FileClass=globalThis.File,signal}={}){
