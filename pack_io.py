@@ -106,6 +106,18 @@ class ProjectError(ValueError):
     """An actionable import/export validation error."""
 
 
+_TRUE_STEM_DEFAULTS = {'true', 'on', 'yes'}
+
+
+def stem_is_default(stem):
+    """Per the FeedPak manifest spec (§5.3), a stem's `default` is a bool or one of
+    true/false/on/off/yes/no (any case), and a MISSING `default` means false, not true."""
+    value = stem.get('default', False)
+    if isinstance(value, str):
+        return value.strip().lower() in _TRUE_STEM_DEFAULTS
+    return bool(value)
+
+
 def _instrument_bases(kind,count):
     """Original authoring defaults, low to high; labels never imply timbre."""
     guitar={4:[40,45,50,55],5:[40,45,50,55,59],6:[40,45,50,55,59,64],7:[35,40,45,50,55,59,64],8:[30,35,40,45,50,55,59,64]}

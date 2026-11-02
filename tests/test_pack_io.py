@@ -124,6 +124,14 @@ class PackIOTests(unittest.TestCase):
             manifest=yaml.safe_load(z.read('manifest.yaml'))
         self.assertNotIn('authors',manifest)
 
+    def test_stem_is_default_treats_a_missing_field_as_false_per_feedpak_spec(self):
+        self.assertFalse(p.stem_is_default({'id':'drums','file':'drums.ogg'}))
+        self.assertTrue(p.stem_is_default({'id':'full','file':'full.ogg','default':True}))
+        for value in ('true','True','on','yes',' YES '):
+            self.assertTrue(p.stem_is_default({'default':value}),value)
+        for value in (False,'false','False','off','no',''):
+            self.assertFalse(p.stem_is_default({'default':value}),value)
+
     def test_guide_voice_override_is_lossless_namespaced_and_schema_compatible(self):
         for kind in ('guitar','keys','drums'):
             song=project(kind);arr=song['arrangements'][0]

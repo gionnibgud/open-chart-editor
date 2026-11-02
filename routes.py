@@ -360,7 +360,7 @@ def setup(app, context=None):
                 project = await asyncio.to_thread(pack_io.load_project,data,file.filename or 'project.json')
             pack = project.get('_pack',{})
             stems = pack.get('manifest',{}).get('stems',[])
-            selected = next((s for s in stems if s.get('id') == 'full'),None) or next((s for s in stems if s.get('default',True)),None)
+            selected = next((s for s in stems if s.get('id') == 'full'),None) or next((s for s in stems if pack_io.stem_is_default(s)),None) or (stems[0] if stems else None)
             if selected:
                 name = selected.get('file')
                 content = pack.get('entries',{}).get(name)
@@ -708,7 +708,7 @@ def setup(app, context=None):
             codec={'wav':'pcm','ogg':'vorbis'}.get(str(stem.get('codec') or '').lower(),str(stem.get('codec') or '').lower())
             return codec if codec in ('vorbis','pcm') else None if codec else BASELINE_CODECS.get(Path(str(stem.get('file',''))).suffix.lower())
         if not stems or any(resolved(stem) for stem in stems):return None
-        source=next((s for s in stems if s.get('default',True)),stems[0]);data=pack.get('entries',{}).get(source.get('file'))
+        source=next((s for s in stems if pack_io.stem_is_default(s)),stems[0]);data=pack.get('entries',{}).get(source.get('file'))
         if data is None:return None
         executable=shutil.which('ffmpeg')
         with tempfile.TemporaryDirectory(prefix='baseline-stem-',dir=cache) as directory:
