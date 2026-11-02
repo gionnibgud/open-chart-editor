@@ -71,10 +71,10 @@ def _track(name, fmt, body=b'', behavior=0, ttype=0, difficulty=0xFF, altname=No
     return out
 
 
-def build_eof(title='Test Song', artist='Test Artist', tracks=()):
+def build_eof(title='Test Song', artist='Test Artist', tracks=(), frettist=None):
     header = e.MAGIC + b'\x00' * 8
     header += struct.pack('<I', 1) + bytes([0]) + struct.pack('<I', 0)
-    strings = [(3, title), (2, artist)]
+    strings = [(3, title), (2, artist)] + ([(4, frettist)] if frettist is not None else [])
     header += struct.pack('<H', len(strings))
     for kind, value in strings:
         header += bytes([kind]) + _str(value)
@@ -106,6 +106,13 @@ class EofIoTests(unittest.TestCase):
         self.assertEqual(guitar['altname'], 'Lead')
         self.assertEqual(len(guitar['notes']), 1)
         self.assertEqual(guitar['notes'][0]['frets'][:2], [3, 5])
+
+    def test_frettist_field_becomes_the_project_charter_name(self):
+        note = _note(frets=(3,), string_mask=0b000001)
+        track = _track('PART REAL_GUITAR', e.TRACK_FORMAT_PRO_GUITAR, _pro_guitar_track([note]))
+        data = build_eof(tracks=[track], frettist='Jane Charter')
+        project = e.eof_project(e.parse_eof(data))
+        self.assertEqual(project['charterName'], 'Jane Charter')
 
     def test_chord_with_techniques_and_finger_array_builds_a_template(self):
         flags = e.NOTE_FLAG_HO | e.NOTE_FLAG_PALM_MUTE

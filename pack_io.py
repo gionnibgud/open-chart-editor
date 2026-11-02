@@ -1454,6 +1454,10 @@ def load_feedpak(data):
     # Year and album are optional in the manifest; a pack without them stays without them.
     for key in ('album','year'):
         if key in manifest:project[key]=copy.deepcopy(manifest[key])
+    charter=next((a for a in manifest.get('authors') or [] if isinstance(a,dict) and a.get('role')=='charter'),None)
+    if charter:
+        if charter.get('name'):project['charterName']=str(charter['name'])
+        if charter.get('url'):project['charterUrl']=str(charter['url'])
     for index, entry in enumerate(manifest.get('arrangements', [])):
         filename = entry.get('drum_tab') or entry.get('file')
         if not filename:
@@ -1794,6 +1798,14 @@ def save_feedpak(project,*,vocal_only=False):
         value=project.get(key)
         if value in (None,''):manifest.pop(key,None)
         else:manifest[key]=value
+    charter_name,charter_url=project.get('charterName'),project.get('charterUrl')
+    if charter_name or charter_url:
+        author={'name':charter_name or 'Unknown charter','role':'charter'}
+        if charter_url:author['url']=charter_url
+        manifest['authors']=[a for a in manifest.get('authors') or [] if a.get('role')!='charter']+[author]
+    elif manifest.get('authors'):
+        manifest['authors']=[a for a in manifest['authors'] if a.get('role')!='charter'] or None
+        if manifest['authors'] is None:manifest.pop('authors',None)
     # Codec is a FeedPak codec name that overrides the extension: older projects stored the
     # extension itself ("wav", "ogg", "m4a"), which a Reader would not recognise.
     for stem in manifest.get('stems') or []:

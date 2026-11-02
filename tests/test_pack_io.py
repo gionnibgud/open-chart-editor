@@ -101,6 +101,29 @@ def psarc_fixture(directory,pcm=False,multiple=False):
 
 
 class PackIOTests(unittest.TestCase):
+    def test_charter_name_and_link_round_trip_through_a_feedpak_authors_entry(self):
+        song=project();song['charterName']='Jane Charter';song['charterUrl']='https://ko-fi.com/jane'
+        with zipfile.ZipFile(io.BytesIO(p.save_feedpak(song))) as z:
+            manifest=yaml.safe_load(z.read('manifest.yaml'))
+        self.assertEqual(manifest['authors'],[{'name':'Jane Charter','role':'charter','url':'https://ko-fi.com/jane'}])
+        loaded=p.load_feedpak(p.save_feedpak(song))
+        self.assertEqual((loaded['charterName'],loaded['charterUrl']),('Jane Charter','https://ko-fi.com/jane'))
+
+    def test_charter_name_without_a_link_omits_the_url_property(self):
+        song=project();song['charterName']='Jane Charter'
+        with zipfile.ZipFile(io.BytesIO(p.save_feedpak(song))) as z:
+            manifest=yaml.safe_load(z.read('manifest.yaml'))
+        self.assertEqual(manifest['authors'],[{'name':'Jane Charter','role':'charter'}])
+
+    def test_clearing_charter_fields_removes_the_authors_entry_entirely(self):
+        song=project();song['charterName']='Jane Charter'
+        saved=p.save_feedpak(song)
+        loaded=p.load_feedpak(saved)
+        del loaded['charterName'];loaded['_pack']=song['_pack']
+        with zipfile.ZipFile(io.BytesIO(p.save_feedpak(loaded))) as z:
+            manifest=yaml.safe_load(z.read('manifest.yaml'))
+        self.assertNotIn('authors',manifest)
+
     def test_guide_voice_override_is_lossless_namespaced_and_schema_compatible(self):
         for kind in ('guitar','keys','drums'):
             song=project(kind);arr=song['arrangements'][0]

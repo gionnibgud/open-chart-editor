@@ -333,7 +333,7 @@ def _load_eof_folder(entries, metadata):
         project = eof_io.eof_project(parsed)
     except eof_io.EofError as exc:
         raise pack_io.ProjectError('Cannot read Editor on Fire project: '+str(exc)) from exc
-    for key in ('title', 'artist', 'album', 'year'):
+    for key in ('title', 'artist', 'album', 'year', 'charterName', 'charterUrl'):
         if key in metadata:
             project[key] = copy.deepcopy(metadata[key])
     audio_names = [name for name in entries if '/' not in name and
@@ -358,7 +358,7 @@ def _load_charter_folder(entries, metadata, rscp_name):
         project = charter_io.charter_project(parsed)
     except charter_io.CharterError as exc:
         raise pack_io.ProjectError('Cannot read Charter project: '+str(exc)) from exc
-    for key in ('title', 'artist', 'album', 'year'):
+    for key in ('title', 'artist', 'album', 'year', 'charterName', 'charterUrl'):
         if key in metadata:
             project[key] = copy.deepcopy(metadata[key])
     audio_names = [name for name in entries if '/' not in name and
@@ -458,7 +458,7 @@ def load_folder_archive(data):
         for arr in project['arrangements']:
             arr=copy.deepcopy(arr);arr['id']=f'loose-{index}-{arr["id"]}';arr['name']=PurePosixPath(name).stem
             result['arrangements'].append(arr)
-    for key in ('title','artist','album','year'):
+    for key in ('title','artist','album','year','charterName','charterUrl'):
         if key in metadata:result[key]=copy.deepcopy(metadata[key])
     if vocals is not None:
         for key in ('vocals','_vocalXml'):result[key]=copy.deepcopy(vocals.get(key,[] if key=='vocals' else ''))

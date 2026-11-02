@@ -462,6 +462,8 @@ def eof_project(parsed, warnings=None):
     for key in ('album', 'year'):
         if parsed.get(key):
             project[key] = parsed[key]
+    if parsed.get('frettist'):
+        project['charterName'] = parsed['frettist']
     if warnings:
         project['import_warnings'] = warnings
     return project
