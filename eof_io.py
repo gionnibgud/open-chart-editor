@@ -371,8 +371,18 @@ def _note_techniques(note, warnings):
 
 def _track_frets(note, numstrings):
     """{string_index: fret} for every string this note actually plays, in OCE's string
-    numbering (string 0 = the same string EOF/Rocksmith's own bit 0 and tuning[0] mean)."""
-    return {string: note['frets'][string] for string in range(numstrings) if note['string_mask'] & (1 << string)}
+    numbering (string 0 = the same string EOF/Rocksmith's own bit 0 and tuning[0] mean).
+    EOF packs a per-string mute ('x') flag into the fret byte's 0x80 bit (confirmed against
+    EOF's own save code, song.c: `fret = np->frets[stringnum] & 0x7F`), so that bit is masked
+    out of the fret value here; see _track_muted_strings for the flag itself."""
+    return {string: note['frets'][string] & 0x7F for string in range(numstrings) if note['string_mask'] & (1 << string)}
+
+
+def _track_muted_strings(note, numstrings):
+    """{string_index} for every string this note plays muted ('x'), per the 0x80 bit EOF
+    packs into that string's fret byte."""
+    return {string for string in range(numstrings)
+            if note['string_mask'] & (1 << string) and note['frets'][string] & 0x80}
 
 
 def _eof_track_arrangement(track, index, warnings):
@@ -397,10 +407,13 @@ def _eof_track_arrangement(track, index, warnings):
         frets = _track_frets(note, numstrings)
         if not frets:
             continue
+        muted_strings = _track_muted_strings(note, numstrings)
         techniques = _note_techniques(note, warnings)
         if len(frets) == 1:
             (string, fret), = frets.items()
             note_techniques = dict(techniques)
+            if string in muted_strings:
+                note_techniques['mute'] = True
             finger = (note.get('fingers') or {}).get(string)
             if finger is not None:
                 note_techniques['left_hand'] = finger
@@ -424,6 +437,8 @@ def _eof_track_arrangement(track, index, warnings):
             chord_notes = []
             for string, fret in sorted(frets.items()):
                 note_techniques = dict(techniques)
+                if string in muted_strings:
+                    note_techniques['mute'] = True
                 finger = (note.get('fingers') or {}).get(string)
                 if finger is not None:
                     note_techniques['left_hand'] = finger

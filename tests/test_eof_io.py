@@ -133,6 +133,28 @@ class EofIoTests(unittest.TestCase):
             self.assertTrue(note_row['techniques']['palm_mute'])
         self.assertEqual({n['string']: n['techniques'].get('left_hand') for n in chord['notes']}, {0: 0, 1: 2, 2: 3})
 
+    def test_a_single_muted_string_is_unpacked_from_the_frets_high_bit(self):
+        # EOF packs a per-string mute ('x') flag into the fret byte's 0x80 bit (confirmed
+        # against EOF's own save code, song.c: `fret = np->frets[stringnum] & 0x7F`).
+        note = _note(string_mask=0b000001, frets=(3 | 0x80,))
+        track = _track('PART REAL_GUITAR', e.TRACK_FORMAT_PRO_GUITAR, _pro_guitar_track([note]))
+        data = build_eof(tracks=[track])
+        project = e.eof_project(e.parse_eof(data))
+        row = project['arrangements'][0]['notes'][0]
+        self.assertEqual(row['fret'], 3)
+        self.assertTrue(row['techniques']['mute'])
+
+    def test_a_chord_with_one_muted_string_unpacks_the_fret_and_flags_only_that_string(self):
+        note = _note(name='x24432', string_mask=0b000111, frets=(0 | 0x80, 2, 2))
+        track = _track('PART REAL_GUITAR', e.TRACK_FORMAT_PRO_GUITAR, _pro_guitar_track([note]))
+        data = build_eof(tracks=[track])
+        project = e.eof_project(e.parse_eof(data))
+        arr = project['arrangements'][0]
+        template = arr['chord_templates'][arr['chords'][0]['chord_id']]
+        self.assertEqual(template['frets'], [0, 2, 2, -1, -1, -1])
+        by_string = {n['string']: n['techniques'].get('mute', False) for n in arr['chords'][0]['notes']}
+        self.assertEqual(by_string, {0: True, 1: False, 2: False})
+
     def test_fret_hand_position_and_tone_change_sections(self):
         note = _note()
         sections = {e.SECTION_FRET_HAND_POS: [('', 0, 2000, 5, 0)],
