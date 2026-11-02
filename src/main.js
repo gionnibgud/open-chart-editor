@@ -172,7 +172,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
  const changeScope=(label,fn)=>{countIn.cancel();stopMidi();change(label,fn);};
  const status=(message,error=false)=>{$('status').textContent=message;$('status').title=message;$('status').style.color=error?'#ef8e80':'';};
  let errorRevision=0;
- const safe=fn=>async(...args)=>{try{return await fn(...args);}catch(e){errorRevision++;status(e.message,true);console.error(e);}};
+ const safe=fn=>async(...args)=>{try{return await fn(...args);}catch(e){errorRevision++;status(e.message,true);console.error(e);render();}};
  audio.onQualityStatus=event=>{
   if(!root.isConnected||abort.signal.aborted)return;qualityMessage=event.message||event.state;
   if($('preview-quality'))$('preview-quality').value=audio.quality;if($('quality-status'))$('quality-status').textContent=qualityMessage;
@@ -1141,7 +1141,7 @@ let history=new History(demoProject()),arrangementId=history.project.arrangement
   }
   for(const key of ['title','artist','album','year','duration','charterName','charterUrl'])on($(`meta-${key}`),'change',safe(e=>change(`Set ${key}`,p=>{if(key==='year'&&!e.target.value.trim())delete p.year;else p[key]=['duration','year'].includes(key)?Number(e.target.value):e.target.value;})));
   on($('arr-name'),'change',e=>change('Rename arrangement',()=>a.name=e.target.value));on($('string-count'),'change',safe(e=>change('Change strings',()=>setStringCount(a,Number(e.target.value)))));on($('arr-capo'),'change',safe(e=>{const capo=validCapo(e.target.value);change('Set capo',()=>a.capo=capo);}));
-  on($('arr-type'),'change',safe(e=>{if([a,...a.difficulties||[]].some(content=>content.notes?.length||content.chords?.length)||a.chord_templates.length)throw Error('Create another arrangement to change instrument without losing authored content');changeScope('Change instrument',()=>{const replacement=makeArrangement(e.target.value);Object.assign(a,replacement);arrangementId=a.id;});}));
+  on($('arr-type'),'change',safe(e=>{const to=e.target.value;if(['guitar','bass'].includes(a.type)&&['guitar','bass'].includes(to)){change(`Reclassify as ${to}`,()=>{a.type=to;});return;}if([a,...a.difficulties||[]].some(content=>content.notes?.length||content.chords?.length)||a.chord_templates.length)throw Error('Create another arrangement to change instrument without losing authored content');changeScope('Change instrument',()=>{const replacement=makeArrangement(to);Object.assign(a,replacement);arrangementId=a.id;});}));
   on($('bpm'),'change',safe(e=>change('Set tempo from cursor',p=>setTempo(p,Number(e.target.value),{start:Math.max(0,Math.min(p.beats.length-2,Math.floor(beatAt(p.beats,cursor)))),moveNotes:$('move-notes').checked}))));
   for(const id of ['ramp-enabled','ramp-start','ramp-end','ramp-duration'])on($(id),'change',()=>{countIn.cancel();ramp={enabled:$('ramp-enabled').checked,startSpeed:Number($('ramp-start').value)/100,endSpeed:Number($('ramp-end').value)/100,duration:Number($('ramp-duration').value)};audio.setRamp(ramp);});
  }
