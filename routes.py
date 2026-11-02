@@ -471,7 +471,7 @@ def setup(app, context=None):
             tree,report=await asyncio.to_thread(export_targets.rs2014_sources,
                 project,payload.get('arrangement_ids'),include_vocals=payload.get('include_vocals') is True,
                 audio=supplied,normalized_wav=normalized,
-                author=payload.get('author','Open Chart Editor'),dlc_key=payload.get('dlcKey'))
+                author=payload.get('author') or project.get('charterName') or 'Open Chart Editor',dlc_key=payload.get('dlcKey'))
             if payload.get('delivery')=='entries':
                 return {**tree.transport(),'manifest':report}
             from urllib.parse import quote

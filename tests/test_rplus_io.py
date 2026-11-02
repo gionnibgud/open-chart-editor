@@ -117,6 +117,60 @@ class ReadTests(unittest.TestCase):
         self.assertEqual([p['time'] for p in lead['phrases']], [0.0, 1.5, 7.0])
         self.assertEqual(lead['_xml'].find('<offset>0.000</offset>') >= 0, True)
 
+    def test_anchor_stays_exactly_colocated_with_its_phrase_start_through_a_non_round_offset(self):
+        """Regression for issue #11: imported R+ charts were reported with spurious
+        "Phrase needs an anchor at its start" findings. A non-round offset (2.321, as seen
+        on a real song) is subtracted from every timestamped element independently
+        (anchors, phraseIterations, notes), so this checks they land on the exact same
+        instant afterward rather than drifting apart by float error or being read from a
+        different source element."""
+        offset = 2.321
+        body = ('<chordTemplates count="0" /><levels count="1"><level difficulty="0"><notes count="1">'
+                '<note time="14.026" fret="3" string="5" sustain="0.500" /></notes><chords count="0" />'
+                '<anchors count="1"><anchor time="14.026" fret="3" width="4" /></anchors><handShapes count="0" /></level></levels>')
+        lead = chart('Lead', 'Guitar', body).replace(b'<offset>0.500</offset>', f'<offset>{offset:.3f}</offset>'.encode())
+        lead = lead.replace(b'<phraseIteration phraseId="1" time="2.000" variation="" />', b'<phraseIteration phraseId="1" time="14.026" variation="" />')
+        project = open_folder(**{f'Official_Lead1_{LEAD}_v4.xml': lead})
+        arr = next(a for a in project['arrangements'] if a['_rplus']['kind'] == 'Lead')
+        self.assertEqual(len(arr['anchors']), 1)
+        self.assertEqual(arr['anchors'][0]['time'], arr['phrases'][1]['time'])
+        self.assertAlmostEqual(arr['notes'][0]['time'], arr['anchors'][0]['time'])
+
+    def test_bend_point_at_the_exact_end_of_sustain_survives_a_non_round_offset(self):
+        """Regression for issue #11: imported R+ charts were reported with spurious
+        "Bend point lies outside the note sustain." findings. A bend point placed at the
+        very end of its note's sustain in the source (a common, valid shape: the bend
+        peaks right as the note ends) should land at t == sustain after import, not drift
+        past it, through the same per-file offset normalization as the note/anchor test above."""
+        offset = 2.321
+        body = ('<chordTemplates count="0" /><levels count="1"><level difficulty="0"><notes count="1">'
+                '<note time="14.026" fret="3" string="5" sustain="0.500">'
+                '<bendValues count="1"><bendValue time="14.526" step="1.0"/></bendValues></note></notes>'
+                '<chords count="0" /><anchors count="0" /><handShapes count="0" /></level></levels>')
+        lead = chart('Lead', 'Guitar', body).replace(b'<offset>0.500</offset>', f'<offset>{offset:.3f}</offset>'.encode())
+        project = open_folder(**{f'Official_Lead1_{LEAD}_v4.xml': lead})
+        arr = next(a for a in project['arrangements'] if a['_rplus']['kind'] == 'Lead')
+        note = arr['notes'][0]
+        point = note['techniques']['bend_values'][0]
+        self.assertLessEqual(point['t'], note['sustain'] + 1e-6)
+        self.assertAlmostEqual(point['t'], note['sustain'])
+
+    def test_folder_with_only_a_keyboard_chart_still_imports(self):
+        """Regression: a real Rocksmith+ folder (Coldplay - "Amsterdam") with no Official
+        Lead/Rhythm/Bass chart at all - only a Keyboard one - failed to import entirely.
+        The beat-grid extraction parses whichever chart becomes the sole "grid" candidate
+        as if it were generic fretted-note XML, and piano fingering legitimately runs 1-5
+        (thumb to pinky) where fretted left-hand fingering only runs 0-4, so a keyboard
+        chart's own finger values raised ProjectError and aborted the whole folder."""
+        entries = folder()
+        entries.pop(f'Official_Lead1_{LEAD}_v4.xml')
+        entries.pop(f'Official_HumStrum1_{STRUM}_v2.xml')
+        project = e.load_folder_archive(as_zip(entries))
+        by_kind = {a['_rplus']['kind']: a for a in project['arrangements']}
+        self.assertEqual(by_kind['Keyboard']['type'], 'keys')
+        self.assertAlmostEqual(project['duration'], 7.5)
+        self.assertEqual(len(project['beats']), 15)
+
     def test_majority_non_humstrum_maps_excludes_humstrum_grid_outlier(self):
         bass_id = 'aaaaaaaa-0000-0000-0000-000000000004'
         bass_body = LEAD_BODY.replace('string="5"', 'string="3"').replace('string="4"', 'string="2"')
