@@ -324,6 +324,97 @@ def _gpa_song(entries):
     return pack_io.validate_project(project)
 
 
+_RS2014_ARRANGEMENT_NAMES = {0: 'Lead', 1: 'Rhythm', 2: 'Bass', 3: 'Combo'}
+
+
+def _rs2014_toolkit_info(entries):
+    """Rocksmith Custom Song Toolkit project files (.rs2dlc JSON, or the older .dlc.xml) carry
+    two signals EOF's own notes.eof never stores: the author's explicit Lead/Rhythm/Bass
+    arrangement label, and a TuningPitch reference (e.g. 220 instead of 440) that charters use
+    to make Rocksmith's pitch detector track an extended-range bass charted an octave high on a
+    guitar-shaped fretboard. Returns {xml_stem_lower: {'arrangementName':..., 'tuningPitch':...}},
+    keyed by the arrangement's exported XML filename without its '_RS2[.xml]' suffix, since
+    that's the name EOF's own track name/altname matches. Never raises: this is best-effort
+    enrichment, not a required part of reading the project."""
+    info = {}
+    def stem(xml_name):
+        xml_name = PurePosixPath(xml_name).stem
+        return re.sub(r'_rs2$', '', xml_name, flags=re.IGNORECASE).strip().lower()
+    for name, content in entries.items():
+        if '/' in name:
+            continue
+        lower = name.lower()
+        try:
+            if lower.endswith('.rs2dlc'):
+                data = json.loads(content.decode('utf-8-sig'))
+                for arrangement in data.get('Arrangements') or []:
+                    for field in arrangement.get('Fields') or []:
+                        xml_name = field.get('XML')
+                        if not xml_name:
+                            continue
+                        info[stem(xml_name)] = {
+                            'arrangementName': _RS2014_ARRANGEMENT_NAMES.get(field.get('Name')),
+                            'tuningPitch': field.get('TuningPitch') if isinstance(field.get('TuningPitch'), (int, float)) else None}
+            elif lower.endswith('.dlc.xml'):
+                root = ET.fromstring(pack_io._xml_input(content))
+                for arrangement in root.iter():
+                    if arrangement.tag.rsplit('}', 1)[-1] != 'Arrangement':
+                        continue
+                    by_tag = {child.tag.rsplit('}', 1)[-1]: child for child in arrangement}
+                    xml_file = None
+                    song_xml = by_tag.get('SongXml')
+                    if song_xml is not None:
+                        file_elem = next((c for c in song_xml if c.tag.rsplit('}', 1)[-1] == 'File'), None)
+                        xml_file = file_elem.text if file_elem is not None else None
+                    if not xml_file:
+                        continue
+                    tuning_pitch = None
+                    if by_tag.get('TuningPitch') is not None and by_tag['TuningPitch'].text:
+                        try:
+                            tuning_pitch = float(by_tag['TuningPitch'].text)
+                        except ValueError:
+                            tuning_pitch = None
+                    name_elem = by_tag.get('ArrangementName')
+                    info[stem(xml_file)] = {
+                        'arrangementName': name_elem.text.strip() if name_elem is not None and name_elem.text else None,
+                        'tuningPitch': tuning_pitch}
+        except Exception:
+            continue
+    return info
+
+
+def _flag_extended_range_bass_charted_as_guitar(project, entries):
+    """A 5- or 6-string bass is sometimes charted on a guitar-shaped fretboard (EOF has no
+    native 5/6-string bass track format), often with Rocksmith's pitch-detection reference
+    pitch halved (TuningPitch 220 instead of 440, i.e. the chart plays an octave high of where
+    it sounds) so Rocksmith can track the extended low range. EOF's own numstrings==4 rule
+    already classifies a 4-string drop-tuned part as bass; this only needs to catch the 5/6
+    string case, which EOF has no way to mark as bass at all."""
+    toolkit = _rs2014_toolkit_info(entries)
+    has_real_bass = any(arr.get('type') == 'bass' for arr in project.get('arrangements', []))
+    for arr in project.get('arrangements', []):
+        if arr.get('type') != 'guitar' or arr.get('stringCount') not in (5, 6):
+            continue
+        tuning = arr.get('tuning') or []
+        info = toolkit.get(re.sub(r'_rs2$', '', (arr.get('name') or '').strip().lower(), flags=re.IGNORECASE))
+        reasons = []
+        if info and info.get('arrangementName') == 'Bass':
+            reasons.append('the Rocksmith Toolkit project for this folder labels this arrangement as Bass')
+        if info and info.get('tuningPitch') and abs(info['tuningPitch'] - 440) > 1:
+            octaves = math.log2(440 / info['tuningPitch'])
+            reasons.append(f"its tuning pitch reference is {info['tuningPitch']:g}Hz instead of 440Hz "
+                            f"(~{octaves:g} octave{'s' if abs(octaves) != 1 else ''} low), a common trick to let "
+                            "Rocksmith's pitch detection track an extended-range bass")
+        if not reasons and not has_real_bass and tuning and min(tuning) <= -5 and all(t <= -4 for t in tuning):
+            reasons.append(f"all {len(tuning)} strings are tuned {min(tuning)} to {max(tuning)} semitones below "
+                            "standard, deep enough to suggest a bass part charted on a guitar-shaped fretboard")
+        if reasons:
+            project.setdefault('import_warnings', []).append(
+                f"{arr.get('name')}: this {arr['stringCount']}-string guitar arrangement looks like it may "
+                f"actually be a {arr['stringCount']}-string bass chart ({'; '.join(reasons)}). If so, consider "
+                "changing its Authoring family to Bass in Song details.")
+
+
 def _load_eof_folder(entries, metadata):
     """An Editor on Fire project folder: read its own notes.eof directly, even when the
     folder also holds loose arrangement XML exported earlier (that export can be stale).
@@ -333,6 +424,7 @@ def _load_eof_folder(entries, metadata):
         project = eof_io.eof_project(parsed)
     except eof_io.EofError as exc:
         raise pack_io.ProjectError('Cannot read Editor on Fire project: '+str(exc)) from exc
+    _flag_extended_range_bass_charted_as_guitar(project, entries)
     for key in ('title', 'artist', 'album', 'year', 'charterName', 'charterUrl'):
         if key in metadata:
             project[key] = copy.deepcopy(metadata[key])
@@ -358,6 +450,7 @@ def _load_charter_folder(entries, metadata, rscp_name):
         project = charter_io.charter_project(parsed)
     except charter_io.CharterError as exc:
         raise pack_io.ProjectError('Cannot read Charter project: '+str(exc)) from exc
+    _flag_extended_range_bass_charted_as_guitar(project, entries)
     for key in ('title', 'artist', 'album', 'year', 'charterName', 'charterUrl'):
         if key in metadata:
             project[key] = copy.deepcopy(metadata[key])
