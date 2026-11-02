@@ -129,7 +129,7 @@ def source_audio(project, supplied=None):
     pack = project.get('_pack', {})
     stems = pack.get('manifest', {}).get('stems', [])
     stem = next((s for s in stems if s.get('id')=='full'),None)
-    stem = stem or next((s for s in stems if s.get('default',True)),None)
+    stem = stem or next((s for s in stems if pack_io.stem_is_default(s)),None) or (stems[0] if stems else None)
     if stem is None:
         raise pack_io.ProjectError('Select original audio before exporting source files')
     path = _safe_path(stem.get('file'))
