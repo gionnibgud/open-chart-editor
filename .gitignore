@@ -8,6 +8,7 @@ node_modules/
 research/
 verification/
 dist/
+build/
 imports/
 builds/
 tools/.host-runs/

@@ -1,0 +1,32 @@
+# Builds the standalone program for each OS, only when started by hand from the Actions tab.
+name: Standalone builds
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows names its own tar, as the runner's PATH may reach Git's, which cannot write zips.
+          - {os: windows-latest, tar: 'C:\Windows\System32\tar.exe', archive: open-chart-editor-windows-x64.zip}
+          - {os: macos-latest, tar: tar, archive: open-chart-editor-macos-arm64.zip}
+          - {os: ubuntu-22.04, tar: tar, archive: open-chart-editor-linux-x64.tar.gz}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements-build.txt
+      - run: python -m PyInstaller tools/standalone.spec --noconfirm
+      - run: python tools/smoke-standalone.py dist/open-chart-editor/open-chart-editor
+      # Archived here because artifact uploads lose the program's executable bit.
+      - run: ${{ matrix.tar }} -a -cf ${{ matrix.archive }} -C dist open-chart-editor
+      - uses: actions/upload-artifact@v7
+        with:
+          path: ${{ matrix.archive }}
+          archive: false
+          if-no-files-found: error

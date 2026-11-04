@@ -26,6 +26,23 @@ Open the editor
   The launcher uses the existing Python environment; it downloads nothing.
   File > Arrangement info or Ctrl+Shift+I reveals the Settings inspector.
 
+Standalone builds
+  The "Standalone builds" workflow in GitHub Actions, started by hand, produces
+  Windows x64, macOS Apple Silicon and Linux x64 builds that need no Python.
+  Unpack one, keep the folder together and run open-chart-editor inside it (on
+  Linux, from a terminal). The editor opens in your browser; close the program's
+  window or press Ctrl+C to stop.
+  The builds are unsigned, so the system warns on first use:
+    Windows: choose More info > Run anyway.
+    macOS: run xattr -dr com.apple.quarantine on the unpacked folder.
+  FFmpeg and the other external tools stay separate and optional. Guitar Pro
+  import and editing notation-only keys parts need FeedBack's code: set
+  OCE_FEEDBACK_LIB to FeedBack's lib folder. The AmpliTube 5 live host is not included; it needs running from source.
+  To build one on your own machine:
+    pip install -r requirements-build.txt
+    pyinstaller tools/standalone.spec
+  and find it in dist/open-chart-editor. tools/smoke-standalone.py checks a build.
+
 FeedBack integration
   See tools/README.txt for the explicit-file installer and isolated host test.
   Intended host: I:\Dev\freedBack\feedBack, version 0.3.1-alpha.4.

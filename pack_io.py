@@ -3616,7 +3616,9 @@ def feedback_core():
     then a development checkout beside this one or its parent (freedBack/feedBack/lib)."""
     import os
     here=Path(__file__).resolve()
-    for candidate in (os.environ.get('OCE_FEEDBACK_LIB'),here.parents[2]/'lib',here.parents[1]/'freedBack'/'feedBack'/'lib',here.parents[2]/'freedBack'/'feedBack'/'lib'):
+    # A standalone build runs wherever it was unpacked, so nothing beside it is trusted as code.
+    candidates=(os.environ.get('OCE_FEEDBACK_LIB'),) if getattr(sys,'frozen',False) else (os.environ.get('OCE_FEEDBACK_LIB'),here.parents[2]/'lib',here.parents[1]/'freedBack'/'feedBack'/'lib',here.parents[2]/'freedBack'/'feedBack'/'lib')
+    for candidate in candidates:
         if candidate and (Path(candidate)/'gp2rs.py').is_file() and (Path(candidate)/'gp2rs_gpx.py').is_file():
             return Path(candidate).resolve()
     return None
