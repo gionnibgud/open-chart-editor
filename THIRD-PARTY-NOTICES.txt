@@ -1,5 +1,6 @@
-This build references existing dependencies; it does not bundle their
-binaries, upstream source, recordings, commercial assets or native presets.
+The plugin and source tree reference existing dependencies; they do not bundle
+their binaries, upstream source, recordings, commercial assets or native presets.
+Standalone builds are the exception described below.
 See docs/provenance-audit.md for where each part of this project comes from.
 
 Rocksmith2014.NET / DLC Builder, MIT License, Copyright (c) 2020 Tapio Malmberg
@@ -43,7 +44,19 @@ authors: bundled in assets/feedpak-schemas/ with their license
 Python runtime dependencies: FastAPI, Uvicorn, python-multipart, PyYAML,
 jsonschema (FeedBack installs it from requirements.txt). Optional verification
 dependencies: pytest, Playwright/Chromium. These are supplied by the local
-environment and are not copied into this build.
+environment and are not copied into the plugin or source tree.
+
+Standalone builds (tools/standalone.spec, built with PyInstaller) do bundle
+PyInstaller's bootloader (GPL-2.0 with its bundling exception), the Python
+interpreter with the native libraries it links to (such as OpenSSL, zlib, bzip2,
+xz, libffi, mpdecimal and expat; the set varies by OS), the runtime dependencies
+above with the packages they need, and PyGuitarPro. Each package's licence text
+is in _internal/<package>.dist-info and Python's is in _internal/licenses/python;
+Python lists the licences of the software it incorporates at
+https://docs.python.org/3/license.html. PyGuitarPro is LGPL-3.0:
+requirements-build.txt and tools/standalone.spec let you rebuild with a modified
+copy. This program's source is at https://github.com/zagatozee/open-chart-editor.
+The external tools below stay external.
 
 External tools, invoked and never bundled: FFmpeg; vgmstream for Wwise .wem
 audio (from a local FeedBack/Slopsmith install or PATH); the DLC Builder
